@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-01-01T00:00:00Z",
+  "jobs": [
+    {
+      "id": "sample-office-2026",
+      "kind": "recruitment",
+      "title_bn": "নমুনা চাকরি — প্রকাশযোগ্য নয়",
+      "title_en": "SAMPLE ONLY — not a real vacancy",
+      "organization": "Sample organization",
+      "category": "office",
+      "districts": [
+        "West Bengal"
+      ],
+      "qualifications": [
+        "Graduate"
+      ],
+      "status": "open",
+      "source_url": "https://example.org/sample-source",
+      "notice_url": "https://example.org/sample-notice",
+      "reviewed_at": "2026-01-01T00:00:00Z",
+      "published_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z",
+      "summary_bn": "শুধু পরীক্ষার নমুনা।",
+      "summary_en": "Test fixture only, not an actual vacancy.",
+      "how_to_apply_bn": "নমুনা, আবেদন করবেন না।",
+      "how_to_apply_en": "Do not apply. Test fixture.",
+      "vacancies": null,
+      "application_start_date": "2026-01-01",
+      "application_end_date": "2026-01-31",
+      "application_end_at": null,
+      "exam_date": null,
+      "apply_url": null,
+      "age_note_bn": null,
+      "age_note_en": null
+    }
+  ]
+}

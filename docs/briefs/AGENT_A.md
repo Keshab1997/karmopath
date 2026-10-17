@@ -1,5 +1,5 @@
 # Worker A — batch 1
-Status: BLOCKED until captain foundation exists and common base SHA is recorded. These docs alone are not dispatch authorization.
+Status: ready against the common base recorded in docs/DISPATCH_BATCH_1.md. Read that setup first; do not use an older docs-only commit.
 Repository: https://github.com/Keshab1997/karmopath.git (public).
 Branch: `agent/A/data-v1`
 Read: README.md, AGENTS.md, docs/PRODUCT.md, DESIGN.md, ARCHITECTURE.md, CONTRACTS.md, ADMIN.md, POLICY.md, ACCEPTANCE.md.

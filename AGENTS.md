@@ -2,7 +2,7 @@
 Captain owns main; maximum three workers; each works on its named branch in an independent sandbox. Never merge, tag, release, trigger CI, change repository settings, or touch secrets. Never work in /tmp. Never copy credentials between agents. Use your own GitHub pairing only if necessary; reuse valid pairing.
 
 ## Captain-owned / DO NOT TOUCH
-pubspec.yaml, pubspec.lock, .github/workflows/**, AGENTS.md, android/**, ios/**, lib/main.dart, lib/app/**, lib/contracts/**, lib/design_system/**, tool/preflight.py, generated files including *.g.dart, version numbers, root docs and assets/**.
+pubspec.yaml, pubspec.lock, .github/workflows/**, AGENTS.md, android/**, ios/**, lib/main.dart, lib/app/**, lib/contracts/**, lib/design_system/**, tool/preflight.py, test/contracts/**, test/fixtures/**, generated files including *.g.dart, version numbers, root docs and assets/**.
 
 ## Exclusive worker ownership
 A: lib/data/**, test/data/**, docs/reports/A.md
