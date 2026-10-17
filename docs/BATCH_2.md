@@ -24,3 +24,6 @@ No overlapping write ownership. Captain won't edit worker-owned areas during thi
 Support/correction email; actual original notices for initial jobs; Play account/tester status; AdMob/FCM project setup if used; authorized signing setup. Don't paste private keys into public repo or worker briefs. Monthly-zero is a free-tier design target, not unlimited infrastructure.
 
 Work here is sequenced: these remaining release tasks cannot safely be promised as three one-shot worker jobs before integration and owner inputs exist.
+
+## Captain parallel progress
+Production shell/bootstrap and live-detail routing implemented and tested independently (see PRODUCTION_INTEGRATION.md). Not activated until concrete adapters/platform actions/configuration are reviewed. Worker A/B/C ownership remains unchanged.
