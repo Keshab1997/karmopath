@@ -13,4 +13,6 @@ jobs:
     with:
       comment-on-pr: false
       set-about-link: false
+      dart-defines: |
+        KARMOPATH_PREVIEW=true
     secrets: inherit

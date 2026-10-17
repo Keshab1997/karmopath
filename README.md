@@ -58,10 +58,13 @@ Read [AGENTS.md](AGENTS.md) before contributing. Contracts and file ownership ar
 
 **Use [Batch 1 dispatch](docs/DISPATCH_BATCH_1.md) for the common foundation SHA, setup and ownership map.** Do not invent missing dependencies or interfaces.
 
+## Browser design preview
+[Preview setup and deployment steps](docs/WEB_PREVIEW.md). Pages is already enabled. The manual web workflow now selects an explicitly labeled, session-only demo composition of the actual screens. **The new preview is not deployed until Keshab runs the workflow.** Production integration remains pending.
+
 ## GitHub Actions
 Caller workflows reuse [Keshab1997/flutter-builder](https://github.com/Keshab1997/flutter-builder) at **v1.15.0**. All are **manual only**: CI, widget diagnostics, screenshots, Android build, web preview, preview cleanup and signed release.
 
-No workflow was dispatched during repository setup. The Flutter scaffold is present; workflow execution has not been tested. Pages is not enabled; signing and Play upload are not configured. Release actions can create tags/releases—only Keshab may authorize and dispatch them.
+No workflow was dispatched during repository setup. The Flutter scaffold is present; workflow execution has not been tested. Pages is enabled; signing and Play upload are not configured. Release actions can create tags/releases—only Keshab may authorize and dispatch them.
 
 ## Public repository safety
 Never commit admin drafts, tokens, service-account credentials, signing keys or applicant information. Use GitHub-hosted runners only; **do not attach an owner-PC self-hosted runner to this public repository**. Future private ingestion automation must be isolated in a separately approved private repository. No server credentials belong in the app.
