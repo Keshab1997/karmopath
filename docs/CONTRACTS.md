@@ -42,3 +42,12 @@ Python validator uses exactly the same schema and fixtures. Cross-language contr
 
 ## Foundation implementation notes
 Schema parser is in job.dart/job_feed.dart; use it in Dart rather than duplicating validation. Sample-only fixture is test/fixtures/sample_feed.json, deliberately example.org and NOT publishable. Validator schema success cannot establish an official source: human source verification remains separate. Screen names and import paths are specified in B brief. A owns creation of its own transport/cache/store abstract files under lib/data; captain owns their eventual platform implementations under lib/app. No notification scheduling backend is wired yet.
+
+## Batch 2 — concrete platform adapters (supersedes earlier lib/app location)
+Captain approved worker A to implement concrete adapters under `lib/data/platform/**`; app composition/lifecycle stays captain-owned in lib/app. Dependencies pinned by captain: http ^1.6.0, shared_preferences ^2.5.6. No worker edits pubspec/lock.
+
+- `lib/data/platform/http_feed_transport.dart`: `HttpFeedTransport({required Uri feedUrl, required http.Client client, Duration timeout = const Duration(seconds: 20), int maxBytes = 2097152}) implements FeedTransport`. The caller owns and closes the injected client. Public HTTPS only, no embedded credentials or auth headers. No production URL hardcoded.
+- `lib/data/platform/preferences_feed_cache.dart`: `PreferencesFeedCache({required SharedPreferencesAsync preferences}) implements FeedCache`; string key literal `karmopath.feed.v1`.
+- `lib/data/platform/shared_preferences_store.dart`: `SharedPreferencesStore({required SharedPreferencesAsync preferences}) implements PreferencesStore`; use existing saved/reminder versioned keys supplied to readStrings/writeStrings, never clear unrelated settings.
+
+HTTP transport checks 200 status, enforces configured byte limit against both declared and streamed size, rejects malformed UTF-8 and exposes errors to repository (not UI). Total fetch timeout, no automatic unbounded retries; test resource cleanup and document browser differences. Validation remains JobFeed.fromJson in repository; transport must not trust JSON. Cache/storage errors propagate; preferences setters await successful persistence. Production feed URL and CORS are owner/captain deployment gates, not permission to publish a feed now.
