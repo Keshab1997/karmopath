@@ -52,6 +52,9 @@ Read [AGENTS.md](AGENTS.md) before contributing. Contracts and file ownership ar
 | [Roadmap](docs/ROADMAP.md) | Foundation → parallel work → integration → release |
 | [Workflow guide](docs/WORKFLOWS.md) | Manual Actions and prerequisites |
 
+### Current dispatch
+[Batch 2 remaining work and worker briefs](docs/BATCH_2.md). A/B Batch 1 are merged; C admin remains under review. Use current batch briefs, not the old Batch 1 starters.
+
 ### Parallel team
 **A:** data/cache/preferences · **B:** native screens · **C:** local admin/validator.
 [Brief A](docs/briefs/AGENT_A.md) · [Brief B](docs/briefs/AGENT_B.md) · [Brief C](docs/briefs/AGENT_C.md)
