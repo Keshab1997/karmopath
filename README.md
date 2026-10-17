@@ -15,7 +15,7 @@ Bengali-first job discovery & deadline tracking
 ## A clearer path to your next opportunity
 Karmopath is planned to turn recruitment notices into clear, searchable information: eligibility, dates, original sources and application steps—with saved opportunities and deadline reminders.
 
-> **Current status: foundation implemented; feature development next.** Flutter Android/web scaffold, shared contracts, bundled Bengali font, design tokens and a minimal foundation screen are present. The approved home screen and product features are not implemented yet. There is no production feed, live admin service, APK or Play Store release.
+> **Current status: data layer and feature screens implemented; app wiring pending.** Flutter Android/web scaffold, shared contracts, bundled Bengali font, design tokens, data/cache/preferences and five feature screens are present. The entrypoint still shows the minimal foundation preview; full navigation/platform integration and visual approval remain pending. There is no production feed, live admin service, APK or Play Store release.
 
 ## Approved visual direction
 <p align="center"><img src="docs/design/karmopath-home-v2.png" alt="Approved Karmopath design concept with illustrated coral banner, category shortcuts and job cards" width="330"></p>
