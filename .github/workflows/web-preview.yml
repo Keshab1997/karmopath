@@ -1,0 +1,16 @@
+name: Karmopath web preview (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: web-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    uses: Keshab1997/flutter-builder/.github/workflows/web-preview.yml@v1.15.0
+    with:
+      comment-on-pr: false
+      set-about-link: false
+    secrets: inherit

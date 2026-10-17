@@ -1,0 +1,18 @@
+name: Remove a web preview (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      branch-name:
+        description: Branch preview to remove (main is protected by runner)
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: web-preview
+  cancel-in-progress: false
+jobs:
+  cleanup:
+    uses: Keshab1997/flutter-builder/.github/workflows/preview-cleanup.yml@v1.15.0
+    with:
+      branch-name: ${{ inputs['branch-name'] }}

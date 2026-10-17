@@ -1,0 +1,11 @@
+# Acceptance / evidence
+- Home resembles approved v2, uses actual widgets and bundled decorative art; no crest, mockup screenshot background, real-looking fictional vacancies or unsupported verified badges.
+- Bengali text and 320px/large-font layout work; labels accessible; loading/empty/offline/error states tested.
+- Feed v1 parses strictly; invalid refresh retains last good cache; cache corruption is recoverable; first launch without network gives useful empty state. No silent validation failures.
+- Saved IDs persist through restart and refresh; missing/withdrawn job handled safely; reminder permission denied does not show successful scheduling. Captain validates actual platform scheduling separately.
+- IST deadline boundaries tested, date-only not shifted through timezone; expired status visible even when server status is stale.
+- Every published item has reviewed original official source and correct eligibility/dates; manual drafts never leak; no auto trust of AI output.
+- Admin import/edit/preview/export works; invalid records blocked; no XSS via imported text, unsafe URL schemes or accidental replacement; draft backup tested.
+- Validator tests: duplicates, wrong schema/enums, missing bilingual text, date ordering/leap days, bad URLs, future timestamps, unknown vacancies, malformed JSON, withdrawn/result status rules.
+- No credentials/server secrets, public writes or private-feed tokens in app; no unauthorized dependencies/shared-surface edits.
+- Documentation and CLI agree; evidence reports actual tests, not assumptions. Docs-only checks do not establish app correctness. Production policy/ads/permissions tests remain release gates.
