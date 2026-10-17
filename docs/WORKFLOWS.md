@@ -13,4 +13,4 @@ All events are workflow_dispatch only; no push, PR or delete event runs a job au
 
 No copied builder-maintenance workflows: installer-tests, smoke-test and bump-consumers belong to flutter-builder itself, not this consumer app. Call reusable workflows rather than copying their implementation, whose relative scripts belong upstream.
 
-No secrets configured, settings changed or new deployment performed by captain. Existing Pages hosting is enabled. Web preview now passes KARMOPATH_PREVIEW=true for safe demo UI; see WEB_PREVIEW.md. Inherit-secrets callers must never run untrusted branches with sensitive credentials. Public app source does not imply public admin drafts. No self-hosted runners here.
+No secrets configured, settings changed or new deployment performed by captain. Existing Pages hosting is enabled. Web builds now select safe demo UI by default; see WEB_PREVIEW.md. Inherit-secrets callers must never run untrusted branches with sensitive credentials. Public app source does not imply public admin drafts. No self-hosted runners here.

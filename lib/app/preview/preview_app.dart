@@ -16,7 +16,7 @@ import '../../features/calendar/calendar_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/job_detail/job_detail_screen.dart';
 
-/// Explicitly selected by KARMOPATH_PREVIEW=true. No production network,
+/// Selected by web platform or KARMOPATH_PREVIEW=true. No production network,
 /// persistent storage, platform permissions, ads or publisher credentials.
 class KarmopathPreviewApp extends StatefulWidget {
   const KarmopathPreviewApp({super.key});

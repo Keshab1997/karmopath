@@ -13,7 +13,7 @@ The existing URL returned HTTP 200, but currently serves the older foundation de
 3. After success, use the preview URL from that run's summary (main URL above).
 4. Refresh the browser; if an old cached version appears use a private window or clear the site's cache.
 
-Caller uses flutter-builder v1.15.0 and passes `KARMOPATH_PREVIEW=true`. It remains manual-only, GitHub-hosted, with no About-link changes. Captain has not dispatched it or run flutter build/gradlew locally.
+Caller uses flutter-builder v1.15.0 with only supported inputs. It remains manual-only, GitHub-hosted, with no About-link changes. Captain has not dispatched it or run flutter build/gradlew locally.
 
 ## What the design preview contains
 - Home, Saved, Calendar, Settings and sample job detail navigation using the actual Flutter feature widgets.
@@ -22,7 +22,12 @@ Caller uses flutter-builder v1.15.0 and passes `KARMOPATH_PREVIEW=true`. It rema
 - No production network feed, notifications, permission grants, ads, admin drafts, credentials or external application links. Link actions fail safely; reminder permission returns false.
 - Rolling dates only for demo layout. Demo reviewed timestamps are synthetic and must never be treated as verified official notices or copied into a production feed.
 
-Without the compile-time define, main still selects the foundation app. This is intentionally a safe design-preview composition, NOT the production integration. To preview locally: `flutter run -d chrome --dart-define=KARMOPATH_PREVIEW=true`.
+Web builds select the labeled demo by default (`kIsWeb`); Android/native builds still select the foundation app. `--dart-define=KARMOPATH_PREVIEW=false` explicitly selects the foundation on web. This is intentionally a safe design-preview composition, NOT the production integration. To preview locally: `flutter run -d chrome --dart-define=KARMOPATH_PREVIEW=true`.
 
 ## Evidence and remaining gates
 Two widget integration tests cover marked samples, session bookmarks, detail/reminder denial, calendar/settings navigation and 320px layout. Full analysis/tests are local checks only. Browser/WASM compilation, deployed visual fidelity, native Android behavior and actual reminder delivery are not established by them; inspect after owner dispatch. Production wiring remains a separate task.
+
+## Startup failure fix
+Run 39061690228 failed before any job started: the caller supplied `dart-defines`, which the actual `flutter-builder@v1.15.0` web-preview workflow does not declare. Removed that unsupported input. Web mode now selects the safe labeled preview via `kIsWeb`, leaving native default unchanged; no builder-repo or tag change required.
+
+Caller input names were checked against the downloaded v1.15.0 workflow; local analyze clean, 132 tests passed, structural preflight passed. This is not a successful deployment claim. **Start a NEW Run workflow on main** after this fix; do not rerun the old failed run, which uses the old caller commit.
