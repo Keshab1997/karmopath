@@ -1,5 +1,6 @@
 import '../../contracts/app_actions.dart';
 import '../../contracts/user_preferences.dart';
+import 'deadline_clock.dart';
 import 'formatting.dart';
 import 'strings.dart';
 
@@ -29,12 +30,19 @@ enum ReminderOutcome {
 /// Order is fixed by docs/CONTRACTS.md: ask [AppActions] for permission first,
 /// and only persist the preference when it is granted. The captain schedules
 /// and cancels the actual notification.
+///
+/// [deadlineAt] normally recomputes the deadline for a given instant. It is
+/// re-evaluated after the permission prompt returns: a dialog can stay open
+/// across the deadline, and an enable intent must not be written for a job
+/// that has closed in the meantime.
 Future<ReminderOutcome> setReminderIntent({
   required UserPreferences preferences,
   required AppActions actions,
   required String jobId,
   required bool enable,
   DeadlineInfo? deadline,
+  DeadlineInfo Function(DateTime now)? deadlineAt,
+  NowProvider? now,
 }) async {
   if (!enable) {
     try {
@@ -44,10 +52,12 @@ Future<ReminderOutcome> setReminderIntent({
       return ReminderOutcome.failed;
     }
   }
-  if (deadline == null || !deadline.hasDeadline) {
+  final clock = now ?? DeadlineClock.now;
+  final current = deadlineAt?.call(clock()) ?? deadline;
+  if (current == null || !current.hasDeadline) {
     return ReminderOutcome.noDeadline;
   }
-  if (deadline.isClosed || deadline.isWithdrawn) {
+  if (current.isClosed || current.isWithdrawn) {
     return ReminderOutcome.closed;
   }
   final bool granted;
@@ -57,6 +67,15 @@ Future<ReminderOutcome> setReminderIntent({
     return ReminderOutcome.failed;
   }
   if (!granted) return ReminderOutcome.permissionDenied;
+
+  // Permission may have outlived the deadline: recheck before persisting.
+  final afterPermission = deadlineAt?.call(clock());
+  if (afterPermission != null) {
+    if (!afterPermission.hasDeadline) return ReminderOutcome.noDeadline;
+    if (afterPermission.isClosed || afterPermission.isWithdrawn) {
+      return ReminderOutcome.closed;
+    }
+  }
   try {
     await preferences.setReminder(jobId, true);
     return ReminderOutcome.enabled;

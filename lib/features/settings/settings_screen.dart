@@ -263,15 +263,18 @@ class _SettingsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, size: 18, color: KarmopathTheme.teal),
               const SizedBox(width: 8),
-              Text(
-                title.inLang(lang),
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: KarmopathTheme.ink,
+              Expanded(
+                child: Text(
+                  title.inLang(lang),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w800,
+                    color: KarmopathTheme.ink,
+                  ),
                 ),
               ),
             ],

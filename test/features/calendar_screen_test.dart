@@ -140,6 +140,65 @@ void main() {
     expect(opened, soon.id);
   });
 
+  testWidgets('offline with a cached feed shows the stale banner', (
+    tester,
+  ) async {
+    final repo = FakeJobRepository(
+      JobFeedState(feed: makeFeed([soon]), isOffline: true),
+    );
+    await pumpScreen(
+      tester,
+      CalendarScreen(
+        repository: repo,
+        preferences: FakePreferences(),
+        onOpenJob: (_) {},
+      ),
+    );
+
+    expect(find.text('আপনি অফলাইনে'), findsOneWidget);
+    expect(find.textContaining('সর্বশেষ হালনাগাদ'), findsOneWidget);
+    // Cached deadlines stay visible next to the warning.
+    expect(find.text(soon.titleBn), findsOneWidget);
+  });
+
+  testWidgets('failed refresh with a cached feed shows the stale banner', (
+    tester,
+  ) async {
+    final repo = FakeJobRepository(
+      JobFeedState(feed: makeFeed([soon]), lastError: 'timeout'),
+    );
+    await pumpScreen(
+      tester,
+      CalendarScreen(
+        repository: repo,
+        preferences: FakePreferences(),
+        onOpenJob: (_) {},
+      ),
+    );
+
+    // Banner title and body intentionally repeat the stale wording.
+    expect(
+      find.text('ফিড হালনাগাদ হয়নি। নিচে টেনে রিফ্রেশ করুন।'),
+      findsNWidgets(2),
+    );
+    expect(find.text(soon.titleBn), findsOneWidget);
+  });
+
+  testWidgets('no offline banner while the feed is live', (tester) async {
+    final repo = FakeJobRepository(readyState([soon]));
+    await pumpScreen(
+      tester,
+      CalendarScreen(
+        repository: repo,
+        preferences: FakePreferences(),
+        onOpenJob: (_) {},
+      ),
+    );
+
+    expect(find.text('আপনি অফলাইনে'), findsNothing);
+    expect(find.textContaining('হালনাগাদ হয়নি'), findsNothing);
+  });
+
   testWidgets('loading and error states render', (tester) async {
     final repo = FakeJobRepository(const JobFeedState(isLoading: true));
     await pumpScreen(

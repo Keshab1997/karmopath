@@ -242,7 +242,9 @@ class UnavailableJobTile extends StatelessWidget {
 
   final AppLang lang;
   final String jobId;
-  final VoidCallback onRemove;
+
+  /// Null while a removal write is in flight (disabled, no false success).
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {

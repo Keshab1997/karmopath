@@ -37,11 +37,15 @@ class FakePreferences implements UserPreferences {
     Set<String>? saved,
     Set<String>? reminders,
     this.throwOnWrite = false,
+    this.writeDelay = Duration.zero,
   }) : savedJobIds = ValueNotifier(<String>{...?saved}),
        reminderJobIds = ValueNotifier(<String>{...?reminders});
 
   /// Simulates a failed local store write.
   final bool throwOnWrite;
+
+  /// Simulates a slow store so rapid-tap guards can be tested.
+  final Duration writeDelay;
 
   @override
   final ValueNotifier<Set<String>> savedJobIds;
@@ -54,6 +58,7 @@ class FakePreferences implements UserPreferences {
 
   @override
   Future<void> setSaved(String jobId, bool saved) async {
+    if (writeDelay > Duration.zero) await Future<void>.delayed(writeDelay);
     if (throwOnWrite) throw StateError('storage unavailable');
     savedCalls.add((jobId, saved));
     final next = <String>{...savedJobIds.value};
@@ -165,6 +170,7 @@ Future<void> pumpScreen(
   WidgetTester tester,
   Widget screen, {
   Size? surfaceSize,
+  double textScale = 1.0,
 }) async {
   if (surfaceSize != null) {
     tester.view.physicalSize = surfaceSize;
@@ -172,7 +178,15 @@ Future<void> pumpScreen(
     addTearDown(tester.view.reset);
   }
   await tester.pumpWidget(
-    MaterialApp(theme: KarmopathTheme.light(), home: screen),
+    MaterialApp(
+      theme: KarmopathTheme.light(),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
+      home: screen,
+    ),
   );
   await tester.pump();
 }

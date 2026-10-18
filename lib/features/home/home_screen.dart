@@ -5,11 +5,27 @@ import '../../contracts/job_repository.dart';
 import '../../contracts/user_preferences.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../common/app_language.dart';
+import '../common/deadline_clock.dart';
 import '../common/formatting.dart';
+import '../common/palette.dart';
 import '../common/strings.dart';
 import '../common/widgets/category_circle.dart';
 import '../common/widgets/job_card.dart';
 import '../common/widgets/state_views.dart';
+
+/// Unique district values in the current feed, sorted for stable chips.
+List<String> availableDistricts(List<Job> jobs) {
+  final values = <String>{for (final job in jobs) ...job.districts};
+  final list = values.toList()..sort();
+  return list;
+}
+
+/// Unique qualification values in the current feed, sorted for stable chips.
+List<String> availableQualifications(List<Job> jobs) {
+  final values = <String>{for (final job in jobs) ...job.qualifications};
+  final list = values.toList()..sort();
+  return list;
+}
 
 /// Home feed: header, search, illustrated hero, category strip, filters, cards.
 ///
@@ -35,19 +51,45 @@ class _HomeScreenState extends State<HomeScreen> {
   JobKind? _kind;
   JobCategory? _category;
   bool _closingSoonOnly = false;
+  final Set<String> _districts = <String>{};
+  final Set<String> _qualifications = <String>{};
+  late final DeadlineTicker _ticker;
 
   @override
   void initState() {
     super.initState();
+    _ticker = DeadlineTicker();
     _search.addListener(_onSearchChanged);
+    widget.repository.state.addListener(_onFeedChanged);
   }
 
   void _onSearchChanged() => setState(() {});
 
+  /// Selections come from the current feed, so a refresh can remove values.
+  /// Stale picks are dropped instead of silently filtering everything out.
+  void _onFeedChanged() {
+    if (!mounted) return;
+    if (_pruneSelections()) setState(() {});
+  }
+
+  bool _pruneSelections() {
+    final jobs = widget.repository.state.value.feed?.jobs ?? const <Job>[];
+    final districts = availableDistricts(jobs);
+    final qualifications = availableQualifications(jobs);
+    final beforeDistricts = _districts.length;
+    final beforeQualifications = _qualifications.length;
+    _districts.removeWhere((value) => !districts.contains(value));
+    _qualifications.removeWhere((value) => !qualifications.contains(value));
+    return beforeDistricts != _districts.length ||
+        beforeQualifications != _qualifications.length;
+  }
+
   @override
   void dispose() {
+    widget.repository.state.removeListener(_onFeedChanged);
     _search.removeListener(_onSearchChanged);
     _search.dispose();
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -55,6 +97,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _kind != null ||
       _category != null ||
       _closingSoonOnly ||
+      _districts.isNotEmpty ||
+      _qualifications.isNotEmpty ||
       _search.text.trim().isNotEmpty;
 
   void _clearFilters() {
@@ -62,8 +106,121 @@ class _HomeScreenState extends State<HomeScreen> {
       _kind = null;
       _category = null;
       _closingSoonOnly = false;
+      _districts.clear();
+      _qualifications.clear();
       _search.clear();
     });
+  }
+
+  Future<void> _openFacetSheet({
+    required String facetKey,
+    required AppLang lang,
+  }) async {
+    final jobs = widget.repository.state.value.feed?.jobs ?? const <Job>[];
+    final isDistrict = facetKey == 'district';
+    final options = isDistrict
+        ? availableDistricts(jobs)
+        : availableQualifications(jobs);
+    final selected = isDistrict ? _districts : _qualifications;
+    if (options.isEmpty) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: KarmopathTheme.background,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            void toggle(String value) {
+              setState(() {
+                if (!selected.remove(value)) selected.add(value);
+              });
+              setSheetState(() {});
+            }
+
+            return SafeArea(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.72,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  // Whole sheet scrolls: at 2x text on a 320px screen the
+                  // fixed rows alone can exceed the sheet height.
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          (isDistrict
+                                  ? K.districtFilter
+                                  : K.qualificationFilter)
+                              .inLang(lang),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: KarmopathTheme.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          K.facetSheetHint.inLang(lang),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            height: 1.4,
+                            color: KarmopathTheme.ink.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: selected.isEmpty
+                              ? null
+                              : () {
+                                  setState(selected.clear);
+                                  setSheetState(() {});
+                                },
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                          ),
+                          child: Text(
+                            (isDistrict ? K.allDistricts : K.allQualifications)
+                                .inLang(lang),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final option in options)
+                              HomeFilterChip(
+                                label: option,
+                                selected: selected.contains(option),
+                                onTap: () => toggle(option),
+                                accent: KarmopathTheme.teal,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            child: Text(K.done.inLang(lang)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   List<Job> _visibleJobs(JobFeedState state, DateTime now) {
@@ -73,6 +230,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_kind != null && job.kind != _kind) return false;
       if (_category != null && job.category != _category) return false;
       if (_closingSoonOnly && !deadlineInfo(job, now).closesSoon) return false;
+      if (_districts.isNotEmpty && !job.districts.any(_districts.contains)) {
+        return false;
+      }
+      if (_qualifications.isNotEmpty &&
+          !job.qualifications.any(_qualifications.contains)) {
+        return false;
+      }
       if (query.isNotEmpty) {
         final haystack = <String>[
           job.titleBn,
@@ -105,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final byId = <String, Job>{
               for (final job in feed?.jobs ?? const <Job>[]) job.id: job,
             };
-            final now = DateTime.now();
+            final now = _ticker.now;
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -153,36 +317,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 8),
                             for (final id in reminderIds)
-                              ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(
-                                  Icons.alarm_on_outlined,
-                                  color: KarmopathTheme.teal,
-                                ),
-                                title: Text(
-                                  byId[id] == null
-                                      ? K.unavailableJob.inLang(lang)
-                                      : (lang == AppLang.bn
-                                            ? byId[id]!.titleBn
-                                            : byId[id]!.titleEn),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              _ReminderRow(
+                                title: byId[id] == null
+                                    ? K.unavailableJob.inLang(lang)
+                                    : (lang == AppLang.bn
+                                          ? byId[id]!.titleBn
+                                          : byId[id]!.titleEn),
                                 subtitle: byId[id] == null
                                     ? null
-                                    : Text(
-                                        deadlineLabel(
-                                              deadlineInfo(byId[id]!, now),
-                                              byId[id]!.kind,
-                                              lang,
-                                              endDateOnly:
-                                                  byId[id]!.applicationEndAt ==
-                                                      null
-                                                  ? byId[id]!.applicationEndDate
-                                                  : null,
-                                            ) ??
-                                            kindLabel(byId[id]!.kind, lang),
-                                      ),
+                                    : (deadlineLabel(
+                                            deadlineInfo(byId[id]!, now),
+                                            byId[id]!.kind,
+                                            lang,
+                                            endDateOnly:
+                                                byId[id]!.applicationEndAt ==
+                                                    null
+                                                ? byId[id]!.applicationEndDate
+                                                : null,
+                                          ) ??
+                                          kindLabel(byId[id]!.kind, lang)),
                                 onTap: () {
                                   Navigator.of(sheetContext).pop();
                                   widget.onOpenJob(id);
@@ -217,112 +370,143 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           backgroundColor: KarmopathTheme.background,
           body: SafeArea(
-            child: ValueListenableBuilder<JobFeedState>(
-              valueListenable: widget.repository.state,
-              builder: (context, state, _) {
-                final now = DateTime.now();
-                final visible = _visibleJobs(state, now);
-                return RefreshIndicator(
-                  onRefresh: widget.repository.refresh,
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 28),
-                    children: [
-                      _Header(
-                        lang: lang,
-                        onNotifications: () => _openNotificationSheet(lang),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                        child: _SearchField(
-                          controller: _search,
+            child: ListenableBuilder(
+              listenable: _ticker,
+              builder: (context, _) => ValueListenableBuilder<JobFeedState>(
+                valueListenable: widget.repository.state,
+                builder: (context, state, _) {
+                  // Deadline UI recomputes on ticker ticks and app resume,
+                  // not only when a new feed arrives.
+                  final now = _ticker.now;
+                  _ticker.watch(
+                    deadlineWatchInstants(
+                      state.feed?.jobs ?? const <Job>[],
+                      now,
+                    ),
+                  );
+                  final visible = _visibleJobs(state, now);
+                  return RefreshIndicator(
+                    onRefresh: widget.repository.refresh,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 28),
+                      children: [
+                        _Header(
                           lang: lang,
-                          onClear: () => _search.clear(),
+                          onNotifications: () => _openNotificationSheet(lang),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _HeroBanner(lang: lang),
-                      ),
-                      const SizedBox(height: 18),
-                      _CategoryStrip(
-                        lang: lang,
-                        selected: _category,
-                        onSelect: (category) {
-                          setState(() {
-                            _category = _category == category ? null : category;
-                          });
-                        },
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        child: _FilterRow(
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                          child: _SearchField(
+                            controller: _search,
+                            lang: lang,
+                            onClear: () => _search.clear(),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: _HeroBanner(lang: lang),
+                        ),
+                        const SizedBox(height: 18),
+                        _CategoryStrip(
                           lang: lang,
-                          kind: _kind,
-                          closingSoonOnly: _closingSoonOnly,
-                          hasFilters: _hasFilters,
-                          onKind: (kind) {
-                            setState(() => _kind = _kind == kind ? null : kind);
+                          selected: _category,
+                          onSelect: (category) {
+                            setState(() {
+                              _category = _category == category
+                                  ? null
+                                  : category;
+                            });
                           },
-                          onClosingSoon: () {
-                            setState(
-                              () => _closingSoonOnly = !_closingSoonOnly,
-                            );
-                          },
-                          onClear: _clearFilters,
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                K.latestOpportunities.inLang(lang),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: KarmopathTheme.ink,
-                                ),
-                              ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                          child: _FilterRow(
+                            lang: lang,
+                            kind: _kind,
+                            closingSoonOnly: _closingSoonOnly,
+                            hasFilters: _hasFilters,
+                            districtCount: _districts.length,
+                            qualificationCount: _qualifications.length,
+                            districtsAvailable: availableDistricts(
+                              state.feed?.jobs ?? const <Job>[],
+                            ).isNotEmpty,
+                            qualificationsAvailable: availableQualifications(
+                              state.feed?.jobs ?? const <Job>[],
+                            ).isNotEmpty,
+                            onKind: (kind) {
+                              setState(
+                                () => _kind = _kind == kind ? null : kind,
+                              );
+                            },
+                            onClosingSoon: () {
+                              setState(
+                                () => _closingSoonOnly = !_closingSoonOnly,
+                              );
+                            },
+                            onDistrict: () => _openFacetSheet(
+                              facetKey: 'district',
+                              lang: lang,
                             ),
-                            if (state.feed != null)
-                              Text(
-                                K.updatesCount(visible.length, lang),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: KarmopathTheme.teal.withValues(
-                                    alpha: 0.9,
+                            onQualification: () => _openFacetSheet(
+                              facetKey: 'qualification',
+                              lang: lang,
+                            ),
+                            onClear: _clearFilters,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  K.latestOpportunities.inLang(lang),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: KarmopathTheme.ink,
                                   ),
                                 ),
                               ),
-                          ],
+                              if (state.feed != null)
+                                Text(
+                                  K.updatesCount(visible.length, lang),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: KarmopathTheme.teal.withValues(
+                                      alpha: 0.9,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (state.isOffline && state.feed != null)
-                              OfflineBanner(
-                                lang: lang,
-                                lastFeedUpdate: state.feed?.updatedAt,
-                              )
-                            else if (state.lastError != null &&
-                                state.feed != null)
-                              OfflineBanner(lang: lang, staleOnly: true),
-                            _body(state, now, lang, visible),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (state.isOffline && state.feed != null)
+                                OfflineBanner(
+                                  lang: lang,
+                                  lastFeedUpdate: state.feed?.updatedAt,
+                                )
+                              else if (state.lastError != null &&
+                                  state.feed != null)
+                                OfflineBanner(lang: lang, staleOnly: true),
+                              _body(state, now, lang, visible),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         );
@@ -536,11 +720,11 @@ class _HeroBanner extends StatelessWidget {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                       colors: [
-                        KarmopathTheme.coral,
-                        KarmopathTheme.coral.withValues(alpha: 0.94),
+                        KPalette.coralStrong,
+                        KPalette.coralStrong.withValues(alpha: 0.94),
                         KarmopathTheme.coral.withValues(alpha: 0.0),
                       ],
-                      stops: const [0.0, 0.52, 0.92],
+                      stops: const [0.0, 0.52, 0.78],
                     ),
                   ),
                 ),
@@ -674,14 +858,80 @@ class _CategoryButton extends StatelessWidget {
   }
 }
 
+/// Reminder line inside the notification sheet. Grows with large text instead
+/// of overflowing like a fixed-height ListTile.
+class _ReminderRow extends StatelessWidget {
+  const _ReminderRow({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(Icons.alarm_on_outlined, color: KarmopathTheme.teal),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: KarmopathTheme.ink,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: KarmopathTheme.ink.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FilterRow extends StatelessWidget {
   const _FilterRow({
     required this.lang,
     required this.kind,
     required this.closingSoonOnly,
     required this.hasFilters,
+    required this.districtCount,
+    required this.qualificationCount,
+    required this.districtsAvailable,
+    required this.qualificationsAvailable,
     required this.onKind,
     required this.onClosingSoon,
+    required this.onDistrict,
+    required this.onQualification,
     required this.onClear,
   });
 
@@ -689,8 +939,14 @@ class _FilterRow extends StatelessWidget {
   final JobKind? kind;
   final bool closingSoonOnly;
   final bool hasFilters;
+  final int districtCount;
+  final int qualificationCount;
+  final bool districtsAvailable;
+  final bool qualificationsAvailable;
   final ValueChanged<JobKind?> onKind;
   final VoidCallback onClosingSoon;
+  final VoidCallback onDistrict;
+  final VoidCallback onQualification;
   final VoidCallback onClear;
 
   @override
@@ -707,18 +963,42 @@ class _FilterRow extends StatelessWidget {
           }.entries)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: _Chip(
+              child: HomeFilterChip(
                 label: entry.value.inLang(lang),
                 selected: kind == entry.key,
                 onTap: () => onKind(entry.key),
               ),
             ),
-          _Chip(
+          HomeFilterChip(
             label: K.closingSoon.inLang(lang),
             selected: closingSoonOnly,
             onTap: onClosingSoon,
-            accent: KarmopathTheme.coral,
+            accent: KPalette.coralStrong,
           ),
+          if (districtsAvailable)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: HomeFilterChip(
+                label: K.facetCount(districtCount, lang, K.districtFilter),
+                selected: districtCount > 0,
+                onTap: onDistrict,
+                icon: Icons.place_outlined,
+              ),
+            ),
+          if (qualificationsAvailable)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: HomeFilterChip(
+                label: K.facetCount(
+                  qualificationCount,
+                  lang,
+                  K.qualificationFilter,
+                ),
+                selected: qualificationCount > 0,
+                onTap: onQualification,
+                icon: Icons.school_outlined,
+              ),
+            ),
           if (hasFilters) ...[
             const SizedBox(width: 4),
             TextButton(
@@ -732,24 +1012,31 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({
+/// Shared pill used by the filter row and the facet sheets: at least 48dp
+/// tall so it stays a valid touch target at any text scale.
+class HomeFilterChip extends StatelessWidget {
+  const HomeFilterChip({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
     this.accent = KarmopathTheme.teal,
+    this.icon,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
   final Color accent;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    final foreground = selected ? Colors.white : KarmopathTheme.ink;
     return Semantics(
       button: true,
       selected: selected,
+      label: label,
       child: Material(
         color: selected ? accent : Colors.white,
         borderRadius: BorderRadius.circular(999),
@@ -757,8 +1044,8 @@ class _Chip extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(999),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 38),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
@@ -767,13 +1054,26 @@ class _Chip extends StatelessWidget {
                     : KarmopathTheme.ink.withValues(alpha: 0.12),
               ),
             ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : KarmopathTheme.ink,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: foreground),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: foreground,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

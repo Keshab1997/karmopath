@@ -17,7 +17,7 @@ class KText {
 /// Nothing here is production data: job content always comes from the feed.
 abstract final class K {
   // Product identity (docs/PRODUCT.md).
-  static const appName = KText('কার্মপথ', 'Karmopath');
+  static const appName = KText('কর্মপথ', 'Karmopath');
   static const appNameLatin = 'Karmopath';
   static const tagline = KText(
     'কোনো ডেডলাইন আর মিস নয়।',
@@ -106,6 +106,28 @@ abstract final class K {
       : '$n reminder${n == 1 ? '' : 's'}';
 
   // Card / list semantics.
+  // Filters (batch 2).
+  static const districtFilter = KText('জেলা', 'District');
+  static const qualificationFilter = KText('যোগ্যতা', 'Qualification');
+  static const filtersTitle = KText('ফিল্টার', 'Filters');
+  static const allDistricts = KText('সব জেলা', 'All districts');
+  static const allQualifications = KText('সব যোগ্যতা', 'All qualifications');
+  static const done = KText('সম্পন্ন', 'Done');
+  static const noDistricts = KText(
+    'এই ফিডে কোনো জেলার তথ্য নেই',
+    'No districts in the current feed',
+  );
+  static const noQualifications = KText(
+    'এই ফিডে কোনো যোগ্যতার তথ্য নেই',
+    'No qualifications in the current feed',
+  );
+  static const facetSheetHint = KText(
+    'একাধিক নির্বাচন করা যায়; অন্য ফিল্টারগুলোর সঙ্গে মিলিয়ে ফলাফল দেখানো হয়।',
+    'You can pick more than one; results combine with the other filters.',
+  );
+  static String facetCount(int n, AppLang lang, KText base) =>
+      n == 0 ? base.inLang(lang) : '${base.inLang(lang)} · ${_num(n, lang)}';
+
   static const save = KText('সংরক্ষণ করুন', 'Save');
   static const unsave = KText('সংরক্ষণ বাতিল', 'Remove from saved');
   static const openJob = KText('বিস্তারিত দেখুন', 'View details');
@@ -118,6 +140,17 @@ abstract final class K {
     'It is no longer in the current feed. You can remove it from your saved list.',
   );
   static const remove = KText('সরান', 'Remove');
+
+  // Saved-list write failures. Deliberately worded differently from reminder
+  // errors: the stored state did not change.
+  static const saveFailed = KText(
+    'সংরক্ষণ করা যায়নি। আগের অবস্থা অপরিবর্তিত আছে।',
+    "Couldn't save this job. Your previous state is unchanged.",
+  );
+  static const removeFailed = KText(
+    'সংরক্ষিত তালিকা থেকে সরানো যায়নি। আগের অবস্থা অপরিবর্তিত আছে।',
+    "Couldn't remove this job from your saved list. Your previous state is unchanged.",
+  );
 
   // Loading / empty / error / offline.
   static const loading = KText('লোড হচ্ছে…', 'Loading…');
@@ -250,7 +283,7 @@ abstract final class K {
       'with, endorsed by, or representing any government entity. Verify '
       'eligibility and dates in the original official notice before applying.';
   static const disclaimerBn =
-      'কার্মপথ একটি স্বাধীন তথ্যপ্ল্যাটফর্ম। এটি কোনো সরকারি সংস্থার সঙ্গে '
+      'কর্মপথ একটি স্বাধীন তথ্যপ্ল্যাটফর্ম। এটি কোনো সরকারি সংস্থার সঙ্গে '
       'সংযুক্ত, অনুমোদিত বা প্রতিনিধিত্বকারী নয়। আবেদনের আগে মূল সরকারি '
       'বিজ্ঞপ্তিতে যোগ্যতা ও তারিখ যাচাই করুন।';
 

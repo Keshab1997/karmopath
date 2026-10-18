@@ -5,6 +5,7 @@ import '../../../contracts/user_preferences.dart';
 import '../../../design_system/karmopath_theme.dart';
 import '../app_language.dart';
 import '../formatting.dart';
+import '../palette.dart';
 import '../strings.dart';
 import 'category_circle.dart';
 
@@ -179,7 +180,8 @@ class _StatusPill extends StatelessWidget {
       background = KarmopathTheme.ink.withValues(alpha: 0.08);
       foreground = KarmopathTheme.ink.withValues(alpha: 0.65);
     } else if (urgent) {
-      background = KarmopathTheme.coral;
+      // Small text on coral needs the darkened token (AA), not brand coral.
+      background = KPalette.coralStrong;
       foreground = Colors.white;
     } else {
       background = KarmopathTheme.teal.withValues(alpha: 0.10);
@@ -231,7 +233,7 @@ class _MetaLine extends StatelessWidget {
   }
 }
 
-class _BookmarkButton extends StatelessWidget {
+class _BookmarkButton extends StatefulWidget {
   const _BookmarkButton({
     required this.job,
     required this.preferences,
@@ -242,23 +244,49 @@ class _BookmarkButton extends StatelessWidget {
   final UserPreferences preferences;
   final AppLang lang;
 
+  @override
+  State<_BookmarkButton> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends State<_BookmarkButton> {
+  bool _busy = false;
+
   Future<void> _toggle(bool saved) async {
+    // Rapid taps while a write is in flight are ignored, so the second tap can
+    // never report a success the storage did not confirm.
+    if (_busy) return;
+    setState(() => _busy = true);
     try {
-      await preferences.setSaved(job.id, !saved);
+      await widget.preferences.setSaved(widget.job.id, !saved);
     } on Object {
-      // Preferences storage failed: keep the previously rendered state.
+      if (!mounted) return;
+      // Storage rejected the change: the stored state is unchanged, and the
+      // user is told so in their language (never reminder copy).
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              (saved ? K.removeFailed : K.saveFailed).inLang(widget.lang),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Set<String>>(
-      valueListenable: preferences.savedJobIds,
+      valueListenable: widget.preferences.savedJobIds,
       builder: (context, savedIds, _) {
-        final saved = savedIds.contains(job.id);
+        final saved = savedIds.contains(widget.job.id);
         return IconButton(
-          onPressed: () => _toggle(saved),
-          tooltip: saved ? K.unsave.inLang(lang) : K.save.inLang(lang),
+          onPressed: _busy ? null : () => _toggle(saved),
+          tooltip: saved
+              ? K.unsave.inLang(widget.lang)
+              : K.save.inLang(widget.lang),
           icon: Icon(
             saved ? Icons.bookmark : Icons.bookmark_border,
             color: saved

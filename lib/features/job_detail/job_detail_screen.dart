@@ -5,7 +5,9 @@ import '../../contracts/job.dart';
 import '../../contracts/user_preferences.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../common/app_language.dart';
+import '../common/deadline_clock.dart';
 import '../common/formatting.dart';
+import '../common/palette.dart';
 import '../common/reminder_controller.dart';
 import '../common/strings.dart';
 import '../common/widgets/category_circle.dart';
@@ -32,6 +34,20 @@ class JobDetailScreen extends StatefulWidget {
 
 class _JobDetailScreenState extends State<JobDetailScreen> {
   bool _reminderBusy = false;
+  bool _saveBusy = false;
+  late final DeadlineTicker _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = DeadlineTicker();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 
   Job get job => widget.job;
 
@@ -56,10 +72,17 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   }
 
   Future<void> _toggleSaved(bool saved, AppLang lang) async {
+    // One write at a time: a rapid second tap cannot show a success the
+    // storage never confirmed.
+    if (_saveBusy) return;
+    setState(() => _saveBusy = true);
     try {
       await widget.preferences.setSaved(job.id, !saved);
     } on Object {
-      _snack(K.reminderFailedMsg, lang);
+      // Saving error, not a reminder error; stored state is unchanged.
+      if (mounted) _snack(saved ? K.removeFailed : K.saveFailed, lang);
+    } finally {
+      if (mounted) setState(() => _saveBusy = false);
     }
   }
 
@@ -70,7 +93,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       actions: widget.actions,
       jobId: job.id,
       enable: !enabled,
-      deadline: deadlineInfo(job, DateTime.now()),
+      deadline: deadlineInfo(job, DeadlineClock.now()),
+      // Re-checked after the permission dialog returns: it may outlive the
+      // deadline, and no enable intent may be written for a closed job.
+      deadlineAt: (now) => deadlineInfo(job, now),
+      now: DeadlineClock.now,
     );
     if (!mounted) return;
     setState(() => _reminderBusy = false);
@@ -81,168 +108,96 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<AppLang>(
       valueListenable: appLanguage,
-      builder: (context, lang, _) {
-        final now = DateTime.now();
-        final info = deadlineInfo(job, now);
-        final title = lang == AppLang.bn ? job.titleBn : job.titleEn;
-        final summary = lang == AppLang.bn ? job.summaryBn : job.summaryEn;
-        final howToApply = lang == AppLang.bn
-            ? job.howToApplyBn
-            : job.howToApplyEn;
-        final ageNote = lang == AppLang.bn ? job.ageNoteBn : job.ageNoteEn;
-        final closedForReminder = info.isClosed || info.isWithdrawn;
-        final hasDeadline = info.hasDeadline;
+      builder: (context, lang, _) => ListenableBuilder(
+        listenable: _ticker,
+        builder: (context, _) {
+          final now = _ticker.now;
+          _ticker.watch(deadlineWatchInstants([job], now));
+          final info = deadlineInfo(job, now);
+          final title = lang == AppLang.bn ? job.titleBn : job.titleEn;
+          final summary = lang == AppLang.bn ? job.summaryBn : job.summaryEn;
+          final howToApply = lang == AppLang.bn
+              ? job.howToApplyBn
+              : job.howToApplyEn;
+          final ageNote = lang == AppLang.bn ? job.ageNoteBn : job.ageNoteEn;
+          final closedForReminder = info.isClosed || info.isWithdrawn;
+          final hasDeadline = info.hasDeadline;
 
-        return Scaffold(
-          backgroundColor: KarmopathTheme.background,
-          appBar: AppBar(
+          return Scaffold(
             backgroundColor: KarmopathTheme.background,
-            surfaceTintColor: Colors.transparent,
-            title: Text(
-              K.jobDetails.inLang(lang),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: KarmopathTheme.ink,
+            appBar: AppBar(
+              backgroundColor: KarmopathTheme.background,
+              surfaceTintColor: Colors.transparent,
+              title: Text(
+                K.jobDetails.inLang(lang),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: KarmopathTheme.ink,
+                ),
               ),
+              actions: [
+                ValueListenableBuilder<Set<String>>(
+                  valueListenable: widget.preferences.savedJobIds,
+                  builder: (context, savedIds, _) {
+                    final saved = savedIds.contains(job.id);
+                    return IconButton(
+                      onPressed: _saveBusy
+                          ? null
+                          : () => _toggleSaved(saved, lang),
+                      tooltip: saved
+                          ? K.unsave.inLang(lang)
+                          : K.save.inLang(lang),
+                      icon: Icon(
+                        saved ? Icons.bookmark : Icons.bookmark_border,
+                        color: saved ? KarmopathTheme.teal : KarmopathTheme.ink,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            actions: [
-              ValueListenableBuilder<Set<String>>(
-                valueListenable: widget.preferences.savedJobIds,
-                builder: (context, savedIds, _) {
-                  final saved = savedIds.contains(job.id);
-                  return IconButton(
-                    onPressed: () => _toggleSaved(saved, lang),
-                    tooltip: saved
-                        ? K.unsave.inLang(lang)
-                        : K.save.inLang(lang),
-                    icon: Icon(
-                      saved ? Icons.bookmark : Icons.bookmark_border,
-                      color: saved ? KarmopathTheme.teal : KarmopathTheme.ink,
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
-            children: [
-              if (info.isWithdrawn)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: StatusBanner(
-                    lang: lang,
-                    text: K.withdrawnBanner,
-                    color: const Color(0xFFB42318),
-                    icon: Icons.block,
-                  ),
-                )
-              else if (info.isClosed)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: StatusBanner(
-                    lang: lang,
-                    text: K.closedBanner,
-                    color: const Color(0xFF8A5A00),
-                    icon: Icons.event_busy,
-                  ),
-                ),
-              _Headline(job: job, lang: lang, info: info, title: title),
-              const SizedBox(height: 16),
-              _ActionPanel(
-                job: job,
-                lang: lang,
-                preferences: widget.preferences,
-                busy: _reminderBusy,
-                closedForReminder: closedForReminder,
-                hasDeadline: hasDeadline,
-                onReminder: _toggleReminder,
-              ),
-              const SizedBox(height: 16),
-              _Section(
-                title: K.overview,
-                lang: lang,
-                icon: Icons.notes,
-                child: Text(
-                  summary,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.55,
-                    color: KarmopathTheme.ink,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _Section(
-                title: K.eligibility,
-                lang: lang,
-                icon: Icons.verified_user_outlined,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _LabelledList(
-                      label: K.qualification,
+            body: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+              children: [
+                if (info.isWithdrawn)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: StatusBanner(
                       lang: lang,
-                      values: job.qualifications,
+                      text: K.withdrawnBanner,
+                      color: const Color(0xFFB42318),
+                      icon: Icons.block,
                     ),
-                    const SizedBox(height: 10),
-                    _FactRow(
-                      icon: Icons.place_outlined,
-                      label: K.district,
-                      value: job.districts.join(', '),
-                    ),
-                    if (ageNote != null && ageNote.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      _FactRow(
-                        icon: Icons.cake_outlined,
-                        label: K.ageNote,
-                        value: ageNote,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _Section(
-                title: K.importantDates,
-                lang: lang,
-                icon: Icons.event_outlined,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _FactRow(
-                      icon: Icons.play_circle_outline,
-                      label: K.applicationStart,
-                      value: job.applicationStartDate == null
-                          ? K.notSpecified.inLang(lang)
-                          : formatDateOnly(job.applicationStartDate!, lang),
-                    ),
-                    const SizedBox(height: 8),
-                    _FactRow(
+                  )
+                else if (info.isClosed)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: StatusBanner(
+                      lang: lang,
+                      text: K.closedBanner,
+                      color: const Color(0xFF8A5A00),
                       icon: Icons.event_busy,
-                      label: K.applicationEnd,
-                      value: _deadlineText(job, info, lang),
                     ),
-                    if (job.examDate != null) ...[
-                      const SizedBox(height: 8),
-                      _FactRow(
-                        icon: Icons.edit_calendar_outlined,
-                        label: K.examDate,
-                        value: formatDateOnly(job.examDate!, lang),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (howToApply.trim().isNotEmpty) ...[
-                const SizedBox(height: 12),
-                _Section(
-                  title: K.application,
+                  ),
+                _Headline(job: job, lang: lang, info: info, title: title),
+                const SizedBox(height: 16),
+                _ActionPanel(
+                  job: job,
                   lang: lang,
-                  icon: Icons.task_alt,
+                  preferences: widget.preferences,
+                  busy: _reminderBusy,
+                  closedForReminder: closedForReminder,
+                  hasDeadline: hasDeadline,
+                  onReminder: _toggleReminder,
+                ),
+                const SizedBox(height: 16),
+                _Section(
+                  title: K.overview,
+                  lang: lang,
+                  icon: Icons.notes,
                   child: Text(
-                    howToApply,
+                    summary,
                     style: const TextStyle(
                       fontSize: 14,
                       height: 1.55,
@@ -250,89 +205,167 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                _Section(
+                  title: K.eligibility,
+                  lang: lang,
+                  icon: Icons.verified_user_outlined,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _LabelledList(
+                        label: K.qualification,
+                        lang: lang,
+                        values: job.qualifications,
+                      ),
+                      const SizedBox(height: 10),
+                      _FactRow(
+                        icon: Icons.place_outlined,
+                        label: K.district,
+                        value: job.districts.join(', '),
+                      ),
+                      if (ageNote != null && ageNote.trim().isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        _FactRow(
+                          icon: Icons.cake_outlined,
+                          label: K.ageNote,
+                          value: ageNote,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _Section(
+                  title: K.importantDates,
+                  lang: lang,
+                  icon: Icons.event_outlined,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _FactRow(
+                        icon: Icons.play_circle_outline,
+                        label: K.applicationStart,
+                        value: job.applicationStartDate == null
+                            ? K.notSpecified.inLang(lang)
+                            : formatDateOnly(job.applicationStartDate!, lang),
+                      ),
+                      const SizedBox(height: 8),
+                      _FactRow(
+                        icon: Icons.event_busy,
+                        label: K.applicationEnd,
+                        value: _deadlineText(job, info, lang),
+                      ),
+                      if (job.examDate != null) ...[
+                        const SizedBox(height: 8),
+                        _FactRow(
+                          icon: Icons.edit_calendar_outlined,
+                          label: K.examDate,
+                          value: formatDateOnly(job.examDate!, lang),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (howToApply.trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _Section(
+                    title: K.application,
+                    lang: lang,
+                    icon: Icons.task_alt,
+                    child: Text(
+                      howToApply,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.55,
+                        color: KarmopathTheme.ink,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                _OfficialLinks(
+                  job: job,
+                  lang: lang,
+                  onOpen: (url) => _open(url, lang),
+                ),
+                const SizedBox(height: 12),
+                _Section(
+                  title: K.lastVerified,
+                  lang: lang,
+                  icon: Icons.verified_outlined,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        formatInstant(job.reviewedAt, lang),
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: KarmopathTheme.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        K.sourceUrlLabel.inLang(lang),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: KarmopathTheme.ink.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      Text(
+                        Uri.tryParse(job.sourceUrl)?.host ?? job.sourceUrl,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: KarmopathTheme.teal.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _Section(
+                  title: K.correction,
+                  lang: lang,
+                  icon: Icons.report_outlined,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: null,
+                        icon: const Icon(Icons.lock_outline, size: 18),
+                        label: Text(
+                          '${K.correction.inLang(lang)} · ${K.notAvailable.inLang(lang)}',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        K.correctionUnavailable.inLang(lang),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: KarmopathTheme.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        K.correctionUnavailableHint.inLang(lang),
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: KarmopathTheme.ink.withValues(alpha: 0.65),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _Disclaimer(lang: lang),
               ],
-              const SizedBox(height: 12),
-              _OfficialLinks(
-                job: job,
-                lang: lang,
-                onOpen: (url) => _open(url, lang),
-              ),
-              const SizedBox(height: 12),
-              _Section(
-                title: K.lastVerified,
-                lang: lang,
-                icon: Icons.verified_outlined,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      formatInstant(job.reviewedAt, lang),
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: KarmopathTheme.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      K.sourceUrlLabel.inLang(lang),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: KarmopathTheme.ink.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    Text(
-                      Uri.tryParse(job.sourceUrl)?.host ?? job.sourceUrl,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: KarmopathTheme.teal.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _Section(
-                title: K.correction,
-                lang: lang,
-                icon: Icons.report_outlined,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.lock_outline, size: 18),
-                      label: Text(
-                        '${K.correction.inLang(lang)} · ${K.notAvailable.inLang(lang)}',
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      K.correctionUnavailable.inLang(lang),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: KarmopathTheme.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      K.correctionUnavailableHint.inLang(lang),
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.4,
-                        color: KarmopathTheme.ink.withValues(alpha: 0.65),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              _Disclaimer(lang: lang),
-            ],
-          ),
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -399,7 +432,7 @@ class _Headline extends StatelessWidget {
                         _Pill(
                           text: status,
                           background: info.closesSoon
-                              ? KarmopathTheme.coral
+                              ? KPalette.coralStrong
                               : KarmopathTheme.ink.withValues(alpha: 0.08),
                           foreground: info.closesSoon
                               ? Colors.white
@@ -763,7 +796,7 @@ class _OfficialLinks extends StatelessWidget {
           FilledButton.icon(
             onPressed: () => onOpen(job.noticeUrl),
             style: FilledButton.styleFrom(
-              backgroundColor: KarmopathTheme.coral,
+              backgroundColor: KPalette.coralStrong,
               minimumSize: const Size(48, 48),
             ),
             icon: const Icon(Icons.description_outlined, size: 20),
@@ -811,6 +844,7 @@ class _Disclaimer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 Icons.info_outline,
@@ -818,12 +852,14 @@ class _Disclaimer extends StatelessWidget {
                 color: KarmopathTheme.ink.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 6),
-              Text(
-                K.about.inLang(lang),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: KarmopathTheme.ink.withValues(alpha: 0.7),
+              Expanded(
+                child: Text(
+                  K.about.inLang(lang),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: KarmopathTheme.ink.withValues(alpha: 0.7),
+                  ),
                 ),
               ),
             ],

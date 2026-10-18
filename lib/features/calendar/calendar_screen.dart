@@ -5,7 +5,9 @@ import '../../contracts/job_repository.dart';
 import '../../contracts/user_preferences.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../common/app_language.dart';
+import '../common/deadline_clock.dart';
 import '../common/formatting.dart';
+import '../common/palette.dart';
 import '../common/strings.dart';
 import '../common/widgets/state_views.dart';
 
@@ -34,6 +36,19 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   bool _showAll = false;
+  late final DeadlineTicker _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = DeadlineTicker();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,54 +69,74 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
           ),
-          body: ValueListenableBuilder<JobFeedState>(
-            valueListenable: widget.repository.state,
-            builder: (context, state, _) {
-              return ValueListenableBuilder<Set<String>>(
-                valueListenable: widget.preferences.reminderJobIds,
-                builder: (context, reminderIds, _) {
-                  final now = DateTime.now();
-                  return RefreshIndicator(
-                    onRefresh: widget.repository.refresh,
-                    child: ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-                      children: [
-                        _ScopeFilter(
-                          lang: lang,
-                          showAll: _showAll,
-                          onChanged: (value) =>
-                              setState(() => _showAll = value),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          K.calendarHint.inLang(lang),
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.4,
-                            color: KarmopathTheme.ink.withValues(alpha: 0.62),
-                          ),
-                        ),
-                        if (state.feed == null && state.isLoading)
-                          LoadingView(lang: lang)
-                        else if (state.feed == null && state.lastError != null)
-                          MessageView(
+          body: ListenableBuilder(
+            listenable: _ticker,
+            builder: (context, _) => ValueListenableBuilder<JobFeedState>(
+              valueListenable: widget.repository.state,
+              builder: (context, state, _) {
+                return ValueListenableBuilder<Set<String>>(
+                  valueListenable: widget.preferences.reminderJobIds,
+                  builder: (context, reminderIds, _) {
+                    // Expired deadlines move from Upcoming to All without a
+                    // feed refresh, driven by the ticker or app resume.
+                    final now = _ticker.now;
+                    _ticker.watch(
+                      deadlineWatchInstants(
+                        state.feed?.jobs ?? const <Job>[],
+                        now,
+                      ),
+                    );
+                    return RefreshIndicator(
+                      onRefresh: widget.repository.refresh,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                        children: [
+                          _ScopeFilter(
                             lang: lang,
-                            icon: Icons.cloud_off_outlined,
-                            title: K.errorTitle,
-                            body: K.errorBody,
-                            actionLabel: K.retry,
-                            onAction: widget.repository.refresh,
-                            tone: KarmopathTheme.coral,
-                          )
-                        else
-                          ..._entries(state, now, lang, reminderIds),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
+                            showAll: _showAll,
+                            onChanged: (value) =>
+                                setState(() => _showAll = value),
+                          ),
+                          const SizedBox(height: 8),
+                          if (state.isOffline && state.feed != null)
+                            OfflineBanner(
+                              lang: lang,
+                              lastFeedUpdate: state.feed?.updatedAt,
+                            )
+                          else if (state.lastError != null &&
+                              state.feed != null)
+                            OfflineBanner(lang: lang, staleOnly: true),
+                          Text(
+                            K.calendarHint.inLang(lang),
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: KarmopathTheme.ink.withValues(alpha: 0.62),
+                            ),
+                          ),
+                          if (state.feed == null && state.isLoading)
+                            LoadingView(lang: lang)
+                          else if (state.feed == null &&
+                              state.lastError != null)
+                            MessageView(
+                              lang: lang,
+                              icon: Icons.cloud_off_outlined,
+                              title: K.errorTitle,
+                              body: K.errorBody,
+                              actionLabel: K.retry,
+                              onAction: widget.repository.refresh,
+                              tone: KarmopathTheme.coral,
+                            )
+                          else
+                            ..._entries(state, now, lang, reminderIds),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         );
       },
@@ -218,14 +253,17 @@ class _ScopeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    // Wrap instead of Row: at 2x text the two segments stack instead of
+    // clipping their labels.
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
         _Segment(
           label: K.upcoming.inLang(lang),
           selected: !showAll,
           onTap: () => onChanged(false),
         ),
-        const SizedBox(width: 8),
         _Segment(
           label: K.allDeadlines.inLang(lang),
           selected: showAll,
@@ -259,7 +297,7 @@ class _Segment extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(999),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 40, minWidth: 96),
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 96),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
             decoration: BoxDecoration(
@@ -305,7 +343,7 @@ class _DeadlineTile extends StatelessWidget {
     final closed = entry.info.isClosed || entry.info.isWithdrawn;
     final accent = closed
         ? KarmopathTheme.ink.withValues(alpha: 0.45)
-        : (entry.info.closesSoon ? KarmopathTheme.coral : KarmopathTheme.teal);
+        : (entry.info.closesSoon ? KPalette.coralStrong : KarmopathTheme.teal);
     final title = lang == AppLang.bn ? job.titleBn : job.titleEn;
     final label = deadlineLabel(
       entry.info,
