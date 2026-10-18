@@ -66,68 +66,74 @@ void main() {
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
-      var calls = 0;
-      await tester.pumpWidget(
-        host(
-          phase: ReminderSyncUiPhase.syncing,
-          language: language,
-          onRetry: () => calls++,
-        ),
-      );
-      expect(K.reminderSyncChecking.inLang(language), checking);
-      expect(find.text(checking), findsOneWidget);
-      expect(find.text(failed), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(
-        tester.widget<CircularProgressIndicator>(
-          find.byType(CircularProgressIndicator),
-        ).value,
-        isNull,
-      );
-      expect(find.bySemanticsLabel(checking), findsOneWidget);
-      expect(
-        tester.getSemantics(find.bySemanticsLabel(checking)),
-        matchesSemantics(
-          label: checking,
-          isLiveRegion: true,
-          textDirection: TextDirection.ltr,
-        ),
-      );
-      expect(find.byType(TextButton), findsNothing);
-      expect(find.text(retry), findsNothing);
-      await tester.pump(const Duration(seconds: 1));
-      expect(calls, 0);
+      try {
+        var calls = 0;
+        await tester.pumpWidget(
+          host(
+            phase: ReminderSyncUiPhase.syncing,
+            language: language,
+            onRetry: () => calls++,
+          ),
+        );
+        expect(K.reminderSyncChecking.inLang(language), checking);
+        expect(find.text(checking), findsOneWidget);
+        expect(find.text(failed), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(
+          tester.widget<CircularProgressIndicator>(
+            find.byType(CircularProgressIndicator),
+          ).value,
+          isNull,
+        );
+        expect(find.bySemanticsLabel(checking), findsOneWidget);
+        expect(
+          tester.getSemantics(find.bySemanticsLabel(checking)),
+          matchesSemantics(
+            label: checking,
+            isLiveRegion: true,
+            textDirection: TextDirection.ltr,
+          ),
+        );
+        expect(find.byType(TextButton), findsNothing);
+        expect(find.text(retry), findsNothing);
+        await tester.pump(const Duration(seconds: 1));
+        expect(calls, 0);
+      } finally {
+        semantics.dispose();
+      }
     });
 
     testWidgets('${language.name}: failure retries once only on explicit tap', (
       tester,
     ) async {
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
-      var calls = 0;
-      await tester.pumpWidget(
-        host(
-          phase: ReminderSyncUiPhase.failed,
-          language: language,
-          onRetry: () => calls++,
-        ),
-      );
-      expect(K.reminderSyncFailed.inLang(language), failed);
-      expect(find.text(failed), findsOneWidget);
-      expect(find.bySemanticsLabel(failed), findsOneWidget);
-      expect(find.text(checking), findsNothing);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.byType(TextButton), findsOneWidget);
-      expect(find.widgetWithText(TextButton, retry), findsOneWidget);
-      expect(K.retry.inLang(language), retry);
-      await tester.pump(const Duration(seconds: 1));
-      expect(calls, 0);
-      await tester.tap(find.widgetWithText(TextButton, retry));
-      await tester.pump();
-      expect(calls, 1);
-      await tester.pump(const Duration(seconds: 1));
-      expect(calls, 1);
+      try {
+        var calls = 0;
+        await tester.pumpWidget(
+          host(
+            phase: ReminderSyncUiPhase.failed,
+            language: language,
+            onRetry: () => calls++,
+          ),
+        );
+        expect(K.reminderSyncFailed.inLang(language), failed);
+        expect(find.text(failed), findsOneWidget);
+        expect(find.bySemanticsLabel(failed), findsOneWidget);
+        expect(find.text(checking), findsNothing);
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.byType(TextButton), findsOneWidget);
+        expect(find.widgetWithText(TextButton, retry), findsOneWidget);
+        expect(K.retry.inLang(language), retry);
+        await tester.pump(const Duration(seconds: 1));
+        expect(calls, 0);
+        await tester.tap(find.widgetWithText(TextButton, retry));
+        await tester.pump();
+        expect(calls, 1);
+        await tester.pump(const Duration(seconds: 1));
+        expect(calls, 1);
+      } finally {
+        semantics.dispose();
+      }
     });
 
     for (final phase in ReminderSyncUiPhase.values) {
