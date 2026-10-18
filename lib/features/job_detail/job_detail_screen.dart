@@ -6,6 +6,7 @@ import '../../contracts/user_preferences.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../common/app_language.dart';
 import '../common/deadline_clock.dart';
+import '../common/external_link.dart';
 import '../common/formatting.dart';
 import '../common/palette.dart';
 import '../common/reminder_controller.dart';
@@ -35,6 +36,8 @@ class JobDetailScreen extends StatefulWidget {
 class _JobDetailScreenState extends State<JobDetailScreen> {
   bool _reminderBusy = false;
   bool _saveBusy = false;
+  final ExternalLinkGuard _links = ExternalLinkGuard();
+  final Set<String> _pendingLinks = <String>{};
   late final DeadlineTicker _ticker;
 
   @override
@@ -58,16 +61,23 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       ..showSnackBar(SnackBar(content: Text(message.inLang(lang))));
   }
 
+  /// Validates before [AppActions], suppresses duplicate launches and never
+  /// touches the tree after unmount.
   Future<void> _open(String rawUrl, AppLang lang) async {
-    final uri = Uri.tryParse(rawUrl);
-    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
-      _snack(K.linkOpenFailed, lang);
-      return;
-    }
-    try {
-      await widget.actions.openExternal(uri);
-    } on Object {
-      _snack(K.linkOpenFailed, lang);
+    if (_pendingLinks.contains(rawUrl)) return;
+    setState(() => _pendingLinks.add(rawUrl));
+    final status = await _links.open(actions: widget.actions, rawUrl: rawUrl);
+    // The launcher may finish after the route is gone: no setState, no snack.
+    if (!mounted) return;
+    setState(() => _pendingLinks.remove(rawUrl));
+    switch (status) {
+      case LinkOpenStatus.invalid:
+        _snack(K.linkUnsafe, lang);
+      case LinkOpenStatus.failed:
+        _snack(K.linkOpenFailed, lang);
+      case LinkOpenStatus.opened:
+      case LinkOpenStatus.duplicate:
+        break;
     }
   }
 
@@ -287,6 +297,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 _OfficialLinks(
                   job: job,
                   lang: lang,
+                  pendingUrls: _pendingLinks,
                   onOpen: (url) => _open(url, lang),
                 ),
                 const SizedBox(height: 12),
@@ -599,6 +610,17 @@ class _ActionPanel extends StatelessWidget {
                   ),
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                K.reminderPolicyHelp.inLang(lang),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.4,
+                  color: KarmopathTheme.ink.withValues(alpha: 0.66),
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -777,12 +799,34 @@ class _OfficialLinks extends StatelessWidget {
   const _OfficialLinks({
     required this.job,
     required this.lang,
+    required this.pendingUrls,
     required this.onOpen,
   });
 
   final Job job;
   final AppLang lang;
+
+  /// Each URL retains its own pending state when launches overlap.
+  /// Unrelated save/reminder actions stay usable.
+  final Set<String> pendingUrls;
+
   final ValueChanged<String> onOpen;
+
+  Widget _label(KText text, String url) {
+    if (!pendingUrls.contains(url)) return Text(text.inLang(lang));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        const SizedBox(width: 8),
+        Flexible(child: Text(text.inLang(lang))),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -794,31 +838,37 @@ class _OfficialLinks extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton.icon(
-            onPressed: () => onOpen(job.noticeUrl),
+            onPressed: pendingUrls.contains(job.noticeUrl)
+                ? null
+                : () => onOpen(job.noticeUrl),
             style: FilledButton.styleFrom(
               backgroundColor: KPalette.coralStrong,
               minimumSize: const Size(48, 48),
             ),
             icon: const Icon(Icons.description_outlined, size: 20),
-            label: Text(K.openNotice.inLang(lang)),
+            label: _label(K.openNotice, job.noticeUrl),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: () => onOpen(job.sourceUrl),
+            onPressed: pendingUrls.contains(job.sourceUrl)
+                ? null
+                : () => onOpen(job.sourceUrl),
             style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
             icon: const Icon(Icons.open_in_new, size: 18),
-            label: Text(K.openSource.inLang(lang)),
+            label: _label(K.openSource, job.sourceUrl),
           ),
           if (job.applyUrl != null) ...[
             const SizedBox(height: 8),
             FilledButton.icon(
-              onPressed: () => onOpen(job.applyUrl!),
+              onPressed: pendingUrls.contains(job.applyUrl)
+                  ? null
+                  : () => onOpen(job.applyUrl!),
               style: FilledButton.styleFrom(
                 backgroundColor: KarmopathTheme.teal,
                 minimumSize: const Size(48, 48),
               ),
               icon: const Icon(Icons.arrow_outward, size: 20),
-              label: Text(K.applyOnline.inLang(lang)),
+              label: _label(K.applyOnline, job.applyUrl!),
             ),
           ],
         ],

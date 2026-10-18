@@ -14,7 +14,11 @@ enum ReminderOutcome {
   /// Permission refused or unavailable: nothing was scheduled.
   permissionDenied,
 
-  /// Storage/action threw; nothing was scheduled.
+  /// The permission check itself threw, so the grant state is unknown and
+  /// nothing was saved. Distinct from a storage failure.
+  permissionError,
+
+  /// Storage threw while writing; the previous stored state is unchanged.
   failed,
 
   /// Deadline already passed or the job was withdrawn.
@@ -64,7 +68,7 @@ Future<ReminderOutcome> setReminderIntent({
   try {
     granted = await actions.requestReminderPermission();
   } on Object {
-    return ReminderOutcome.failed;
+    return ReminderOutcome.permissionError;
   }
   if (!granted) return ReminderOutcome.permissionDenied;
 
@@ -88,6 +92,7 @@ KText reminderOutcomeMessage(ReminderOutcome outcome) => switch (outcome) {
   ReminderOutcome.enabled => K.reminderEnabledMsg,
   ReminderOutcome.disabled => K.reminderDisabledMsg,
   ReminderOutcome.permissionDenied => K.reminderDeniedMsg,
+  ReminderOutcome.permissionError => K.reminderPermissionErrorMsg,
   ReminderOutcome.failed => K.reminderFailedMsg,
   ReminderOutcome.closed => K.reminderClosedMsg,
   ReminderOutcome.noDeadline => K.reminderNoDeadlineMsg,

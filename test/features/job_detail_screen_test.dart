@@ -80,7 +80,7 @@ void main() {
 
     expect(actions.permissionRequests, 1);
     expect(prefs.reminderCalls, isEmpty);
-    expect(find.textContaining('অনুমতি দেওয়া হয়নি'), findsOneWidget);
+    expect(find.textContaining('অনুমতি পাওয়া যায়নি'), findsOneWidget);
   });
 
   testWidgets('granted permission persists the reminder intent', (
@@ -225,11 +225,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(
-      find.text(
-        'রিমাইন্ডারের অনুরোধ সংরক্ষণ করা হয়েছে। নোটিফিকেশন কখন আসবে তা ফোনের সেটিংসের উপর নির্ভর করে।',
-      ),
+      find.textContaining('রিমাইন্ডারের অনুরোধ সংরক্ষণ করা হয়েছে'),
       findsOneWidget,
     );
+    // No delivery guarantee is implied by the snackbar copy.
+    expect(find.textContaining('নিশ্চিত নয়'), findsOneWidget);
   });
 
   testWidgets(

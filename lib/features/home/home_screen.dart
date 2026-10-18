@@ -271,88 +271,99 @@ class _HomeScreenState extends State<HomeScreen> {
             };
             final now = _ticker.now;
             return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      K.notifications.inLang(lang),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: KarmopathTheme.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      K.reminderSheetNote.inLang(lang),
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.4,
-                        color: KarmopathTheme.ink.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (reminderIds.isEmpty)
-                      MessageView(
-                        lang: lang,
-                        icon: Icons.notifications_none_rounded,
-                        title: K.noRemindersTitle,
-                        body: K.noRemindersBody,
-                      )
-                    else
-                      Flexible(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            Text(
-                              K.reminderCount(reminderIds.length, lang),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: KarmopathTheme.teal,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            for (final id in reminderIds)
-                              _ReminderRow(
-                                title: byId[id] == null
-                                    ? K.unavailableJob.inLang(lang)
-                                    : (lang == AppLang.bn
-                                          ? byId[id]!.titleBn
-                                          : byId[id]!.titleEn),
-                                subtitle: byId[id] == null
-                                    ? null
-                                    : (deadlineLabel(
-                                            deadlineInfo(byId[id]!, now),
-                                            byId[id]!.kind,
-                                            lang,
-                                            endDateOnly:
-                                                byId[id]!.applicationEndAt ==
-                                                    null
-                                                ? byId[id]!.applicationEndDate
-                                                : null,
-                                          ) ??
-                                          kindLabel(byId[id]!.kind, lang)),
-                                onTap: () {
-                                  Navigator.of(sheetContext).pop();
-                                  widget.onOpenJob(id);
-                                },
-                              ),
-                          ],
+              child: ConstrainedBox(
+                // Keeps the sheet usable at 2x text: content scrolls instead
+                // of overflowing a fixed-height bottom sheet.
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          K.notifications.inLang(lang),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: KarmopathTheme.ink,
+                          ),
                         ),
-                      ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => Navigator.of(sheetContext).pop(),
-                        child: Text(K.close.inLang(lang)),
-                      ),
+                        const SizedBox(height: 4),
+                        Text(
+                          K.reminderSheetNote.inLang(lang),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            height: 1.4,
+                            color: KarmopathTheme.ink.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          K.reminderSheetPolicy.inLang(lang),
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: KarmopathTheme.ink.withValues(alpha: 0.66),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (reminderIds.isEmpty)
+                          MessageView(
+                            lang: lang,
+                            icon: Icons.notifications_none_rounded,
+                            title: K.noRemindersTitle,
+                            body: K.noRemindersBody,
+                          )
+                        else ...[
+                          Text(
+                            K.reminderCount(reminderIds.length, lang),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: KarmopathTheme.teal,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          for (final id in reminderIds)
+                            _ReminderRow(
+                              title: byId[id] == null
+                                  ? K.unavailableJob.inLang(lang)
+                                  : (lang == AppLang.bn
+                                        ? byId[id]!.titleBn
+                                        : byId[id]!.titleEn),
+                              subtitle: byId[id] == null
+                                  ? null
+                                  : (deadlineLabel(
+                                          deadlineInfo(byId[id]!, now),
+                                          byId[id]!.kind,
+                                          lang,
+                                          endDateOnly:
+                                              byId[id]!.applicationEndAt == null
+                                              ? byId[id]!.applicationEndDate
+                                              : null,
+                                        ) ??
+                                        kindLabel(byId[id]!.kind, lang)),
+                              onTap: () {
+                                Navigator.of(sheetContext).pop();
+                                widget.onOpenJob(id);
+                              },
+                            ),
+                        ],
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            child: Text(K.close.inLang(lang)),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             );

@@ -233,25 +233,37 @@ abstract final class K {
     'লিঙ্ক খোলা যায়নি',
     'Could not open the link',
   );
+  static const linkUnsafe = KText(
+    'এই লিঙ্কটি নিরাপদ HTTPS ঠিকানা নয়, তাই খোলা হয়নি।',
+    'This link is not a safe HTTPS address, so it was not opened.',
+  );
   static const lastVerified = KText('সর্বশেষ যাচাই', 'Last verified');
   static const sourceUrlLabel = KText('সূত্র', 'Source');
   static const reminderOn = KText('রিমাইন্ডার চালু', 'Reminder on');
   static const reminderOff = KText('রিমাইন্ডার দিন', 'Remind me');
   static const reminderEnabledMsg = KText(
-    'রিমাইন্ডারের অনুরোধ সংরক্ষণ করা হয়েছে। নোটিফিকেশন কখন আসবে তা ফোনের সেটিংসের উপর নির্ভর করে।',
-    'Reminder request saved. Notification timing depends on your device settings.',
+    'ডেডলাইনের ২৪ ঘণ্টা আগে রিমাইন্ডারের অনুরোধ সংরক্ষণ করা হয়েছে। এটি শুধু সংরক্ষিত অনুরোধ—নোটিফিকেশন পাঠানো নিশ্চিত নয়।',
+    'Reminder request saved for 24 hours before the deadline. This is a saved request only—no notification is confirmed.',
+  );
+  static const reminderPolicyHelp = KText(
+    'চালু করলে ডেডলাইনের ২৪ ঘণ্টা আগে একবার রিমাইন্ডারের অনুরোধ রাখা হয়, এবং শুধু তখনই যদি ওই সময় এখনো ভবিষ্যতে থাকে। পরে চালু করলে অতিরিক্ত কোনো বার্তা আসে না।',
+    'If enabled, one reminder is requested 24 hours before the deadline, and only when that time is still ahead. Enabling later does not create a catch-up alert.',
   );
   static const reminderDisabledMsg = KText(
-    'রিমাইন্ডার বন্ধ করা হয়েছে।',
-    'Reminder turned off.',
+    'রিমাইন্ডারের অনুরোধ মুছে ফেলা হয়েছে।',
+    'Reminder request removed.',
   );
   static const reminderDeniedMsg = KText(
-    'নোটিফিকেশনের অনুমতি দেওয়া হয়নি, তাই রিমাইন্ডার চালু হয়নি।',
-    'Notification permission was denied, so no reminder was scheduled.',
+    'নোটিফিকেশনের অনুমতি পাওয়া যায়নি, তাই কোনো রিমাইন্ডার সংরক্ষণ হয়নি।',
+    'Notification permission was not granted, so no reminder was saved.',
+  );
+  static const reminderPermissionErrorMsg = KText(
+    'অনুমতির অবস্থা যাচাই করা যায়নি, তাই কোনো রিমাইন্ডার সংরক্ষণ হয়নি।',
+    'Notification permission could not be checked, so no reminder was saved.',
   );
   static const reminderFailedMsg = KText(
-    'রিমাইন্ডার চালু করা যায়নি।',
-    'Could not update the reminder.',
+    'রিমাইন্ডারের অনুরোধ সংরক্ষণ করা যায়নি। আগের অবস্থা অপরিবর্তিত আছে।',
+    'The reminder request could not be saved. Your previous state is unchanged.',
   );
   static const reminderClosedMsg = KText(
     'সময় শেষ হওয়ায় নতুন রিমাইন্ডার চালু করা যাবে না।',
@@ -299,6 +311,10 @@ abstract final class K {
   static const reminderSheetNote = KText(
     'রিমাইন্ডার শুধু আপনি যেসব চাকরিতে চালু করেছেন সেগুলোর জন্য। কোনো পড়া না পড়া গণনা নেই।',
     'Reminders exist only for jobs you enable. There are no unread counts.',
+  );
+  static const reminderSheetPolicy = KText(
+    'প্রতিটি চালু করা ডেডলাইনের ২৪ ঘণ্টা আগে একবার অনুরোধ রাখা হয়, যদি সেই সময় ভবিষ্যতে থাকে।',
+    'Each enabled deadline gets one request 24 hours before it, when that time is still ahead.',
   );
   static const close = KText('বন্ধ করুন', 'Close');
 

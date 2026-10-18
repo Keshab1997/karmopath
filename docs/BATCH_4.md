@@ -1,5 +1,9 @@
 # Batch 4 — reminder planning and production-readiness safeguards
 
+## Integration status
+
+A and B independently reviewed and integrated, including captain regression fixes; **340 Flutter tests pass**, analyzer clean. C4 is **not integrated**: local commit was reported but the remote branch is absent. See [captain review](reports/CAPTAIN_BATCH_4.md). The original dispatch below remains the historical frozen specification.
+
 ## Starting point
 A2+A3, B2+B3 and C are reviewed, squash-integrated and pushed. Immutable code base: `7d2e5037c163c64b1a14a62ccd62a56df0265623`. Captain independently fixed synchronous HTTP timeout cleanup and stale deadline clocks; **260 Flutter tests**, analyzer, **20 Python +17 Node tests**, structural preflight and Chromium 156 smoke passed. See [captain review](reports/CAPTAIN_BATCH_3.md). Production activation, actual scheduling and real feed remain pending.
 

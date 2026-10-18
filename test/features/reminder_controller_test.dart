@@ -188,11 +188,12 @@ void main() {
       final en = reminderOutcomeMessage(ReminderOutcome.enabled).en;
       final bn = reminderOutcomeMessage(ReminderOutcome.enabled).bn;
       expect(en.toLowerCase(), contains('saved'));
-      expect(en.toLowerCase(), contains('device settings'));
+      expect(en.toLowerCase(), contains('no notification is confirmed'));
       expect(en.toLowerCase(), isNot(contains('will notify')));
       expect(en.toLowerCase(), isNot(contains('guaranteed')));
       expect(bn, contains('সংরক্ষণ'));
-      expect(bn, isNot(contains('নিশ্চিত')));
+      // Only the negated form ("not confirmed") may appear.
+      expect(bn, contains('নিশ্চিত নয়'));
     });
 
     test('honest copy for every failure mode', () {
@@ -209,8 +210,8 @@ void main() {
         contains('closed'),
       );
       expect(
-        reminderOutcomeMessage(ReminderOutcome.failed).en,
-        contains('Could not'),
+        reminderOutcomeMessage(ReminderOutcome.failed).en.toLowerCase(),
+        contains('could not be saved'),
       );
     });
   });

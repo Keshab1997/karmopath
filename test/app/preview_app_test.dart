@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:karmopath/app/preview/preview_app.dart';
 import 'package:karmopath/features/common/app_language.dart';
+import 'package:karmopath/features/common/strings.dart';
 
 void main() {
   setUp(() => appLanguage.value = AppLang.bn);
@@ -29,7 +30,9 @@ void main() {
     expect(find.textContaining('DEMO · নমুনা তথ্য'), findsOneWidget);
     await tester.tap(find.text('রিমাইন্ডার দিন'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('অনুমতি দেওয়া হয়নি'), findsOneWidget);
+    expect(find.text(K.reminderDeniedMsg.bn), findsOneWidget);
+    expect(find.text('রিমাইন্ডার দিন'), findsOneWidget);
+    expect(find.text('রিমাইন্ডার চালু'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });

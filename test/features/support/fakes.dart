@@ -77,18 +77,50 @@ class FakePreferences implements UserPreferences {
 }
 
 class FakeActions implements AppActions {
-  FakeActions({this.permission = true});
+  FakeActions({
+    this.permission = true,
+    this.permissionThrows = false,
+    this.openDelay = Duration.zero,
+    this.openThrowsAsync = false,
+    this.openThrowsSync = false,
+    this.permissionDelay = Duration.zero,
+  });
 
   bool permission;
+
+  /// Simulates an unavailable/failed permission channel.
+  bool permissionThrows;
+
+  /// Simulates a slow platform launcher so rapid taps can be tested.
+  Duration openDelay;
+
+  /// Simulates a launcher that fails after its future is awaited.
+  bool openThrowsAsync;
+
+  /// Simulates a launcher that throws before returning a future.
+  bool openThrowsSync;
+
+  /// Simulates a slow permission dialog.
+  Duration permissionDelay;
+
   int permissionRequests = 0;
   final List<Uri> opened = [];
 
   @override
-  Future<void> openExternal(Uri uri) async => opened.add(uri);
+  Future<void> openExternal(Uri uri) async {
+    if (openThrowsSync) throw StateError('launcher unavailable (sync)');
+    if (openDelay > Duration.zero) await Future<void>.delayed(openDelay);
+    if (openThrowsAsync) throw StateError('launcher unavailable (async)');
+    opened.add(uri);
+  }
 
   @override
   Future<bool> requestReminderPermission() async {
     permissionRequests += 1;
+    if (permissionDelay > Duration.zero) {
+      await Future<void>.delayed(permissionDelay);
+    }
+    if (permissionThrows) throw StateError('permission channel unavailable');
     return permission;
   }
 }
