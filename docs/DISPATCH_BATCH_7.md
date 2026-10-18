@@ -1,5 +1,7 @@
 # Batch 7 — parallel dispatch (A/B/C)
 
+> **HISTORICAL PROPOSAL — DO NOT START THIS TASK.** The delivered two-worker A/B handoff and Captain foundation are tracked in `docs/BATCH_7.md` and `docs/reports/CAPTAIN_BATCH_7.md`. This alternative three-worker plan is retained for audit only. Existing work must be preserved; future work needs a fresh Captain brief.
+
 **Status: dispatch ready; workers have NOT been started by Captain.** The owner
 starts up to three independent worker chats using [these starters](START_BATCH_7_BN.md).
 This replaces the old captain-only Batch 7 assignment. Batch 6 is already

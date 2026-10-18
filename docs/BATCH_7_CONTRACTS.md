@@ -1,5 +1,7 @@
 # Batch 7 — frozen integration contract
 
+> **Retained design/API reference, not an active dispatch.** The later proposed three-worker assignments below were not the delivered handoff. Shared ports remain unchanged; do not infer these named outputs are implemented. Current actual code, publication and remaining gates are in `docs/BATCH_7.md` and `docs/reports/CAPTAIN_BATCH_7.md`.
+
 The owner requested parallel workers. A implements pure reconciliation, B the
 Android notification boundary, C a native runtime factory. Captain retains all
 existing shared surfaces and final app composition. **None imports another

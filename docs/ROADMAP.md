@@ -1,7 +1,7 @@
 # Execution plan
 
 ## Current dispatch — Batch 7
-Batch 6 is integrated. [Batch 7](BATCH_7.md) is now assigned to three independent workers: A reconciliation, B Android notification adapter, C native runtime factory. Captain retains shared prerequisites and final composition. Use [the current dispatch](DISPATCH_BATCH_7.md) and [starters](START_BATCH_7_BN.md); workers have not been started by Captain. Production feed approval, native activation, device evidence and release checks remain separate.
+Batch 6 is integrated. [Batch 7](BATCH_7.md) publishes the actually delivered two-worker A/B helpers and Captain notification/runtime foundation. The alternative three-worker dispatch/starters are historical, not active assignments. No new worker is assigned. Real native-session binding, tap/identity/conflict safety, startup/reboot hardening, approved feed, device evidence and release checks remain separate; see the [final evidence/limits](reports/CAPTAIN_BATCH_7.md).
 
 ## Original execution sequence (historical)
 ## Batch 0 — captain foundation (completed)
@@ -22,4 +22,4 @@ FCM optional; policy/privacy and consent, test ads, developer site/app-ads.txt f
 ## Owner inputs later (not blocking docs)
  Play account status; support email; notification/AdMob configuration via secure authorized setup; original official sources for initial reviewed jobs; Indian-PC connectivity test if automation desired. No need to paste private keys into chat.
 
-Historical Batch 1 dispatch is retained for audit only; do not use its old base or briefs. The active dispatch is Batch 7 above. No dispatch authorizes CI or production publication.
+Historical Batch 1 dispatch is retained for audit only; do not use its old base or briefs. Current implementation status and remaining gates are in Batch 7 above; no old dispatch is an active task. No dispatch authorizes CI or production publication.

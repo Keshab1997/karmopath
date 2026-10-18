@@ -1,32 +1,29 @@
-# Captain production composition — status
-Implemented under lib/app/runtime (captain-owned): AppRuntime dependency container, ProductionBootstrap retryable startup, ProductionShell navigation, live ID-based detail lookup and FeedConfiguration HTTPS syntax validation. No worker-owned source was changed.
+# Captain production composition — current status
 
-## Implemented and tested
-- Four bilingual bottom destinations using existing feature constructors; detail routes resolve against current repository state, so corrections update an already-open detail and removed IDs show unavailable rather than stale fabricated data.
-- Detail stale-information banner when repository reports offline/error.
-- Stored language is restored through injected readLanguage; changes are serialized through persistLanguage. A write failure says it was not saved; runtime close waits for pending writes and is idempotent.
-- Startup dependency/settings failure is visible and retryable. Partially initialized runtime is closed; runtime returned after unmount is closed too.
-- Initial refresh does not block rendering cache hydration. Refresh exceptions outside the repository contract are shown safely.
-- Feed URL must be explicitly supplied as HTTPS without embedded credentials/fragment; no URL or production content is guessed. This is syntax validation, not proof that a host is trusted/public or content official.
+## Present implementation
 
-Historical composition evidence: 8 new runtime tests; then-full Flutter suite 140 PASS; analyze clean; structural preflight PASS. Native plugins, web bundle, actual language persistence/storage, notification delivery and live feed were NOT exercised. No build, CI, release or publication performed.
+Captain-owned `lib/app/runtime/**` contains the injectable `AppRuntime`, retryable `ProductionBootstrap`, navigation/live ID-based `ProductionShell`, HTTPS syntax-only `FeedConfiguration`, native storage/factory/session and lifecycle/language hooks. `lib/app/notifications/**` contains an Android notification driver, concrete `ReminderPlatform` and explicit user actions. These are reviewed/tested foundation code, **not an activated production native application**.
 
-## Activation remains pending
-This composition is NOT yet selected by main.dart. Native entrypoint remains foundation; web design preview remains separate and labeled. Do not call this a launched production app.
+- Existing screens/detail routes resolve current repository data; removed/missing IDs show unavailable, stale data has a warning, no fake live jobs are substituted.
+- Language read/write uses `karmopath.language.v1` (bn/en); unknown/unreadable settings fail rather than silently reset. Visible language reaches the session immediately even when its serialized persistence fails.
+- Partial native initialization registers and releases acquired preferences/ledger, HTTP client, repository, actions, driver and session in reverse order; cleanup attempts continue after a cleanup error and preserve the primary initialization error. Close is idempotent and waits for language writes/session drain.
+- Session orchestration observes stored intents, verified feed, language and resume; an unloaded feed is not an authoritative empty feed. The actual reconciliation/content closure is REQUIRED, not replaced by a successful no-op.
+- Notification queries do not prompt. Only explicit `AppActions.requestReminderPermission()` may request permission; denial/unknown state is never a grant. Scoped cancellation remains possible after denial. Native scheduling validates ID/content/future time, rechecks the clock after an async permission query and uses UTC one-shot `inexactAllowWhileIdle` without exact-alarm permission.
+- The already-published icon/channel constants, Android manifest/desugaring/keep resources and dependency/lock pins were retained; the older foundation icon literal was adapted to `ic_stat_karmopath`.
+- The factory requires a real external-launch callback; launcher/binding tests use explicit injected fakes only. No default fake-success production launcher is provided.
 
-After A adapters are reviewed, captain supplies a factory returning initialized AppRuntime: repository, preferences, AppActions, language read/write and close callbacks. That factory must clean up partial failures, own the http.Client, initialize LocalUserPreferences, and release repository/preferences/client in a finally-safe close path. FeedConfiguration requires an owner-approved endpoint; no private token in URL/app. Language key reserved: karmopath.language.v1 with values bn/en. Actual platform actions/notification scheduling are still pending; never return a fake permission grant.
+Current gate evidence and reviewed immutable inputs: [CAPTAIN_BATCH_7.md](reports/CAPTAIN_BATCH_7.md). Historical runtime/dispatch/local-phase counts elsewhere are historical snapshots, not additional current test runs or Android/device proof.
 
-Captain then wires the native entrypoint, tests persistent storage, external links, CORS, offline recovery and real-device notification behavior. A's new platform adapters are in lib/data/platform per current contract; no duplicate adapters were created in this captain batch.
+## Activation and final binding remain pending
+
+`lib/main.dart` is unchanged: native still selects the foundation; the labeled isolated web demo remains separate. `FeedConfiguration` validates URL syntax only, not host/public reachability or official accuracy. A real endpoint requires explicit owner approval; never guess one or embed credentials.
+
+The delivered A/B work follows the earlier two-worker plan: A extends the applier's pure reconciliation; B supplies pure notification content. The alternative three-worker output names/paths in archived briefs are NOT claims of implemented classes. The shared native ports/tests remain intact as reference for remaining work.
+
+Before activation Captain must connect the real A/B/platform/session binding, namespace/full-identity/foreign-ID conflict handling, safe cold/foreground tap navigation, operational failure/retry state and a real launcher. Plugin `pendingNotificationRequests()` reads a persisted backend registry; matching IDs do not independently prove live AlarmManager alarms survived reboot/force-stop. Finish a safe startup/resume repair strategy and verify handling of previously scheduled overdue reminders. The frozen rule forbids new late-opt-in catch-up; inexact Android delivery can still be delayed.
+
+Real-device permission/denial/reenable, reboot/package replacement/force-stop/cold start, timezone and actual delivery evidence is still NOT RUN. Flutter/widget/method-channel/fake tests do not replace these checks. No local Flutter build/Gradle, CI dispatch/wait or deployment was performed. Explicit code-push approval is not feed/native activation/release approval.
 
 ## Release blockers unchanged
-C admin review/publication workflow, actual human-reviewed notices, final art/visual review, support/correction/legal URLs, privacy/Data safety/consent, test AdMob and app-ads.txt, SDK/account/testers/signing/store submission. No secrets or legal acceptance invented.
 
-## Batch 7 dispatch update — 2026-10-18
-The owner requested parallel workers. [A7/B7/C7](DISPATCH_BATCH_7.md) now cover
-reconciliation, the Android notification boundary and an independent native
-runtime factory. Captain still owns lib/app/**, main, dependency/platform files,
-lifecycle/tap navigation and final integration. Ports/prerequisites are frozen at
-`bffcfb473d14f66bf47b85be96558497cc387dc4`; workers have not been started by Captain.
-Current foundation evidence is [here](reports/CAPTAIN_BATCH_7_DISPATCH.md), not the
-historical count above. No native factory/adapter/coordinator implementation has
-yet been reviewed/integrated, and this update does not activate production.
+Human-reviewed source content, final art/visual acceptance, support/correction/legal URLs, privacy/Data safety/consent, test ads/app-ads.txt, account/testers/signing/store submission remain separate owner-gated work. Do not invent credentials, legal acceptance, publication or Play approval. Future worker tasks require fresh Captain briefs; historical Batch 7 starters are not active assignments.

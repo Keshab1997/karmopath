@@ -1,5 +1,7 @@
 # Agent B — Batch 7 Android notification adapter
 
+> **HISTORICAL PROPOSAL — DO NOT START THIS TASK.** The delivered two-worker A/B handoff and Captain foundation are tracked in `docs/BATCH_7.md` and `docs/reports/CAPTAIN_BATCH_7.md`. This alternative three-worker plan is retained for audit only. Existing work must be preserved; future work needs a fresh Captain brief.
+
 One task, one branch, then stop. Read origin/main's AGENTS.md,
 [common dispatch](../DISPATCH_BATCH_7.md), [frozen contract](../BATCH_7_CONTRACTS.md)
 and this brief before branching. This explicit Batch 7 assignment replaces your

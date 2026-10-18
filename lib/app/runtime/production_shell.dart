@@ -23,13 +23,15 @@ class ProductionShell extends StatefulWidget {
   State<ProductionShell> createState() => _ProductionShellState();
 }
 
-class _ProductionShellState extends State<ProductionShell> {
+class _ProductionShellState extends State<ProductionShell>
+    with WidgetsBindingObserver {
   final _navigator = GlobalKey<NavigatorState>();
   final _messenger = GlobalKey<ScaffoldMessengerState>();
   int _tab = 0;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     appLanguage.addListener(_languageChanged);
     // Refresh is asynchronous so cache hydration can be rendered immediately.
     unawaited(_initialRefresh());
@@ -41,6 +43,21 @@ class _ProductionShellState extends State<ProductionShell> {
     } catch (_) {
       _notify(
         'তথ্য আপডেট করা যায়নি। আবার চেষ্টা করুন। / Could not refresh jobs. Please retry.',
+      );
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_resumed());
+  }
+
+  Future<void> _resumed() async {
+    try {
+      await widget.runtime.resumed();
+    } catch (_) {
+      _notify(
+        'রিমাইন্ডারের অবস্থা যাচাই করা যায়নি। / Could not check reminders. Please retry.',
       );
     }
   }
@@ -70,6 +87,7 @@ class _ProductionShellState extends State<ProductionShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     appLanguage.removeListener(_languageChanged);
     super.dispose();
   }
@@ -109,7 +127,11 @@ class _ProductionShellState extends State<ProductionShell> {
               preferences: widget.runtime.preferences,
               onOpenJob: _openJob,
             ),
-            SettingsScreen(actions: widget.runtime.actions),
+            SettingsScreen(
+              actions: widget.runtime.actions,
+              preferences: widget.runtime.preferences,
+              repository: widget.runtime.repository,
+            ),
           ],
         ),
         bottomNavigationBar: NavigationBar(

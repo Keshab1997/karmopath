@@ -1,5 +1,7 @@
 # Batch 7 — A/B pushed handoff reviewed, LOCAL candidate only
 
+> Historical review snapshot. Keshab subsequently authorized main publication. See [CAPTAIN_BATCH_7.md](CAPTAIN_BATCH_7.md) for the combined candidate, actual final gates and current publication state; the earlier push hold below is historical.
+
 ## Inputs and scope
 
 Keshab reported that A and B pushed. Captain restored the existing login without a device flow, fetched their actual branches and reviewed source/tests, not just their reports:

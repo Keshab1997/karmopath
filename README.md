@@ -15,7 +15,7 @@ Bengali-first job discovery & deadline tracking
 ## A clearer path to your next opportunity
 Karmopath is planned to turn recruitment notices into clear, searchable information: eligibility, dates, original sources and application steps—with saved opportunities and deadline reminders.
 
-> **Current status: Batch 6 integrated; Batch 7 native integration dispatch ready.** Data/cache/preferences, feature screens and the injectable production shell exist. Three workers have separate reminder-reconciliation, Android-notification and native-factory briefs; their implementations are not yet integrated. The entrypoint still selects the foundation or isolated web demo, not a production runtime. No owner-approved production feed or native release is supplied by this dispatch.
+> **Current status: reviewed Batch 7 A/B helpers and Captain native foundation integrated.** Pending-aware ledger reconciliation, bilingual notification content, notification/runtime adapters and failure-safe resource composition are present. The real native-session binding, tap/identity/conflict hardening and device verification remain pending. The entrypoint still selects the foundation or isolated web demo, not a production runtime. There is no owner-approved production feed, APK/AAB or native release.
 
 ## Approved visual direction
 <p align="center"><img src="docs/design/karmopath-home-v2.png" alt="Approved Karmopath design concept with illustrated coral banner, category shortcuts and job cards" width="330"></p>
@@ -52,14 +52,12 @@ Read [AGENTS.md](AGENTS.md) before contributing. Contracts and file ownership ar
 | [Roadmap](docs/ROADMAP.md) | Foundation → parallel work → integration → release |
 | [Workflow guide](docs/WORKFLOWS.md) | Manual Actions and prerequisites |
 
-### Current dispatch
-[Batch 7 dispatch](docs/DISPATCH_BATCH_7.md): three independent worker briefs, frozen code base `bffcfb473d14f66bf47b85be96558497cc387dc4`, shared ports and captain-owned Android prerequisites. **Workers have not been launched by Captain.** [Paste-ready Bengali starters](docs/START_BATCH_7_BN.md) · [Verified foundation evidence](docs/reports/CAPTAIN_BATCH_7_DISPATCH.md).
+### Current Batch 7 status
+[Actual delivered implementation and remaining gates](docs/BATCH_7.md) · [Captain review/gate evidence](docs/reports/CAPTAIN_BATCH_7.md).
 
-### Parallel team — active Batch 7 scopes
-**A:** pure reminder reconciliation · **B:** Android notification adapter · **C:** native runtime factory.
-[Brief A7](docs/briefs/AGENT_A_BATCH_7.md) · [Brief B7](docs/briefs/AGENT_B_BATCH_7.md) · [Brief C7](docs/briefs/AGENT_C_BATCH_7.md) · [Frozen interfaces](docs/BATCH_7_CONTRACTS.md).
+The delivered handoff was **A: pure applier reconciliation** and **B: pure bilingual notification content**, plus Captain-owned notification/runtime foundation. Their actual pushed diffs were reviewed and gated. The later proposed three-worker plan is archived, not a fresh assignment; do not run its old starters or duplicate completed work. No C implementation is claimed.
 
-Captain owns shared files, final review/integration, lifecycle/navigation and native activation. These Batch 7 namespaces explicitly supersede historical B=features/C=admin assignments; historical Batch 1–6 briefs are complete, not current work. Use the common dispatch before branching. No worker pushes main, transfers credentials, triggers CI or publishes a feed.
+The published native ports/tests and Android prerequisites are retained. Captain owns remaining composition, namespace/identity/tap safety, operational status/retry and startup/reboot hardening. The native factory requires a real session binding and launcher; no fake-success default is supplied. Native activation still needs explicit feed approval and verification. See [AGENTS.md](AGENTS.md) before any future work.
 
 ## Browser design preview
 [Preview setup and deployment steps](docs/WEB_PREVIEW.md). Pages is already enabled. The manual web workflow now selects an explicitly labeled, session-only demo composition of the actual screens. **The new preview is not deployed until Keshab runs the workflow.** Production integration remains pending.

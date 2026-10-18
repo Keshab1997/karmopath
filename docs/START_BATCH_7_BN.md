@@ -1,5 +1,7 @@
 # Batch 7 — তিন agent-এর starter
 
+> **ঐতিহাসিক প্রস্তাব—এই starter এখন চালাবেন না।** A/B-এর আগের দুই-worker কাজ reviewed; Captain foundation-সহ বর্তমান অবস্থা `docs/BATCH_7.md` ও final report-এ। নতুন কাজের জন্য নতুন Captain brief লাগবে। নিচের লেখা শুধু পুরোনো পরিকল্পনার রেকর্ড।
+
 প্রতিটি block আলাদা A/B/C chat-এ paste করুন। আগের worker workspace থাকলে সেটিই
 ব্যবহার করুন—নিজের saved login reuse হবে। একেবারে নতুন workspace হলে approval
 লাগতে পারে। **Captain এখনও worker চালু করেননি; এই prompt দিয়েই আপনি শুরু করবেন।**
