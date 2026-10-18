@@ -243,6 +243,10 @@ abstract final class K {
   );
   static const lastVerified = KText('সর্বশেষ যাচাই', 'Last verified');
   static const sourceUrlLabel = KText('সূত্র', 'Source');
+  static const reminderNotificationBody = KText(
+    'আবেদনের শেষ সময় ও মূল বিজ্ঞপ্তি দেখে নিন।',
+    'Check the application deadline and the original notice.',
+  );
   static const reminderOn = KText('রিমাইন্ডার চালু', 'Reminder on');
   static const reminderOff = KText('রিমাইন্ডার দিন', 'Remind me');
   static const reminderEnabledMsg = KText(
