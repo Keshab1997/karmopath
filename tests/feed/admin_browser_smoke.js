@@ -105,6 +105,15 @@ function validateWithPython(candidatePath) {
   return result.stdout.trim();
 }
 
+function compareWithPython(baselinePath, candidatePath) {
+  const result = spawnSync('python3', [path.join(ROOT, 'tools/feed/compare.py'), baselinePath, candidatePath], {
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /OFFLINE COMPARISON: ACCEPTED/);
+  return result.stdout.trim();
+}
+
 async function assertLayout(page, width, height, label) {
   await page.setViewportSize({ width, height });
   await page.waitForTimeout(80);
@@ -132,10 +141,16 @@ async function assertLayout(page, width, height, label) {
 
 async function main() {
   assert.ok(fs.existsSync(FIXTURE), `sample contract fixture missing: ${FIXTURE}`);
-  const fixture = JSON.parse(fs.readFileSync(FIXTURE, 'utf8'));
-  const originalJob = fixture.jobs[0];
+  const fixtureBytes = fs.readFileSync(FIXTURE);
+  const fixture = JSON.parse(fixtureBytes.toString('utf8'));
+  const baseline = JSON.parse(JSON.stringify(fixture));
+  baseline.jobs[0].sample_extension = null;
+  baseline.jobs[0].sample_nested_extension = { preserved: true, values: [null, 'sample-only'] };
+  const originalJob = baseline.jobs[0];
   const originalPublishedAt = originalJob.published_at;
   const temp = fs.mkdtempSync(path.join('/home/user', 'karmopath-admin-browser-'));
+  const baselinePath = writeTempJson(temp, 'baseline.json', baseline);
+  const baselineBytes = fs.readFileSync(baselinePath);
   const { server, origin } = await startLocalAdminServer();
   const externalRequests = [];
   let browser;
@@ -156,8 +171,8 @@ async function main() {
     await page.goto(`${origin}/admin/`, { waitUntil: 'domcontentloaded' });
     await assertLayout(page, 1280, 900, 'desktop');
 
-    // Import the repository's explicitly sample-only contract fixture.
-    await importFile(page, FIXTURE);
+    // Import a local baseline derived only from the repository's sample-only fixture.
+    await importFile(page, baselinePath);
     await page.getByText(/imported after validation/).waitFor();
     assert.equal(await page.locator('#draftList .draft-item').count(), 1);
     assert.equal(await page.locator('#id').inputValue(), originalJob.id);
@@ -168,7 +183,32 @@ async function main() {
     await page.locator('#title_en').fill('Browser smoke test — SAMPLE ONLY');
     await page.locator('#summary_bn').fill('শুধু পরীক্ষার নমুনা; বাস্তব পদ নয়।');
     await page.locator('#summary_en').fill('Browser-only sample; not a real vacancy.');
+    await page.locator('#application_end_date').fill('2027-01-31');
     assert.match(await page.locator('#reviewState').innerText(), /RE-REVIEW NEEDED/);
+    assert.match(await page.locator('#draftSaveState').innerText(), /UNSAVED · MEMORY ONLY/);
+    assert.match(await page.locator('#workspaceSaveState').innerText(), /1 draft.*unsaved in-memory/i);
+    assert.match(await page.locator('#draftList .draft-item small').innerText(), /UNSAVED · IN MEMORY/);
+    const beforeUnloadDirty = await page.evaluate(() => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+    assert.equal(beforeUnloadDirty, true);
+    await page.locator('[data-lang="en"]').click();
+    await page.locator('[data-lang="bn"]').click();
+    assert.match(await page.locator('#draftSaveState').innerText(), /UNSAVED · MEMORY ONLY/);
+
+    // A backup includes live edits but is not a browser-storage commit.
+    const storageBeforeBackup = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
+    const liveBackupPath = path.join(temp, 'live-draft-backup.json');
+    await downloadTo(page, '#draftExportButton', liveBackupPath);
+    const liveBackup = JSON.parse(fs.readFileSync(liveBackupPath, 'utf8'));
+    assert.equal(liveBackup.drafts[0].data.application_end_date, '2027-01-31');
+    assert.equal(liveBackup.drafts[0].data.sample_extension, null);
+    assert.deepEqual(liveBackup.drafts[0].data.sample_nested_extension, { preserved: true, values: [null, 'sample-only'] });
+    assert.equal(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY), storageBeforeBackup);
+    assert.match(await page.locator('#draftSaveState').innerText(), /UNSAVED · MEMORY ONLY/);
+
     await page.locator('#candidateExportButton').click();
     const blockedText = await page.locator('#feedback').innerText();
     assert.match(blockedText, /blocked/i);
@@ -179,6 +219,13 @@ async function main() {
     // Python-validated, and retains the imported stable ID and published_at.
     await page.locator('#reviewButton').click();
     await page.getByText(/Review attestation saved/).waitFor();
+    assert.match(await page.locator('#draftSaveState').innerText(), /SAVED IN BROWSER/);
+    const beforeUnloadClean = await page.evaluate(() => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+    assert.equal(beforeUnloadClean, false);
     const firstCandidatePath = path.join(temp, 'candidate-reviewed.json');
     await downloadTo(page, '#candidateExportButton', firstCandidatePath);
     const firstCandidate = JSON.parse(fs.readFileSync(firstCandidatePath, 'utf8'));
@@ -187,8 +234,17 @@ async function main() {
     assert.equal(firstCandidate.jobs[0].published_at, originalPublishedAt);
     assert.equal(firstCandidate.jobs[0].title_bn, 'ব্রাউজার পরীক্ষা — নমুনা');
     assert.equal(firstCandidate.jobs[0].title_en, 'Browser smoke test — SAMPLE ONLY');
+    assert.equal(firstCandidate.jobs[0].application_end_date, '2027-01-31');
+    assert.equal(firstCandidate.jobs[0].sample_extension, null);
+    assert.deepEqual(firstCandidate.jobs[0].sample_nested_extension, { preserved: true, values: [null, 'sample-only'] });
     assert.equal(firstCandidate.jobs[0].status, originalJob.status); // preview expiry never rewrites feed status
     console.log(`PYTHON_VALIDATION ${validateWithPython(firstCandidatePath)}`);
+    const comparisonReport = compareWithPython(baselinePath, firstCandidatePath);
+    assert.match(comparisonReport, /Changed \(1\):/);
+    assert.match(comparisonReport, new RegExp(`${originalJob.id}: application_end_date`));
+    assert.deepEqual(fs.readFileSync(baselinePath), baselineBytes);
+    assert.deepEqual(fs.readFileSync(FIXTURE), fixtureBytes);
+    console.log(`PYTHON_COMPARISON ${comparisonReport.split('\n').slice(0, 4).join(' | ')}`);
 
     // Existing item cannot be deleted; explicit reviewed withdrawal retains ID.
     await page.locator('#deleteDraftButton').click();
@@ -286,7 +342,7 @@ async function main() {
     await deniedContext.close();
 
     assert.deepEqual(externalRequests, [], `external requests were blocked: ${externalRequests.join(', ')}`);
-    console.log('REAL_BROWSER_SMOKE PASS: import/edit/review/export/Python validation, recovery, XSS/URL and 320px/desktop checks.');
+    console.log('REAL_BROWSER_SMOKE PASS: dirty indicators, unsaved backup, deadline correction, review/export/validate/compare handoff, recovery, XSS/URL and 320px/desktop checks.');
   } finally {
     if (context) await context.close().catch(() => {});
     if (browser) await browser.close().catch(() => {});

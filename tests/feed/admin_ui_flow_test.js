@@ -64,7 +64,7 @@ function makeStorage(raw = null) {
   };
 }
 
-function runAdmin(storage = makeStorage(null), confirmAnswers = []) {
+function runAdmin(storage = makeStorage(null), confirmAnswers = [], { now = null } = {}) {
   const elements = new Map();
   for (const [, id] of HTML_SOURCE.matchAll(/\bid="([^"]+)"/g)) {
     const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -114,16 +114,30 @@ function runAdmin(storage = makeStorage(null), confirmAnswers = []) {
     addEventListener(type, listener) { docListeners.set(type, listener); },
   };
   const prompts = [];
+  const windowListeners = new Map();
   const window = {
     localStorage: storage,
     KarmopathAdminCore: Core,
+    addEventListener(type, listener) {
+      const listeners = windowListeners.get(type) || [];
+      listeners.push(listener);
+      windowListeners.set(type, listeners);
+    },
     confirm(message) { prompts.push(message); return confirmAnswers.length ? confirmAnswers.shift() : true; },
   };
+  let ClockDate = Date;
+  if (now !== null) {
+    const fixedNow = typeof now === 'number' ? now : new Date(now).getTime();
+    ClockDate = class extends Date {
+      constructor(...args) { super(...(args.length ? args : [fixedNow])); }
+      static now() { return fixedNow; }
+    };
+  }
   vm.runInNewContext(ADMIN_SOURCE, {
-    window, document, URL: TestURL, Blob: TestBlob,
+    window, document, URL: TestURL, Blob: TestBlob, Date: ClockDate,
     setTimeout: () => 1, clearTimeout: () => {},
   }, { filename: 'admin/app.js' });
-  return { elements, get: getElementById, storage, downloads, prompts, document, window };
+  return { elements, get: getElementById, storage, downloads, prompts, document, window, windowListeners, languages: { bn: langBn, en: langEn } };
 }
 
 function validJob(id, updates = {}) {
@@ -192,19 +206,145 @@ function statusBadge(harness) {
   };
   return visit(harness.get('preview'));
 }
-async function importJson(harness, data) {
+async function importText(harness, text) {
   const input = harness.get('importFile');
-  input.files = [{ text: async () => JSON.stringify(data) }];
+  input.files = [{ text: async () => text }];
   input.dispatch('change');
   await new Promise((resolve) => setImmediate(resolve));
+}
+async function importJson(harness, data) {
+  await importText(harness, JSON.stringify(data));
 }
 function downloadedCandidate(harness) {
   const file = harness.downloads.find((item) => item.filename === 'karmopath-candidate-feed.json');
   return file ? JSON.parse(file.content) : null;
 }
+function fireBeforeUnload(harness) {
+  const event = { defaultPrevented: false, returnValue: undefined, preventDefault() { this.defaultPrevented = true; } };
+  for (const listener of harness.windowListeners.get('beforeunload') || []) listener(event);
+  return event;
+}
 
 // A small deterministic DOM harness runs the real app.js listeners/state flow.
 // It is not a browser engine: it validates user-event wiring and state effects.
+test('dirty indicators survive draft selection and preview-language changes without autosaving', () => {
+  const first = validJob('dirty-first');
+  const second = validJob('clean-second');
+  const raw = seedWorkspace([savedDraft('key-first', first), savedDraft('key-second', second)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage);
+  const writesBeforeInput = storage.writes;
+
+  enter(harness, 'summary_en', 'Live edit stays in memory');
+  assert.equal(storage.writes, writesBeforeInput);
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('workspaceSaveState').textContent, /1 draft.*unsaved in-memory/i);
+  assert.match(draftButtons(harness)[0].childNodes[1].textContent, /UNSAVED · IN MEMORY/);
+  assert.match(harness.get('reviewState').textContent, /RE-REVIEW NEEDED/);
+  assert.equal(fireBeforeUnload(harness).defaultPrevented, true);
+
+  harness.languages.en.click();
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  draftButtons(harness)[1].click();
+  assert.equal(harness.get('draftSaveState').textContent, 'SAVED IN BROWSER');
+  assert.match(harness.get('workspaceSaveState').textContent, /1 draft.*unsaved in-memory/i);
+  assert.match(draftButtons(harness)[0].childNodes[1].textContent, /UNSAVED · IN MEMORY/);
+  draftButtons(harness)[0].click();
+  assert.equal(harness.get('summary_en').value, 'Live edit stays in memory');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+
+  click(harness, 'saveButton');
+  assert.equal(storage.writes, writesBeforeInput + 1);
+  assert.equal(harness.get('draftSaveState').textContent, 'SAVED IN BROWSER');
+  assert.match(harness.get('workspaceSaveState').textContent, /all current drafts are saved/i);
+  assert.equal(fireBeforeUnload(harness).defaultPrevented, false);
+  assert.match(harness.get('reviewState').textContent, /RE-REVIEW NEEDED/);
+});
+
+test('sample baseline handoff keeps deadline correction and unknown null extensions through compare gate', async () => {
+  const baseline = JSON.parse(fs.readFileSync(path.join(ROOT, 'test/fixtures/sample_feed.json'), 'utf8'));
+  baseline.jobs[0].sample_extension = null;
+  baseline.jobs[0].sample_nested_extension = { preserved: true, values: [null, 'sample-only'] };
+  const temp = fs.mkdtempSync(path.join('/home/user', 'karmopath-admin-handoff-'));
+  try {
+    const baselinePath = path.join(temp, 'baseline.json');
+    const candidatePath = path.join(temp, 'candidate.json');
+    const baselineText = `${JSON.stringify(baseline, null, 2)}\n`;
+    fs.writeFileSync(baselinePath, baselineText, 'utf8');
+    const untouchedBaseline = fs.readFileSync(baselinePath);
+    const harness = runAdmin();
+    await importText(harness, baselineText);
+    assert.match(harness.get('feedback').textContent, /imported after validation/);
+    const storageAfterImport = harness.storage.raw;
+
+    enter(harness, 'application_end_date', '2027-01-31');
+    assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+    click(harness, 'candidateExportButton');
+    assert.match(harness.get('feedback').textContent, /existing record.*cannot be omitted/i);
+    assert.equal(downloadedCandidate(harness), null);
+
+    click(harness, 'draftExportButton');
+    const backup = JSON.parse(harness.downloads.at(-1).content);
+    assert.equal(backup.drafts[0].data.application_end_date, '2027-01-31');
+    assert.equal(backup.drafts[0].data.sample_extension, null);
+    assert.deepEqual(backup.drafts[0].data.sample_nested_extension, { preserved: true, values: [null, 'sample-only'] });
+    assert.equal(harness.storage.raw, storageAfterImport);
+    assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+
+    click(harness, 'reviewButton');
+    assert.match(harness.get('reviewState').textContent, /REVIEWED CANDIDATE/);
+    assert.equal(harness.get('draftSaveState').textContent, 'SAVED IN BROWSER');
+    click(harness, 'candidateExportButton');
+    const candidate = downloadedCandidate(harness);
+    assert.ok(candidate);
+    assert.equal(candidate.jobs[0].application_end_date, '2027-01-31');
+    assert.equal(candidate.jobs[0].sample_extension, null);
+    assert.deepEqual(candidate.jobs[0].sample_nested_extension, { preserved: true, values: [null, 'sample-only'] });
+    assert.equal(candidate.jobs[0].published_at, baseline.jobs[0].published_at);
+    fs.writeFileSync(candidatePath, JSON.stringify(candidate, null, 2), 'utf8');
+
+    const validation = spawnSync('python3', [path.join(ROOT, 'tools/feed/validate.py'), candidatePath], { encoding: 'utf8' });
+    assert.equal(validation.status, 0, validation.stdout + validation.stderr);
+    const comparison = spawnSync('python3', [path.join(ROOT, 'tools/feed/compare.py'), baselinePath, candidatePath], { encoding: 'utf8' });
+    assert.equal(comparison.status, 0, comparison.stdout + comparison.stderr);
+    assert.match(comparison.stdout, /Changed \(1\):/);
+    assert.match(comparison.stdout, new RegExp(`${baseline.jobs[0].id}: application_end_date`));
+    assert.deepEqual(fs.readFileSync(baselinePath), untouchedBaseline);
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+});
+
+test('re-review rejects equal or regressed real review instants without fabricating timestamps', async () => {
+  const fixedNow = Date.now();
+  const nowTimestamp = new Date(fixedNow).toISOString();
+  const wholeSecond = nowTimestamp.slice(0, 19);
+  const milliseconds = nowTimestamp.slice(20, -1);
+  const justFuture = `${wholeSecond}.${milliseconds}0001Z`;
+  for (const [label, priorTimestamp] of [['equal', nowTimestamp], ['sub-millisecond future', justFuture]]) {
+    const job = validJob(`timestamp-${label.replace(/[^a-z]+/g, '-')}`, {
+      published_at: new Date(fixedNow - 60_000).toISOString(),
+      reviewed_at: priorTimestamp,
+      updated_at: priorTimestamp,
+    });
+    const harness = runAdmin(makeStorage(null), [], { now: fixedNow });
+    await importJson(harness, validFeed(job));
+    const persistedRaw = harness.storage.raw;
+    enter(harness, 'summary_en', `Edit with ${label} timestamp`);
+    click(harness, 'candidateExportButton');
+    assert.equal(downloadedCandidate(harness), null);
+    click(harness, 'reviewButton');
+    assert.match(harness.get('feedback').textContent, /No timestamps were changed/i);
+    assert.match(harness.get('feedback').textContent, /current review time must be later/i);
+    assert.equal(harness.storage.raw, persistedRaw);
+    assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+    click(harness, 'draftExportButton');
+    const backup = JSON.parse(harness.downloads.at(-1).content);
+    assert.equal(backup.drafts[0].data.reviewed_at, priorTimestamp);
+    assert.equal(backup.drafts[0].data.updated_at, priorTimestamp);
+  }
+});
+
 test('real app.js blocks candidate export after editing an imported existing job', async () => {
   const job = validJob('existing-req');
   const harness = runAdmin();
@@ -216,6 +356,54 @@ test('real app.js blocks candidate export after editing an imported existing job
   assert.match(harness.get('feedback').textContent, /existing record.*cannot be omitted/i);
   assert.match(harness.get('feedback').textContent, /existing-req/);
   assert.equal(downloadedCandidate(harness), null);
+});
+
+test('draft backup contains live edits but never clears the dirty state or persists to browser storage', () => {
+  const job = validJob('backup-dirty');
+  const raw = seedWorkspace([savedDraft('backup-key', job)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage);
+  enter(harness, 'summary_en', 'Private unsaved backup value');
+  const writesBeforeBackup = storage.writes;
+  click(harness, 'draftExportButton');
+  const backup = JSON.parse(harness.downloads.find((file) => file.filename === 'karmopath-admin-drafts.json').content);
+  assert.equal(backup.drafts[0].data.summary_en, 'Private unsaved backup value');
+  assert.equal(storage.raw, raw);
+  assert.equal(storage.writes, writesBeforeBackup);
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('feedback').textContent, /does not change browser storage or clear the unsaved indicators/i);
+});
+
+test('failed Save and review writes retain edited values and keep them in private backup', () => {
+  const job = validJob('write-failure');
+  const raw = seedWorkspace([savedDraft('write-key', job)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage);
+  enter(harness, 'summary_en', 'Edit survives failed writes');
+  storage.failSet = true;
+
+  click(harness, 'saveButton');
+  assert.equal(storage.raw, raw);
+  assert.equal(draftButtons(harness).length, 1);
+  assert.equal(harness.get('summary_en').value, 'Edit survives failed writes');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('feedback').textContent, /write failed/i);
+  assert.equal(harness.downloads.length, 0);
+  click(harness, 'draftExportButton');
+  let backup = JSON.parse(harness.downloads.at(-1).content);
+  assert.equal(backup.drafts[0].data.summary_en, 'Edit survives failed writes');
+
+  click(harness, 'reviewButton');
+  assert.equal(storage.raw, raw);
+  assert.equal(harness.get('summary_en').value, 'Edit survives failed writes');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('feedback').textContent, /write failed/i);
+  click(harness, 'draftExportButton');
+  backup = JSON.parse(harness.downloads.at(-1).content);
+  assert.equal(backup.drafts[0].data.summary_en, 'Edit survives failed writes');
+  assert.equal(backup.drafts[0].reviewed, false);
+  assert.equal(storage.writes, 2); // failed Save and failed review; backups do not write storage
+  assert.equal(storage.raw, raw);
 });
 
 test('real app.js prevents deletion of imported records and keeps their identity', async () => {
@@ -290,6 +478,112 @@ test('failed import/new/delete storage writes retain old workspace and never sho
   assert.equal(draftButtons(harness)[1].getAttribute('aria-current'), 'true');
   assert.match(harness.get('feedback').textContent, /write failed/i);
   assert.doesNotMatch(harness.get('feedback').textContent, /deleted/i);
+});
+
+test('invalid and cancelled replacement imports keep selection, live edits, and storage intact', async () => {
+  const first = validJob('import-first');
+  const second = validJob('import-second');
+  const raw = seedWorkspace([savedDraft('first-key', first), savedDraft('second-key', second)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage, [false]);
+  draftButtons(harness)[1].click();
+  enter(harness, 'summary_en', 'Unsaved selected-draft text');
+  const selectedKey = 'second-key';
+
+  const invalid = validFeed(validJob('bad-import', { title_en: '' }));
+  await importJson(harness, invalid);
+  assert.match(harness.get('feedback').textContent, /Import rejected/i);
+  assert.equal(harness.prompts.length, 0);
+  assert.equal(storage.raw, raw);
+  assert.equal(harness.get('summary_en').value, 'Unsaved selected-draft text');
+  assert.equal(draftButtons(harness).find((button) => button.getAttribute('aria-current') === 'true').childNodes[0].textContent, `নমুনা import-second`);
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+
+  await importJson(harness, validFeed(validJob('replacement-import')));
+  assert.match(harness.prompts[0], /unsaved in-memory edits.*will be discarded/i);
+  assert.equal(storage.raw, raw);
+  assert.equal(harness.get('summary_en').value, 'Unsaved selected-draft text');
+  assert.equal(draftButtons(harness).length, 2);
+  assert.equal(draftButtons(harness).find((button) => button.getAttribute('aria-current') === 'true').childNodes[0].textContent, `নমুনা import-second`);
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.equal(selectedKey, 'second-key');
+
+  storage.failSet = true;
+  await importJson(harness, validFeed(validJob('write-failed-import')));
+  assert.match(harness.get('feedback').textContent, /write failed/i);
+  assert.equal(storage.raw, raw);
+  assert.equal(harness.get('summary_en').value, 'Unsaved selected-draft text');
+  assert.equal(draftButtons(harness).length, 2);
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+});
+
+test('new and delete transitions disclose consequences and commit or retain the whole workspace exactly', () => {
+  const first = validJob('workspace-first');
+  const second = validJob('workspace-second');
+  const raw = seedWorkspace([savedDraft('workspace-first-key', first), savedDraft('workspace-second-key', second)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage, [false, true]);
+  enter(harness, 'summary_en', 'Edit persisted by explicit new-draft action');
+  click(harness, 'newDraftButton'); // cancel: the live workspace remains exactly as before
+  assert.match(harness.prompts[0], /save the workspace.*no edits will be discarded/i);
+  assert.equal(storage.raw, raw);
+  assert.equal(draftButtons(harness).length, 2);
+  assert.equal(harness.get('summary_en').value, 'Edit persisted by explicit new-draft action');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+
+  storage.failSet = true;
+  click(harness, 'newDraftButton'); // accepted, but failed write must retain old live workspace
+  assert.equal(storage.raw, raw);
+  assert.equal(draftButtons(harness).length, 2);
+  assert.equal(harness.get('summary_en').value, 'Edit persisted by explicit new-draft action');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('feedback').textContent, /write failed/i);
+
+  storage.failSet = false;
+  click(harness, 'newDraftButton'); // retry: full current workspace, including edit, is persisted
+  const persisted = JSON.parse(storage.raw);
+  assert.equal(persisted.drafts.length, 3);
+  assert.equal(persisted.drafts.find((draft) => draft.key === 'workspace-first-key').data.summary_en,
+    'Edit persisted by explicit new-draft action');
+  assert.equal(harness.get('draftSaveState').textContent, 'SAVED IN BROWSER');
+  assert.match(harness.get('workspaceSaveState').textContent, /all current drafts are saved/i);
+  assert.equal(fireBeforeUnload(harness).defaultPrevented, false);
+});
+
+test('failed reload after reset confirmation preserves in-memory edits and selection', () => {
+  const job = validJob('reset-read-failure');
+  const raw = seedWorkspace([savedDraft('reset-key', job)]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage);
+  enter(harness, 'summary_en', 'Keep this in memory after read failure');
+  storage.failRead = true;
+  click(harness, 'resetButton');
+  assert.match(harness.prompts[0], /discards in-memory changes/i);
+  assert.equal(harness.storage.raw, raw);
+  assert.equal(draftButtons(harness).length, 1);
+  assert.equal(harness.get('summary_en').value, 'Keep this in memory after read failure');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+  assert.match(harness.get('feedback').textContent, /in-memory drafts were kept/i);
+  assert.equal(harness.get('recoveryPanel').hidden, false);
+});
+
+test('deleting a dirty never-published draft warns before consent and cancellation preserves it', () => {
+  const job = validJob('delete-unsaved');
+  const raw = seedWorkspace([savedDraft('delete-key', job, { existing: false, reviewed: false, idLocked: false })]);
+  const storage = makeStorage(raw);
+  const harness = runAdmin(storage, [false, true]);
+  enter(harness, 'summary_en', 'Will be deleted only after explicit warning');
+
+  click(harness, 'deleteDraftButton');
+  assert.match(harness.prompts[0], /unsaved in-memory edits will be discarded/i);
+  assert.equal(storage.raw, raw);
+  assert.equal(draftButtons(harness).length, 1);
+  assert.equal(harness.get('summary_en').value, 'Will be deleted only after explicit warning');
+  assert.equal(harness.get('draftSaveState').textContent, 'UNSAVED · MEMORY ONLY');
+
+  click(harness, 'deleteDraftButton');
+  assert.equal(draftButtons(harness).length, 0);
+  assert.deepEqual(JSON.parse(storage.raw), { version: 1, drafts: [] });
 });
 
 test('corrupt browser storage is backed up and requires explicit recovery consent', () => {

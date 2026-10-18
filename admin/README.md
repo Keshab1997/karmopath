@@ -12,6 +12,14 @@ This is a dependency-free, browser-local editor for human-reviewed candidate pos
 6. After personally checking the original notice, eligibility, and dates, use **Confirm source review**. This records an owner attestation; it does not prove that a source is official. A new item gets a candidate `published_at` initialized to the review time. That time is not a publication event; the captain must set the actual timestamp when approving the candidate.
 7. **Export candidate** includes reviewed records only, blocks if any existing record still needs review, and names any omitted new drafts. It downloads `karmopath-candidate-feed.json`; there is no publish action or endpoint. Run the CLI validator and review the candidate diff before any separately approved publication.
 
+## Edit and persistence model
+
+Typing changes the selected draft in **this tab's memory only**. Each draft and the workspace indicator distinguish unsaved in-memory edits from data saved in this browser; switching drafts or preview language does not discard those edits. Input events never auto-save. An explicit **Save local draft** writes the entire current workspace. Review confirmation, creating a new draft, import replacement, delete, and recovery also use whole-workspace writes, so a successful one of those actions may persist edits in other drafts too. A failed write keeps the old browser storage, selection, edited values, and unsaved indicators intact. Review state is separate: editing an existing record invalidates its review and candidate export remains blocked until a genuine fresh review can be timestamped after its prior review/update times.
+
+**Export drafts** downloads a private backup of the current in-memory workspace, including unsaved edits. It does not write browser storage or clear the unsaved indicators. Keep it private; it may contain unpublished editorial work. Undo/reset, replacement import, deletion, and recovery explain when unsaved edits would be discarded before asking for confirmation. Creating a new draft with pending edits also asks before committing the whole workspace. If you cancel, import validation fails, or a storage write fails, the current selection and live edits remain. Existing records remain non-deletable.
+
+A best-effort `beforeunload` warning appears while the workspace has unsaved edits. Browser warnings depend on browser policy and user action: they are not durable storage, do not guarantee recovery, and are not a substitute for saving or exporting a private backup. Browser local storage itself is also not a durable backup.
+
 ## Local export, validation, and comparison handoff
 
 The candidate export is a local review artifact, not a publication. Keep it separate from the exact local snapshot of the currently published schema-v1 feed. From the repository root, validate first and then compare:
@@ -51,7 +59,7 @@ PLAYWRIGHT_BROWSERS_PATH=/home/user/c3-browser-tools/browsers \
   node tests/feed/admin_browser_smoke.js
 ```
 
-The smoke starts a static server bound only to `127.0.0.1`, uses `test/fixtures/sample_feed.json`, and aborts every browser request outside that local origin. It covers real Chromium import/edit/review/export/CLI validation, unsafe content, storage recovery, and desktop/320px layout. It does not publish or contact any source site. Exit status is `0` for a structurally valid schema-v1 candidate and nonzero for malformed JSON, inaccessible files, or field-path validation errors. Structural validity does not establish official-source authenticity or human review; those remain human responsibilities.
+The smoke starts a static server bound only to `127.0.0.1`, clones the explicitly sample-only `test/fixtures/sample_feed.json` in a temporary directory, and aborts every browser request outside that local origin. It covers real Chromium dirty indicators, unsaved private backup, a sample deadline correction, fresh-review gating, candidate validation and offline comparison against an untouched baseline, unsafe content, storage recovery, and desktop/320px layout. It does not publish or contact any source site. Exit status is `0` for a structurally valid schema-v1 candidate and nonzero for malformed JSON, inaccessible files, or field-path validation errors. Structural validity does not establish official-source authenticity or human review; those remain human responsibilities.
 
 ## Data safety and boundaries
 

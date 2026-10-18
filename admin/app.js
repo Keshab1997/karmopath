@@ -31,6 +31,7 @@
   let storageRecovery = null;
   let previewLanguage = 'bn';
   let previewExpiryTimer = null;
+  let persistedDraftSignatures = new Map();
 
   function blankData() {
     return {
@@ -41,6 +42,50 @@
       application_end_date: null, application_end_at: null, exam_date: null, apply_url: null,
       age_note_bn: null, age_note_en: null,
     };
+  }
+
+  function canonicalJson(value) {
+    if (Array.isArray(value)) return `[${value.map((item) => canonicalJson(item) ?? 'null').join(',')}]`;
+    if (value && typeof value === 'object') {
+      const entries = Object.keys(value).sort()
+        .filter((key) => value[key] !== undefined)
+        .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`);
+      return `{${entries.join(',')}}`;
+    }
+    return JSON.stringify(value);
+  }
+
+  function draftSignature(draft) {
+    return canonicalJson({
+      key: draft.key, data: draft.data, reviewed: draft.reviewed,
+      existing: draft.existing, idLocked: draft.idLocked,
+    });
+  }
+
+  function rememberPersistedDrafts(savedDrafts) {
+    persistedDraftSignatures = new Map(savedDrafts.map((draft) => [draft.key, draftSignature(draft)]));
+  }
+
+  function draftIsDirty(draft) {
+    return persistedDraftSignatures.get(draft.key) !== draftSignature(draft);
+  }
+
+  function dirtyDrafts() {
+    return drafts.filter(draftIsDirty);
+  }
+
+  function renderSaveIndicators() {
+    const dirty = dirtyDrafts();
+    const current = selectedDraft();
+    const currentDirty = current && draftIsDirty(current);
+    $('draftSaveState').textContent = current
+      ? (currentDirty ? 'UNSAVED · MEMORY ONLY' : 'SAVED IN BROWSER')
+      : 'NO DRAFT SELECTED';
+    $('draftSaveState').className = currentDirty ? 'save-state unsaved' : 'save-state saved';
+    $('workspaceSaveState').textContent = dirty.length
+      ? `Workspace: ${dirty.length} draft(s) have unsaved in-memory changes.`
+      : 'Workspace: all current drafts are saved in this browser.';
+    $('workspaceSaveState').className = dirty.length ? 'workspace-save-state unsaved' : 'workspace-save-state saved';
   }
 
   function makeKey() {
@@ -93,6 +138,7 @@
     drafts = result.drafts;
     currentKey = result.currentKey;
     storageRecovery = result.recovery;
+    rememberPersistedDrafts(drafts);
     renderRecoveryPanel();
     return true;
   }
@@ -138,6 +184,7 @@
     drafts = loaded.drafts;
     currentKey = loaded.currentKey;
     storageRecovery = loaded.recovery;
+    rememberPersistedDrafts(drafts);
     renderRecoveryPanel();
     if (storageRecovery) {
       const message = storageRecovery.kind === 'corrupt'
@@ -196,9 +243,10 @@
       const title = document.createElement('strong');
       title.textContent = draft.data.title_bn || draft.data.title_en || draft.data.id || 'Untitled draft';
       const status = document.createElement('small');
-      status.textContent = draft.existing && !draft.reviewed
+      const reviewLabel = draft.existing && !draft.reviewed
         ? 'Existing record · re-review required'
         : (draft.reviewed ? 'Reviewed · candidate only' : 'New draft · not reviewed');
+      status.textContent = `${reviewLabel} · ${draftIsDirty(draft) ? 'UNSAVED · IN MEMORY' : 'saved in browser'}`;
       button.append(title, status);
       button.addEventListener('click', () => selectDraft(draft.key));
       els.draftList.append(button);
@@ -229,7 +277,7 @@
     $('idHint').textContent = draft.idLocked ? 'ID is frozen after initial candidate review.' : 'Lowercase letters, numbers, hyphens; freeze after first review.';
     els.title.textContent = draft.data.title_en || draft.data.title_bn || 'Untitled draft';
     els.subtitle.textContent = draft.existing ? 'Imported candidate · published_at is preserved.' : 'Local draft · nothing is published by this tool.';
-    els.reviewState.textContent = draft.reviewed ? 'REVIEWED CANDIDATE' : (draft.existing ? 'RE-REVIEW NEEDED' : 'DRAFT');
+    els.reviewState.textContent = draft.reviewed ? 'REVIEWED CANDIDATE' : (draft.existing ? 'RE-REVIEW NEEDED' : 'NOT REVIEWED');
     renderPreview(draft.data);
   }
 
@@ -237,6 +285,7 @@
     renderRecoveryPanel();
     renderList();
     renderEditor();
+    renderSaveIndicators();
   }
 
   function selectDraft(key) {
@@ -246,11 +295,13 @@
   }
 
   function newDraft() {
+    const dirtyCount = dirtyDrafts().length;
+    if (dirtyCount && !window.confirm(`Create a new draft and save the workspace? This will persist the current in-memory edits in ${dirtyCount} draft(s) to this browser; no edits will be discarded.`)) return;
     const draft = { key: makeKey(), data: blankData(), reviewed: false, existing: false, idLocked: false };
     const nextDrafts = [draft, ...drafts];
     if (!commitDrafts(nextDrafts, draft.key)) return;
     renderAll();
-    setFeedback('New local draft created. Save it to keep changes in this browser.', 'info');
+    setFeedback('New local draft created and this workspace write succeeded. Future typing stays in memory until another explicit Save, review, or workspace action.', 'success');
     $('id').focus();
   }
 
@@ -268,6 +319,27 @@
     const minute = Number(value.slice(14, 16));
     const second = Number(value.slice(17, 19));
     return hour <= 23 && minute <= 59 && second <= 59 && Number.isFinite(Date.parse(value));
+  }
+
+  function compareTimestamps(leftValue, rightValue) {
+    const parts = (value) => {
+      if (!validTimestamp(value)) return null;
+      const fractionStart = value.indexOf('.');
+      const whole = fractionStart === -1 ? value.slice(0, -1) : value.slice(0, fractionStart);
+      const fraction = fractionStart === -1 ? '' : value.slice(fractionStart + 1, -1);
+      return { second: Date.parse(`${whole}Z`), fraction };
+    };
+    const left = parts(leftValue);
+    const right = parts(rightValue);
+    if (!left || !right || !Number.isFinite(left.second) || !Number.isFinite(right.second)) return null;
+    if (left.second !== right.second) return left.second < right.second ? -1 : 1;
+    const length = Math.max(left.fraction.length, right.fraction.length);
+    for (let index = 0; index < length; index += 1) {
+      const leftDigit = left.fraction.charCodeAt(index) || 48;
+      const rightDigit = right.fraction.charCodeAt(index) || 48;
+      if (leftDigit !== rightDigit) return leftDigit < rightDigit ? -1 : 1;
+    }
+    return 0;
   }
 
   function checkHttps(value, path, errors, nullable = false) {
@@ -413,7 +485,7 @@
     if (!draft) return;
     const data = readForm();
     const nextDrafts = drafts.map((item) => item.key === draft.key
-      ? { ...item, data, reviewed: false }
+      ? { ...item, data, reviewed: item.reviewed && canonicalJson(data) === canonicalJson(item.data) }
       : item);
     if (!commitDrafts(nextDrafts, currentKey)) return;
     renderAll();
@@ -426,6 +498,18 @@
     if (!window.confirm('Confirm only after checking the original notice, eligibility and dates. This records your review; it does not publish the post. Continue?')) return;
     const data = readForm();
     const now = new Date().toISOString();
+    if (draft.existing && !draft.reviewed) {
+      const freshnessErrors = [];
+      for (const key of ['reviewed_at', 'updated_at']) {
+        const order = compareTimestamps(now, data[key]);
+        if (order === null) freshnessErrors.push(`job.${key}: existing timestamp is invalid; a fresh advance cannot be established`);
+        else if (order <= 0) freshnessErrors.push(`job.${key}: current review time must be later than the existing timestamp; wait for real time to advance`);
+      }
+      if (freshnessErrors.length) {
+        setFeedback(`Cannot confirm review yet. No timestamps were changed:\n${freshnessErrors.map((error) => `• ${error}`).join('\n')}`, 'error');
+        return;
+      }
+    }
     if (!draft.existing || !data.published_at) data.published_at = now;
     data.reviewed_at = now;
     data.updated_at = now;
@@ -445,12 +529,24 @@
   function resetCurrent() {
     const draft = selectedDraft();
     if (!draft) return;
+    const dirtyCount = dirtyDrafts().length;
+    if (dirtyCount && !window.confirm(`Undo unsaved edits? This discards in-memory changes across ${dirtyCount} draft(s) and reloads the last browser-persisted workspace.`)) return;
     const savedKey = draft.key;
-    readStorage();
+    const loaded = Core.loadWorkspace(storageHandle(), STORAGE_KEY, hydrateDraft);
+    if (loaded.recovery) {
+      storageRecovery = loaded.recovery;
+      // The previous snapshot can no longer be confirmed as present in storage.
+      persistedDraftSignatures = new Map();
+      renderAll();
+      setFeedback('Browser storage could not be re-read. Existing selection and in-memory drafts were kept; export a private backup before recovery.', 'error');
+      return;
+    }
+    drafts = loaded.drafts;
     currentKey = drafts.some((item) => item.key === savedKey) ? savedKey : (drafts[0]?.key || null);
+    storageRecovery = null;
+    rememberPersistedDrafts(drafts);
     renderAll();
-    if (storageRecovery) setFeedback('Saved draft could not be restored. Existing storage was left untouched.', 'error');
-    else setFeedback('Unsaved edits discarded; restored the last saved local draft.', 'info');
+    setFeedback(dirtyCount ? 'Unsaved in-memory edits discarded after confirmation; restored the last saved local workspace.' : 'Restored the last saved local workspace.', 'info');
   }
 
   function deleteCurrent() {
@@ -461,7 +557,12 @@
       setFeedback(`Existing record ${draft.data.id || '(missing ID)'} cannot be deleted. Keep its ID, set status to ${requiredStatus}, then confirm a fresh source review.`, 'error');
       return;
     }
-    if (!window.confirm('Delete this never-published local draft? This cannot be undone.')) return;
+    const draftDirty = draftIsDirty(draft);
+    const otherDirtyCount = dirtyDrafts().filter((item) => item.key !== draft.key).length;
+    const warning = draftDirty
+      ? ` Its unsaved in-memory edits will be discarded.${otherDirtyCount ? ` Unsaved edits in ${otherDirtyCount} other draft(s) will be saved by this workspace write.` : ''}`
+      : (otherDirtyCount ? ` This workspace write will also save unsaved edits in ${otherDirtyCount} other draft(s).` : '');
+    if (!window.confirm(`Delete this never-published local draft? This cannot be undone.${warning}`)) return;
     const nextDrafts = drafts.filter((item) => item.key !== draft.key);
     const nextKey = nextDrafts[0]?.key || null;
     if (!commitDrafts(nextDrafts, nextKey)) return;
@@ -498,7 +599,9 @@
       setFeedback('Download the raw backup before recovery can continue.', 'error');
       return;
     }
-    if (!window.confirm('I have saved the raw backup. Clear only this browser’s unreadable saved draft value and start an empty local workspace?')) return;
+    const dirtyCount = dirtyDrafts().length;
+    const unsavedWarning = dirtyCount ? ` This will also discard in-memory edits in ${dirtyCount} draft(s).` : '';
+    if (!window.confirm(`I have saved the raw backup. Clear only this browser’s unreadable saved draft value and start an empty local workspace?${unsavedWarning}`)) return;
     const result = Core.recoverWorkspace({
       storage: storageHandle(), key: STORAGE_KEY, current: currentWorkspace(),
       backupDownloaded: storageRecovery.backupDownloaded, confirmed: true,
@@ -513,7 +616,8 @@
       format: 'karmopath-admin-drafts-v1', exported_at: new Date().toISOString(),
       drafts: drafts.map(({ key, data, reviewed, existing, idLocked }) => ({ key, data, reviewed, existing, idLocked })),
     });
-    setFeedback('Draft backup exported. Keep this file private; it may contain unpublished editorial work.', 'success');
+    const dirtyCount = dirtyDrafts().length;
+    setFeedback(`Private draft backup exported from the current in-memory workspace${dirtyCount ? `, including unsaved edits in ${dirtyCount} draft(s)` : ''}. This download does not change browser storage or clear the unsaved indicators. Keep it private; it may contain unpublished editorial work.`, 'success');
   }
 
   function exportCandidate() {
@@ -563,7 +667,9 @@
       imported = value.jobs.map((data) => ({ key: makeKey(), data: { ...blankData(), ...data }, reviewed: true, existing: true, idLocked: true }));
     }
     const kind = isDraftBundle ? 'saved drafts' : 'candidate feed';
-    if (!window.confirm(`Replace the current ${drafts.length} local draft(s) with ${imported.length} validated ${kind}? This changes only this browser's local workspace.`)) return;
+    const dirtyCount = dirtyDrafts().length;
+    const unsavedWarning = dirtyCount ? ` Unsaved in-memory edits in ${dirtyCount} current draft(s) will be discarded.` : '';
+    if (!window.confirm(`Replace the current ${drafts.length} local draft(s) with ${imported.length} validated ${kind}? This changes only this browser's local workspace.${unsavedWarning}`)) return;
     const nextKey = imported[0]?.key || null;
     if (!commitDrafts(imported, nextKey)) return;
     renderAll();
@@ -586,9 +692,10 @@
     if (!draft) return;
     draft.data = readForm();
     if (draft.reviewed) draft.reviewed = false;
-    els.reviewState.textContent = draft.existing ? 'RE-REVIEW NEEDED' : 'DRAFT · UNSAVED';
+    els.reviewState.textContent = draft.existing ? 'RE-REVIEW NEEDED' : 'NOT REVIEWED';
     renderPreview(draft.data);
     renderList();
+    renderSaveIndicators();
   });
   for (const button of document.querySelectorAll('.lang-switch button')) button.addEventListener('click', () => {
     previewLanguage = button.dataset.lang;
@@ -600,5 +707,10 @@
   renderAll();
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) renderPreview(selectedDraft()?.data || null);
+  });
+  window.addEventListener('beforeunload', (event) => {
+    if (!dirtyDrafts().length) return;
+    event.preventDefault();
+    event.returnValue = '';
   });
 })();
