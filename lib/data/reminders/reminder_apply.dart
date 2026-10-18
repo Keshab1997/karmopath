@@ -166,6 +166,16 @@ class ReminderApplyResult {
       '${scheduledEntries.length} schedule, ${failures.length} failed)';
 }
 
+class _ReminderReconcileCancellation {
+  const _ReminderReconcileCancellation({
+    required this.jobId,
+    required this.platformId,
+  });
+
+  final String jobId;
+  final int platformId;
+}
+
 /// Applies desired reminder plans to a [ReminderPlatform], reconciling
 /// through a [ReminderStateStore].
 ///
@@ -230,6 +240,38 @@ class ReminderApplier {
     });
   }
 
+  /// Reconciles the durable ledger with the platform's currently pending IDs,
+  /// then brings those known reminders to [desiredPlan].
+  ///
+  /// The pending-ID query runs on the same serial queue as [apply] and
+  /// [applyDiff], after earlier operations have completed. Its result is copied
+  /// before the plan is examined. IDs not present in the durable registry are
+  /// never cancelled or assigned guessed job mappings.
+  ///
+  /// A matching applied record is retained only when its stable ID is still
+  /// pending. Missing, stale, or orphaned known IDs are cancelled before any
+  /// schedules are attempted; schedules reuse existing reservations. The
+  /// callback is injected so this module remains independent of any OS plugin.
+  Future<ReminderApplyResult> reconcile(
+    ReminderPlan desiredPlan,
+    ReminderPlatform platform,
+    String payloadVariant, {
+    required Future<Set<int>> Function() readPendingPlatformIds,
+  }) {
+    return _enqueue(() async {
+      _validateVariant(payloadVariant);
+      final desiredById = _indexDesiredPlan(desiredPlan);
+      await _store.initialize();
+      final pendingPlatformIds = Set<int>.of(await readPendingPlatformIds());
+      return _executeReconciliation(
+        desiredById: desiredById,
+        pendingPlatformIds: pendingPlatformIds,
+        platform: platform,
+        payloadVariant: payloadVariant,
+      );
+    });
+  }
+
   /// Runs [task] after every previously enqueued apply has finished.
   ///
   /// Enqueueing happens synchronously at call time, so calls made in the
@@ -248,6 +290,216 @@ class ReminderApplier {
       }
     });
     return completer.future;
+  }
+
+  Future<ReminderApplyResult> _executeReconciliation({
+    required Map<String, ReminderPlanEntry> desiredById,
+    required Set<int> pendingPlatformIds,
+    required ReminderPlatform platform,
+    required String payloadVariant,
+  }) async {
+    final snapshot = _store.snapshot;
+    final cancellations = <_ReminderReconcileCancellation>[];
+    final schedules = <ReminderPlanEntry>[];
+
+    // A matching ledger entry is trusted only while its reserved ID is still
+    // pending. Every other desired, registered entry is cancelled first and
+    // then repaired/replaced under that same reservation.
+    for (final desired in desiredById.values) {
+      final registry = snapshot.entryFor(desired.jobId);
+      if (registry == null) {
+        schedules.add(desired);
+        continue;
+      }
+
+      final applied = registry.applied;
+      if (applied == null) {
+        // A reservation-only ID can be an OS-success / ledger-write crash
+        // window. If it is pending, cancel the known ID before retrying it.
+        if (pendingPlatformIds.contains(registry.platformId)) {
+          cancellations.add(
+            _ReminderReconcileCancellation(
+              jobId: registry.jobId,
+              platformId: registry.platformId,
+            ),
+          );
+        }
+        schedules.add(desired);
+        continue;
+      }
+
+      final matchesApplied =
+          applied.dueAtUtc == desired.dueAtUtc &&
+          applied.closesAtUtc == desired.closesAtUtc &&
+          applied.contentKey == desired.contentKey;
+      final isPending = pendingPlatformIds.contains(registry.platformId);
+      if (matchesApplied &&
+          applied.payloadVariant == payloadVariant &&
+          isPending) {
+        // Ledger and OS agree exactly: no platform calls and no writes.
+        continue;
+      }
+
+      cancellations.add(
+        _ReminderReconcileCancellation(
+          jobId: registry.jobId,
+          platformId: registry.platformId,
+        ),
+      );
+      schedules.add(desired);
+    }
+
+    // Removed or newly-ineligible applied work must be cancelled even if the
+    // query says its notification has already disappeared; cancel is required
+    // to be idempotent and the ledger is cleared only after it succeeds. A
+    // pending bare reservation is the other known orphan and is cancelled,
+    // while an absent bare reservation is deliberately left untouched.
+    for (final registry in snapshot.entries) {
+      if (desiredById.containsKey(registry.jobId)) continue;
+      if (registry.applied != null ||
+          pendingPlatformIds.contains(registry.platformId)) {
+        cancellations.add(
+          _ReminderReconcileCancellation(
+            jobId: registry.jobId,
+            platformId: registry.platformId,
+          ),
+        );
+      }
+    }
+
+    // Match the existing diff's deterministic orders, while enforcing a
+    // global cancellation phase before the scheduling phase.
+    cancellations.sort((a, b) => a.jobId.compareTo(b.jobId));
+    schedules.sort((a, b) {
+      final byDue = a.dueAtUtc.compareTo(b.dueAtUtc);
+      return byDue != 0 ? byDue : a.jobId.compareTo(b.jobId);
+    });
+
+    final cancelled = <String>[];
+    final scheduled = <ReminderPlanEntry>[];
+    final failures = <ReminderApplyFailure>[];
+    final failedJobs = <String>{};
+
+    for (final cancellation in cancellations) {
+      try {
+        await platform.cancel(cancellation.platformId);
+      } catch (error, stack) {
+        failures.add(
+          ReminderApplyFailure(
+            jobId: cancellation.jobId,
+            error: error,
+            stackTrace: stack,
+            duringCancellation: true,
+          ),
+        );
+        failedJobs.add(cancellation.jobId);
+        continue;
+      }
+
+      try {
+        // For a pending orphan this is intentionally a no-op; the successful
+        // platform cancellation still belongs in cancelledJobIds.
+        await _store.recordCancellationSuccess(cancellation.jobId);
+      } catch (error, stack) {
+        failures.add(
+          ReminderApplyFailure(
+            jobId: cancellation.jobId,
+            error: error,
+            stackTrace: stack,
+            duringCancellation: true,
+          ),
+        );
+        failedJobs.add(cancellation.jobId);
+        continue;
+      }
+      cancelled.add(cancellation.jobId);
+    }
+
+    for (final scheduling in schedules) {
+      if (failedJobs.contains(scheduling.jobId)) {
+        // Never schedule over an ID whose cancellation or cancellation record
+        // failed. Unrelated jobs continue through the queue.
+        continue;
+      }
+
+      final current = _store.snapshot;
+      if (current.entryFor(scheduling.jobId) == null &&
+          pendingPlatformIds.contains(current.nextPlatformId)) {
+        // The next monotonic allocation would overwrite a pending OS ID that
+        // has no durable owner. Leave that ID untouched rather than guessing.
+        failures.add(
+          ReminderApplyFailure(
+            jobId: scheduling.jobId,
+            error: StateError(
+              'refusing to allocate pending platform ID '
+              '${current.nextPlatformId} because it is absent from the ledger',
+            ),
+            stackTrace: StackTrace.current,
+            duringCancellation: false,
+          ),
+        );
+        failedJobs.add(scheduling.jobId);
+        continue;
+      }
+
+      final ReminderReservation reservation;
+      try {
+        // reserve() returns an existing ID without writing, and allocates a
+        // new monotonic ID only for jobs not yet present in the registry.
+        reservation = await _store.reserve(scheduling.jobId);
+      } catch (error, stack) {
+        failures.add(
+          ReminderApplyFailure(
+            jobId: scheduling.jobId,
+            error: error,
+            stackTrace: stack,
+            duringCancellation: false,
+          ),
+        );
+        failedJobs.add(scheduling.jobId);
+        continue;
+      }
+
+      try {
+        await platform.schedule(scheduling, reservation.platformId);
+      } catch (error, stack) {
+        failures.add(
+          ReminderApplyFailure(
+            jobId: scheduling.jobId,
+            error: error,
+            stackTrace: stack,
+            duringCancellation: false,
+          ),
+        );
+        failedJobs.add(scheduling.jobId);
+        continue;
+      }
+
+      try {
+        await _store.recordSchedulingSuccess(
+          entry: scheduling,
+          payloadVariant: payloadVariant,
+        );
+      } catch (error, stack) {
+        failures.add(
+          ReminderApplyFailure(
+            jobId: scheduling.jobId,
+            error: error,
+            stackTrace: stack,
+            duringCancellation: false,
+          ),
+        );
+        failedJobs.add(scheduling.jobId);
+        continue;
+      }
+      scheduled.add(scheduling);
+    }
+
+    return ReminderApplyResult(
+      cancelledJobIds: List<String>.unmodifiable(cancelled),
+      scheduledEntries: List<ReminderPlanEntry>.unmodifiable(scheduled),
+      failures: List<ReminderApplyFailure>.unmodifiable(failures),
+    );
   }
 
   Future<ReminderApplyResult> _executeDiff(
@@ -365,6 +617,23 @@ class ReminderApplier {
       scheduledEntries: List<ReminderPlanEntry>.unmodifiable(scheduled),
       failures: List<ReminderApplyFailure>.unmodifiable(failures),
     );
+  }
+
+  static Map<String, ReminderPlanEntry> _indexDesiredPlan(
+    ReminderPlan desiredPlan,
+  ) {
+    final desiredById = <String, ReminderPlanEntry>{};
+    for (final entry in desiredPlan.entries) {
+      if (desiredById.containsKey(entry.jobId)) {
+        throw ArgumentError.value(
+          entry.jobId,
+          'desired',
+          'duplicate job id in the desired plan',
+        );
+      }
+      desiredById[entry.jobId] = entry;
+    }
+    return desiredById;
   }
 
   static void _validateVariant(String payloadVariant) {
