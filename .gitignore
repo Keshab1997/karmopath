@@ -19,3 +19,4 @@ key.properties
 *.pem
 *.p12
 android/local.properties
+.agent-pack-backups/
