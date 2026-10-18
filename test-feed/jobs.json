@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-17T00:00:00Z",
+  "jobs": [
+    {
+      "id": "test-open-a-2026",
+      "kind": "recruitment",
+      "title_bn": "পরীক্ষামূলক নোটিশ A — প্রকৃত নিয়োগ নয়",
+      "title_en": "TEST FIXTURE A — not a real vacancy",
+      "organization": "Karmopath Test Fixture",
+      "category": "office",
+      "districts": [
+        "West Bengal"
+      ],
+      "qualifications": [
+        "Graduate"
+      ],
+      "status": "open",
+      "source_url": "https://example.org/karmopath-test/source-a",
+      "notice_url": "https://example.org/karmopath-test/notice-a",
+      "reviewed_at": "2026-10-17T00:00:00Z",
+      "published_at": "2026-10-17T00:00:00Z",
+      "updated_at": "2026-10-17T00:00:00Z",
+      "summary_bn": "শুধু যন্ত্র পরীক্ষার জন্য বানানো নোটিশ। কোনো প্রকৃত পদ নয়, আবেদন করার কিছু নেই।",
+      "summary_en": "Synthetic notice used only for device testing. Not a real post; there is nothing to apply for.",
+      "how_to_apply_bn": "আবেদন করবেন না — এটি নমুনা।",
+      "how_to_apply_en": "Do not apply — this is a test fixture.",
+      "vacancies": null,
+      "application_start_date": "2026-10-01",
+      "application_end_date": "2026-12-31",
+      "application_end_at": null,
+      "exam_date": null,
+      "apply_url": null,
+      "age_note_bn": null,
+      "age_note_en": null
+    },
+    {
+      "id": "test-open-b-2026",
+      "kind": "recruitment",
+      "title_bn": "পরীক্ষামূলক নোটিশ B — প্রকৃত নিয়োগ নয়",
+      "title_en": "TEST FIXTURE B — not a real vacancy",
+      "organization": "Karmopath Test Fixture",
+      "category": "other",
+      "districts": [
+        "West Bengal",
+        "Kolkata"
+      ],
+      "qualifications": [
+        "Graduate",
+        "Diploma"
+      ],
+      "status": "open",
+      "source_url": "https://example.org/karmopath-test/source-b",
+      "notice_url": "https://example.org/karmopath-test/notice-b",
+      "reviewed_at": "2026-10-17T00:00:00Z",
+      "published_at": "2026-10-17T00:00:00Z",
+      "updated_at": "2026-10-17T00:00:00Z",
+      "summary_bn": "দ্বিতীয় পরীক্ষামূলক নোটিশ, শুধু per-ID আলাদা রাখা যাচাই করার জন্য।",
+      "summary_en": "Second synthetic notice, present so per-ID isolation can be checked.",
+      "how_to_apply_bn": "আবেদন করবেন না — এটি নমুনা।",
+      "how_to_apply_en": "Do not apply — this is a test fixture.",
+      "vacancies": null,
+      "application_start_date": "2026-10-01",
+      "application_end_date": "2027-01-31",
+      "application_end_at": null,
+      "exam_date": null,
+      "apply_url": null,
+      "age_note_bn": null,
+      "age_note_en": null
+    }
+  ]
+}
