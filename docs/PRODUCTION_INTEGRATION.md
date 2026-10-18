@@ -9,7 +9,7 @@ Implemented under lib/app/runtime (captain-owned): AppRuntime dependency contain
 - Initial refresh does not block rendering cache hydration. Refresh exceptions outside the repository contract are shown safely.
 - Feed URL must be explicitly supplied as HTTPS without embedded credentials/fragment; no URL or production content is guessed. This is syntax validation, not proof that a host is trusted/public or content official.
 
-Evidence: 8 new runtime tests; full Flutter suite 140 PASS; analyze clean; structural preflight PASS. Native plugins, web bundle, actual language persistence/storage, notification delivery and live feed were NOT exercised. No build, CI, release or publication performed.
+Historical composition evidence: 8 new runtime tests; then-full Flutter suite 140 PASS; analyze clean; structural preflight PASS. Native plugins, web bundle, actual language persistence/storage, notification delivery and live feed were NOT exercised. No build, CI, release or publication performed.
 
 ## Activation remains pending
 This composition is NOT yet selected by main.dart. Native entrypoint remains foundation; web design preview remains separate and labeled. Do not call this a launched production app.
@@ -20,3 +20,13 @@ Captain then wires the native entrypoint, tests persistent storage, external lin
 
 ## Release blockers unchanged
 C admin review/publication workflow, actual human-reviewed notices, final art/visual review, support/correction/legal URLs, privacy/Data safety/consent, test AdMob and app-ads.txt, SDK/account/testers/signing/store submission. No secrets or legal acceptance invented.
+
+## Batch 7 dispatch update — 2026-10-18
+The owner requested parallel workers. [A7/B7/C7](DISPATCH_BATCH_7.md) now cover
+reconciliation, the Android notification boundary and an independent native
+runtime factory. Captain still owns lib/app/**, main, dependency/platform files,
+lifecycle/tap navigation and final integration. Ports/prerequisites are frozen at
+`bffcfb473d14f66bf47b85be96558497cc387dc4`; workers have not been started by Captain.
+Current foundation evidence is [here](reports/CAPTAIN_BATCH_7_DISPATCH.md), not the
+historical count above. No native factory/adapter/coordinator implementation has
+yet been reviewed/integrated, and this update does not activate production.

@@ -15,7 +15,7 @@ Bengali-first job discovery & deadline tracking
 ## A clearer path to your next opportunity
 Karmopath is planned to turn recruitment notices into clear, searchable information: eligibility, dates, original sources and application steps—with saved opportunities and deadline reminders.
 
-> **Current status: data layer and feature screens implemented; app wiring pending.** Flutter Android/web scaffold, shared contracts, bundled Bengali font, design tokens, data/cache/preferences and five feature screens are present. The entrypoint still shows the minimal foundation preview; full navigation/platform integration and visual approval remain pending. There is no production feed, live admin service, APK or Play Store release.
+> **Current status: Batch 6 integrated; Batch 7 native integration dispatch ready.** Data/cache/preferences, feature screens and the injectable production shell exist. Three workers have separate reminder-reconciliation, Android-notification and native-factory briefs; their implementations are not yet integrated. The entrypoint still selects the foundation or isolated web demo, not a production runtime. No owner-approved production feed or native release is supplied by this dispatch.
 
 ## Approved visual direction
 <p align="center"><img src="docs/design/karmopath-home-v2.png" alt="Approved Karmopath design concept with illustrated coral banner, category shortcuts and job cards" width="330"></p>
@@ -53,13 +53,13 @@ Read [AGENTS.md](AGENTS.md) before contributing. Contracts and file ownership ar
 | [Workflow guide](docs/WORKFLOWS.md) | Manual Actions and prerequisites |
 
 ### Current dispatch
-[Batch 4 completed](docs/BATCH_4.md): A/B/C reviewed and integrated. [Latest captain verification](docs/reports/CAPTAIN_BATCH_4.md). Native runtime/notification integration and an approved production feed remain pending. [Remaining integration/release plan](docs/BATCH_2.md). Do not start duplicate work from historical worker briefs.
+[Batch 7 dispatch](docs/DISPATCH_BATCH_7.md): three independent worker briefs, frozen code base `bffcfb473d14f66bf47b85be96558497cc387dc4`, shared ports and captain-owned Android prerequisites. **Workers have not been launched by Captain.** [Paste-ready Bengali starters](docs/START_BATCH_7_BN.md) · [Verified foundation evidence](docs/reports/CAPTAIN_BATCH_7_DISPATCH.md).
 
-### Parallel team
-**A:** data/cache/preferences · **B:** native screens · **C:** local admin/validator.
-[Brief A](docs/briefs/AGENT_A.md) · [Brief B](docs/briefs/AGENT_B.md) · [Brief C](docs/briefs/AGENT_C.md)
+### Parallel team — active Batch 7 scopes
+**A:** pure reminder reconciliation · **B:** Android notification adapter · **C:** native runtime factory.
+[Brief A7](docs/briefs/AGENT_A_BATCH_7.md) · [Brief B7](docs/briefs/AGENT_B_BATCH_7.md) · [Brief C7](docs/briefs/AGENT_C_BATCH_7.md) · [Frozen interfaces](docs/BATCH_7_CONTRACTS.md).
 
-**Use [Batch 1 dispatch](docs/DISPATCH_BATCH_1.md) for the common foundation SHA, setup and ownership map.** Do not invent missing dependencies or interfaces.
+Captain owns shared files, final review/integration, lifecycle/navigation and native activation. These Batch 7 namespaces explicitly supersede historical B=features/C=admin assignments; historical Batch 1–6 briefs are complete, not current work. Use the common dispatch before branching. No worker pushes main, transfers credentials, triggers CI or publishes a feed.
 
 ## Browser design preview
 [Preview setup and deployment steps](docs/WEB_PREVIEW.md). Pages is already enabled. The manual web workflow now selects an explicitly labeled, session-only demo composition of the actual screens. **The new preview is not deployed until Keshab runs the workflow.** Production integration remains pending.

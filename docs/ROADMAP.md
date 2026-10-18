@@ -1,4 +1,9 @@
 # Execution plan
+
+## Current dispatch — Batch 7
+Batch 6 is integrated. [Batch 7](BATCH_7.md) is now assigned to three independent workers: A reconciliation, B Android notification adapter, C native runtime factory. Captain retains shared prerequisites and final composition. Use [the current dispatch](DISPATCH_BATCH_7.md) and [starters](START_BATCH_7_BN.md); workers have not been started by Captain. Production feed approval, native activation, device evidence and release checks remain separate.
+
+## Original execution sequence (historical)
 ## Batch 0 — captain foundation (completed)
 Use the public repo without changing settings/Pages/secrets; scaffold Flutter; install/verify available SDK or document limitation. Pin dependencies and actual SDK constraint, never trust remembered version. Add shared contracts, tokens, font licenses, safe cropped AI assets, app shell/routes, test fixtures and honest tool/preflight.py. Commit docs. Record base SHA in dispatch note. No build/release/CI dispatch.
 
@@ -17,4 +22,4 @@ FCM optional; policy/privacy and consent, test ads, developer site/app-ads.txt f
 ## Owner inputs later (not blocking docs)
  Play account status; support email; notification/AdMob configuration via secure authorized setup; original official sources for initial reviewed jobs; Indian-PC connectivity test if automation desired. No need to paste private keys into chat.
 
-Dispatch ready: see DISPATCH_BATCH_1.md for immutable code base and paste-ready starters. This is not authorization for CI or production publication.
+Historical Batch 1 dispatch is retained for audit only; do not use its old base or briefs. The active dispatch is Batch 7 above. No dispatch authorizes CI or production publication.

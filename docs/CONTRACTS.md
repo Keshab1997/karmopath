@@ -51,3 +51,10 @@ Captain approved worker A to implement concrete adapters under `lib/data/platfor
 - `lib/data/platform/shared_preferences_store.dart`: `SharedPreferencesStore({required SharedPreferencesAsync preferences}) implements PreferencesStore`; use existing saved/reminder versioned keys supplied to readStrings/writeStrings, never clear unrelated settings.
 
 HTTP transport checks 200 status, enforces configured byte limit against both declared and streamed size, rejects malformed UTF-8 and exposes errors to repository (not UI). Total fetch timeout, no automatic unbounded retries; test resource cleanup and document browser differences. Validation remains JobFeed.fromJson in repository; transport must not trust JSON. Cache/storage errors propagate; preferences setters await successful persistence. Production feed URL and CORS are owner/captain deployment gates, not permission to publish a feed now.
+
+## Batch 7 native reminder boundary
+`lib/contracts/native_reminders.dart` freezes the notification and synchronization
+ports before A/B/C parallel work. See [Batch 7 API/semantics](BATCH_7_CONTRACTS.md)
+and [dispatch](DISPATCH_BATCH_7.md). A null feed is unavailable, not verified empty;
+unknown permission/pending state is never a grant/empty registry; reported pending
+metadata is not delivery proof. Existing JSON/preferences/ledger schema stays intact.
