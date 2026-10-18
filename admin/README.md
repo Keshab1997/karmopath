@@ -12,12 +12,28 @@ This is a dependency-free, browser-local editor for human-reviewed candidate pos
 6. After personally checking the original notice, eligibility, and dates, use **Confirm source review**. This records an owner attestation; it does not prove that a source is official. A new item gets a candidate `published_at` initialized to the review time. That time is not a publication event; the captain must set the actual timestamp when approving the candidate.
 7. **Export candidate** includes reviewed records only, blocks if any existing record still needs review, and names any omitted new drafts. It downloads `karmopath-candidate-feed.json`; there is no publish action or endpoint. Run the CLI validator and review the candidate diff before any separately approved publication.
 
-## Validator
+## Local export, validation, and comparison handoff
+
+The candidate export is a local review artifact, not a publication. Keep it separate from the exact local snapshot of the currently published schema-v1 feed. From the repository root, validate first and then compare:
+
+```sh
+python3 tools/feed/validate.py path/to/karmopath-candidate-feed.json
+python3 tools/feed/compare.py path/to/currently-published-feed.json path/to/karmopath-candidate-feed.json
+```
+
+The comparison validates **both** files before summarizing added, unchanged, changed (with field names), withdrawn, and missing IDs in deterministic ID order. It rejects invalid/duplicate IDs, prior-ID deletion (including remove-plus-add replacement), a backwards feed envelope or existing-job `updated_at`, a changed existing `published_at`, and content changes without both advancing `updated_at` and a fresh advancing `reviewed_at`. Timestamp ordering uses parsed UTC instants, including fractional seconds. Equivalent spellings of `application_end_at` also compare as instants, not content edits. Field additions/removals (even null-valued extensions) and JSON value/type changes require fresh review; object-key order does not. Unchanged content may keep its timestamps; valid additions and a schema-v1 empty-baseline bootstrap are allowed. A passing result only establishes contract/comparison consistency; it does not authenticate sources, establish truth, or authorize publication. Both commands are offline, read-only, and report nonzero on errors.
+
+After a passing comparison, a human must review the **original source and notice** for every new or changed item, inspect the listed field changes and withdrawals, reconfirm eligibility and deadlines, and decide whether the candidate is appropriate. Neither tool fetches sources or performs publication. Only after that review may the separately authorized feed owner hand the approved artifact to the existing publication process; this admin and the comparison CLI have no upload or publish action.
+
+Before any separately authorized publication, retain the last known-good published feed and its publication record, plan cache/CDN invalidation and propagation, and verify the served feed after cache expiry/invalidation. Keep a rollback plan that accounts for caches and preserves auditability. Do not blindly restore an old timestamped object as a new candidate: this gate rejects backwards envelope/job timestamps, and existing IDs must retain `published_at`; an approved rollback/reversion may need to be represented as a newly reviewed, advancing candidate. None of these publication or rollback actions are performed here.
+
+## Validator and tests
 
 From the repository root:
 
 ```sh
 python3 tools/feed/validate.py path/to/karmopath-candidate-feed.json
+python3 tools/feed/compare.py path/to/currently-published-feed.json path/to/karmopath-candidate-feed.json
 python3 -m unittest discover -s tests/feed
 node --check admin/admin-core.js
 node --check admin/app.js
