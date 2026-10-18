@@ -4,6 +4,18 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Release signing credentials. The shared builder (flutter-build.yml, pinned in
+// .github/workflows/manual-build.yml) decodes ANDROID_KEYSTORE_BASE64 into
+// android/app/upload-keystore.jks and writes android/key.properties before Gradle
+// is configured; a local release build reads the same file when a developer has
+// one. Both paths are git-ignored. Fully-qualified types keep this out of the
+// import block at the top of the file.
+val keystoreProperties = java.util.Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.keshabstudios.karmopath"
     compileSdk = flutter.compileSdkVersion
@@ -31,11 +43,27 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            // Guarded: a checkout with no key.properties (a plain
+            // `flutter run --release` on a fresh machine) still configures. CI
+            // writes the file before this is evaluated, so the guard passes there.
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            // Production signing must be configured explicitly before release.
+            // Without this the release artifact stays unsigned and Play rejects
+            // the upload. Only wired up when the upload key is actually present.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
