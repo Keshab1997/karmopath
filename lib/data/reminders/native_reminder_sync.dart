@@ -38,9 +38,21 @@ class LedgerNativeReminderSynchronizer implements ReminderSynchronizer {
     required NativeNotifications notifications,
     required ReminderNotificationTextBuilder textForJob,
     DateTime Function()? nowUtc,
+  }) : this._internal(
+         store: store,
+         stateStore: stateStore,
+         notifications: notifications,
+         textForJob: textForJob,
+         nowUtc: nowUtc,
+       );
+
+  LedgerNativeReminderSynchronizer._internal({
+    required PreferencesStore store,
+    ReminderStateStore? stateStore,
+    required this._notifications,
+    required this._textForJob,
+    DateTime Function()? nowUtc,
   }) : _store = stateStore ?? ReminderStateStore(store: store),
-       _notifications = notifications,
-       _textForJob = textForJob,
        _nowUtc = nowUtc ?? _currentUtc {
     _applier = ReminderApplier(_store);
   }
@@ -288,18 +300,13 @@ class LedgerNativeReminderSynchronizer implements ReminderSynchronizer {
 
 class _NativeReminderPlatform implements ReminderPlatform {
   const _NativeReminderPlatform({
-    required NativeNotifications notifications,
-    required ReminderNotificationTextBuilder textForJob,
-    required Map<String, Job> jobsById,
-    required String languageCode,
-    required String payloadVariant,
-    required DateTime Function() nowUtc,
-  }) : _notifications = notifications,
-       _textForJob = textForJob,
-       _jobsById = jobsById,
-       _languageCode = languageCode,
-       _payloadVariant = payloadVariant,
-       _nowUtc = nowUtc;
+    required this._notifications,
+    required this._textForJob,
+    required this._jobsById,
+    required this._languageCode,
+    required this._payloadVariant,
+    required this._nowUtc,
+  });
 
   final NativeNotifications _notifications;
   final ReminderNotificationTextBuilder _textForJob;

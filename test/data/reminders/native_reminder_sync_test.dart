@@ -206,7 +206,7 @@ class _Harness {
             title: '$language title',
             body: '${job.id} body',
           ),
-      nowUtc: () => this.now,
+      nowUtc: () => now,
     );
   }
 
@@ -445,7 +445,7 @@ void main() {
 
     test('blank copy and a throwing builder are schedule failures, never successes', () async {
       final blankHarness = _Harness(
-        textForJob: (_, __) =>
+        textForJob: (_, _) =>
             const ReminderNotificationText(title: '   ', body: 'body'),
       );
       final blankJob = _job('blank-copy');
@@ -464,7 +464,7 @@ void main() {
       await blankHarness.synchronizer.close();
 
       final throwingHarness = _Harness(
-        textForJob: (_, __) => throw StateError('copy builder failed'),
+        textForJob: (_, _) => throw StateError('copy builder failed'),
       );
       final throwingJob = _job('throwing-copy');
       final throwing = await throwingHarness.synchronizer.synchronize(
@@ -483,7 +483,7 @@ void main() {
       final due = closes.subtract(const Duration(days: 1));
       late _Harness harness;
       harness = _Harness(
-        textForJob: (_, __) {
+        textForJob: (_, _) {
           harness.now = due;
           return const ReminderNotificationText(title: 'title', body: 'body');
         },

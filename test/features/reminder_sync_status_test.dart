@@ -13,9 +13,8 @@ Widget host({
   home: Scaffold(
     body: Builder(
       builder: (context) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(textScale),
-        ),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
         child: SingleChildScrollView(
           child: ReminderSyncStatusBanner(
             phase: phase,
@@ -80,9 +79,11 @@ void main() {
         expect(find.text(failed), findsNothing);
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
         expect(
-          tester.widget<CircularProgressIndicator>(
-            find.byType(CircularProgressIndicator),
-          ).value,
+          tester
+              .widget<CircularProgressIndicator>(
+                find.byType(CircularProgressIndicator),
+              )
+              .value,
           isNull,
         );
         expect(find.bySemanticsLabel(checking), findsOneWidget);
@@ -137,36 +138,33 @@ void main() {
     });
 
     for (final phase in ReminderSyncUiPhase.values) {
-      testWidgets('${language.name}/${phase.name}: no delivery or success claim', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          host(
-            phase: phase,
-            language: language,
-            onRetry: () {},
-          ),
-        );
-        final copy = tester
-            .widgetList<Text>(find.byType(Text))
-            .map((text) => text.data)
-            .toList();
-        expect(copy, switch (phase) {
-          ReminderSyncUiPhase.idle => <String>[],
-          ReminderSyncUiPhase.syncing => [checking],
-          ReminderSyncUiPhase.failed => [failed, retry],
-        });
-        expect(
-          find.textContaining(
-            RegExp(
-              'success|scheduled|delivered|missed|সফল|পাঠানো|নির্ধারিত|মিস',
-              caseSensitive: false,
+      testWidgets(
+        '${language.name}/${phase.name}: no delivery or success claim',
+        (tester) async {
+          await tester.pumpWidget(
+            host(phase: phase, language: language, onRetry: () {}),
+          );
+          final copy = tester
+              .widgetList<Text>(find.byType(Text))
+              .map((text) => text.data)
+              .toList();
+          expect(copy, switch (phase) {
+            ReminderSyncUiPhase.idle => <String>[],
+            ReminderSyncUiPhase.syncing => [checking],
+            ReminderSyncUiPhase.failed => [failed, retry],
+          });
+          expect(
+            find.textContaining(
+              RegExp(
+                'success|scheduled|delivered|missed|সফল|পাঠানো|নির্ধারিত|মিস',
+                caseSensitive: false,
+              ),
             ),
-          ),
-          findsNothing,
-        );
-        expect(find.byType(Icon), findsNothing);
-      });
+            findsNothing,
+          );
+          expect(find.byType(Icon), findsNothing);
+        },
+      );
     }
 
     for (final phase in [
@@ -180,12 +178,7 @@ void main() {
         tester.view.physicalSize = const Size(320, 720);
         addTearDown(tester.view.reset);
         await tester.pumpWidget(
-          host(
-            phase: phase,
-            language: language,
-            onRetry: () {},
-            textScale: 2,
-          ),
+          host(phase: phase, language: language, onRetry: () {}, textScale: 2),
         );
         expect(tester.takeException(), isNull);
         final text = find.text(
@@ -206,42 +199,39 @@ void main() {
     ReminderSyncUiPhase.syncing,
     ReminderSyncUiPhase.failed,
   ]) {
-    testWidgets('${phase.name}: explicit language changes without global writes', (
-      tester,
-    ) async {
-      final original = appLanguage.value;
-      var changes = 0;
-      void onLanguageChange() => changes++;
-      appLanguage.addListener(onLanguageChange);
-      addTearDown(() => appLanguage.removeListener(onLanguageChange));
-      final copy = phase == ReminderSyncUiPhase.syncing
-          ? K.reminderSyncChecking
-          : K.reminderSyncFailed;
-      for (final language in [AppLang.bn, AppLang.en, AppLang.bn]) {
-        await tester.pumpWidget(
-          host(
-            phase: phase,
-            language: language,
-            onRetry: () {},
-          ),
-        );
-        expect(find.text(copy.inLang(language)), findsOneWidget);
-        expect(
-          find.text(
-            copy.inLang(language == AppLang.bn ? AppLang.en : AppLang.bn),
-          ),
-          findsNothing,
-        );
-        if (phase == ReminderSyncUiPhase.failed) {
-          expect(
-            find.widgetWithText(TextButton, K.retry.inLang(language)),
-            findsOneWidget,
+    testWidgets(
+      '${phase.name}: explicit language changes without global writes',
+      (tester) async {
+        final original = appLanguage.value;
+        var changes = 0;
+        void onLanguageChange() => changes++;
+        appLanguage.addListener(onLanguageChange);
+        addTearDown(() => appLanguage.removeListener(onLanguageChange));
+        final copy = phase == ReminderSyncUiPhase.syncing
+            ? K.reminderSyncChecking
+            : K.reminderSyncFailed;
+        for (final language in [AppLang.bn, AppLang.en, AppLang.bn]) {
+          await tester.pumpWidget(
+            host(phase: phase, language: language, onRetry: () {}),
           );
+          expect(find.text(copy.inLang(language)), findsOneWidget);
+          expect(
+            find.text(
+              copy.inLang(language == AppLang.bn ? AppLang.en : AppLang.bn),
+            ),
+            findsNothing,
+          );
+          if (phase == ReminderSyncUiPhase.failed) {
+            expect(
+              find.widgetWithText(TextButton, K.retry.inLang(language)),
+              findsOneWidget,
+            );
+          }
+          expect(appLanguage.value, original);
+          expect(changes, 0);
         }
-        expect(appLanguage.value, original);
-        expect(changes, 0);
-      }
-    });
+      },
+    );
   }
 
   testWidgets('phase changes remove stale status and retry controls', (
@@ -254,11 +244,7 @@ void main() {
       ReminderSyncUiPhase.idle,
     ]) {
       await tester.pumpWidget(
-        host(
-          phase: phase,
-          language: AppLang.en,
-          onRetry: () => calls++,
-        ),
+        host(phase: phase, language: AppLang.en, onRetry: () => calls++),
       );
       expect(
         find.byType(TextButton),
