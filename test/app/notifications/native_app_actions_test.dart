@@ -2,15 +2,16 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:karmopath/app/notifications/native_app_actions.dart';
+import 'package:karmopath/contracts/native_reminders.dart';
 
 import '../support/native_test_support.dart';
 
 void main() {
-  late FakeNativeNotifications driver;
+  late FakeNativeNotificationBackend driver;
   late NativeAppActions actions;
   late List<Uri> opened;
   setUp(() {
-    driver = FakeNativeNotifications();
+    driver = FakeNativeNotificationBackend();
     opened = [];
     actions = NativeAppActions(
       notifications: driver,
@@ -27,7 +28,7 @@ void main() {
   );
   test('denial is false, with no storage or scheduling effects', () async {
     driver.enabled = false;
-    driver.permissionResult = false;
+    driver.permissionResult = ReminderPermission.denied;
     expect(await actions.requestReminderPermission(), isFalse);
     expect(driver.permissionRequests, 1);
     expect(driver.scheduled, isEmpty);
@@ -43,14 +44,14 @@ void main() {
   });
   test('concurrent requests share one permission dialog', () async {
     driver.enabled = false;
-    final gate = Completer<bool>();
+    final gate = Completer<ReminderPermission>();
     driver.permissionGate = gate.future;
     final first = actions.requestReminderPermission();
     final second = actions.requestReminderPermission();
     expect(identical(first, second), isTrue);
     await Future<void>.delayed(Duration.zero);
     expect(driver.permissionRequests, 1);
-    gate.complete(true);
+    gate.complete(ReminderPermission.granted);
     expect(await first, isTrue);
     expect(await second, isTrue);
   });
@@ -69,13 +70,13 @@ void main() {
   );
   test('late grant after close cannot enable a stored intent', () async {
     driver.enabled = false;
-    final gate = Completer<bool>();
+    final gate = Completer<ReminderPermission>();
     driver.permissionGate = gate.future;
     final request = actions.requestReminderPermission();
     final assertion = expectLater(request, throwsStateError);
     await Future<void>.delayed(Duration.zero);
     actions.close();
-    gate.complete(true);
+    gate.complete(ReminderPermission.granted);
     await assertion;
     await expectLater(actions.requestReminderPermission(), throwsStateError);
   });

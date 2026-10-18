@@ -43,18 +43,21 @@ void main() {
     'job-123\u2028',
   ];
 
-  test('accepts full valid IDs unchanged, including the 100-character limit', () {
-    expect(fullLengthId.length, 100);
-    for (final id in validIds) {
-      final queue = ReminderTapIntentQueue();
-      expect(queue.accept(id), isTrue);
-      expect(queue.hasPending, isTrue);
-      expect(queue.pendingJobId, id);
-      expect(queue.consume(navigationReady: true), id);
-      expect(queue.hasPending, isFalse);
-      expect(queue.pendingJobId, isNull);
-    }
-  });
+  test(
+    'accepts full valid IDs unchanged, including the 100-character limit',
+    () {
+      expect(fullLengthId.length, 100);
+      for (final id in validIds) {
+        final queue = ReminderTapIntentQueue();
+        expect(queue.accept(id), isTrue);
+        expect(queue.hasPending, isTrue);
+        expect(queue.pendingJobId, id);
+        expect(queue.consume(navigationReady: true), id);
+        expect(queue.hasPending, isFalse);
+        expect(queue.pendingJobId, isNull);
+      }
+    },
+  );
 
   test('rejects null and invalid input without creating an intent', () {
     final queue = ReminderTapIntentQueue();
@@ -111,15 +114,18 @@ void main() {
     expect(queue.consume(navigationReady: true), 'job-123');
   });
 
-  test('empty queue has no pending value regardless of navigation readiness', () {
-    final queue = ReminderTapIntentQueue();
-    expect(queue.hasPending, isFalse);
-    expect(queue.pendingJobId, isNull);
-    expect(queue.consume(navigationReady: false), isNull);
-    expect(queue.consume(navigationReady: true), isNull);
-    expect(queue.hasPending, isFalse);
-    expect(queue.pendingJobId, isNull);
-  });
+  test(
+    'empty queue has no pending value regardless of navigation readiness',
+    () {
+      final queue = ReminderTapIntentQueue();
+      expect(queue.hasPending, isFalse);
+      expect(queue.pendingJobId, isNull);
+      expect(queue.consume(navigationReady: false), isNull);
+      expect(queue.consume(navigationReady: true), isNull);
+      expect(queue.hasPending, isFalse);
+      expect(queue.pendingJobId, isNull);
+    },
+  );
 
   test('clear is idempotent on empty and populated queues', () {
     final queue = ReminderTapIntentQueue();
@@ -136,6 +142,27 @@ void main() {
     expect(queue.accept('next-job'), isTrue);
     expect(queue.consume(navigationReady: true), 'next-job');
   });
+
+  test(
+    'listeners are notified for valid acceptance and one-time consumption',
+    () {
+      final queue = ReminderTapIntentQueue();
+      var notifications = 0;
+      void listener() => notifications++;
+      queue.addListener(listener);
+      expect(queue.accept('job-123'), isTrue);
+      expect(notifications, 1);
+      expect(queue.accept('bad/job'), isFalse);
+      expect(notifications, 1);
+      expect(queue.consume(navigationReady: false), isNull);
+      expect(notifications, 1);
+      expect(queue.consume(navigationReady: true), 'job-123');
+      expect(notifications, 2);
+      queue.removeListener(listener);
+      expect(queue.accept('another-job'), isTrue);
+      expect(notifications, 2);
+    },
+  );
 
   test('queue instances do not share pending state', () {
     final first = ReminderTapIntentQueue();

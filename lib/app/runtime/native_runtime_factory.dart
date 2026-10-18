@@ -2,31 +2,38 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 
+import '../../contracts/job.dart';
+import '../../contracts/native_reminders.dart';
 import '../../data/cached_job_repository.dart';
 import '../../data/local_user_preferences.dart';
 import '../../data/platform/http_feed_transport.dart';
-import '../../data/reminders/reminder_apply.dart';
+import '../../data/reminders/native_reminder_sync.dart';
 import '../../data/reminders/reminder_state_store.dart';
+import '../../features/common/app_language.dart';
+import '../../features/common/reminder_notification_content.dart';
+import '../../features/common/reminder_tap_intent.dart';
+import '../../platform/notifications/android_native_notifications.dart';
 import '../notifications/native_app_actions.dart';
-import '../notifications/native_notification_driver.dart';
 import 'app_runtime.dart';
 import 'feed_configuration.dart';
+import 'native_reminder_session.dart';
 import 'native_storage.dart';
 import 'runtime_reminder_session.dart';
 
 /// Native composition, intentionally NOT selected by lib/main.dart yet.
 ///
-/// A reviewed feed config, a real external launcher and a real reminder-session
-/// binding are required. Neither demo content nor no-op success is a fallback.
-/// Every successfully acquired resource is registered before the next await;
-/// failure unwinds all of them, preserving the original initialization error.
+/// A reviewed feed config and a real external launcher are required. The
+/// default binding composes the reviewed synchronizer, Android backend,
+/// bilingual content, tap handoff and status/retry session. No demo content or
+/// no-op success is a fallback. Every acquired resource is registered before
+/// the next await; failure unwinds all of them and preserves the primary error.
 Future<AppRuntime> createNativeRuntime({
   required FeedConfiguration feed,
   required Future<void> Function(Uri uri) openExternal,
-  required RuntimeReminderSessionFactory createReminderSession,
+  RuntimeReminderSessionFactory? createReminderSession,
   Future<NativeStorage> Function()? openStorage,
   http.Client Function()? createHttpClient,
-  NativeNotificationDriver Function()? createNotifications,
+  NativeNotifications Function()? createNotifications,
 }) async {
   final resources = _RuntimeResources();
   try {
@@ -41,10 +48,14 @@ Future<AppRuntime> createNativeRuntime({
     resources.add(ledger.dispose);
     await ledger.initialize();
     final language = await storage.readLanguage();
+
+    final tapIntents = ReminderTapIntentQueue();
+    resources.add(tapIntents.clear);
     final notifications =
-        (createNotifications ?? AndroidNotificationDriver.new)();
-    resources.add(notifications.close);
-    await notifications.initialize();
+        (createNotifications ?? AndroidNativeNotifications.new)();
+    resources.add(notifications.dispose);
+    await notifications.initialize(onJobTap: tapIntents.accept);
+
     final repository = CachedJobRepository(
       transport: HttpFeedTransport(feedUrl: feed.uri, client: client),
       cache: storage.feedCache,
@@ -55,18 +66,37 @@ Future<AppRuntime> createNativeRuntime({
       openExternal: openExternal,
     );
     resources.add(actions.close);
-    final session = await createReminderSession(
-      ReminderSessionDependencies(
-        repository: repository,
-        preferences: preferences,
-        ledger: ledger,
-        applier: ReminderApplier(ledger),
-        notifications: notifications,
-        initialLanguage: language,
-      ),
+    final synchronizer = LedgerNativeReminderSynchronizer(
+      store: storage.preferences,
+      stateStore: ledger,
+      notifications: notifications,
+      textForJob: _notificationText,
     );
+    resources.add(synchronizer.close);
+
+    final dependencies = ReminderSessionDependencies(
+      repository: repository,
+      preferences: preferences,
+      ledger: ledger,
+      notifications: notifications,
+      synchronizer: synchronizer,
+      initialLanguage: language,
+    );
+    final session = createReminderSession == null
+        ? NativeReminderSession(
+            repository: repository,
+            preferences: preferences,
+            synchronizer: synchronizer,
+            initialLanguage: language,
+          )
+        : await createReminderSession(dependencies);
     resources.add(session.close);
     await session.start();
+
+    final RuntimeReminderStatusSource? statusSource =
+        session is RuntimeReminderStatusSource
+        ? session as RuntimeReminderStatusSource
+        : null;
     return AppRuntime(
       repository: repository,
       preferences: preferences,
@@ -75,6 +105,9 @@ Future<AppRuntime> createNativeRuntime({
       writeLanguage: storage.writeLanguage,
       onLanguageChanged: session.languageChanged,
       onResume: session.resumed,
+      reminderStatus: statusSource?.status,
+      retryReminderSync: statusSource?.retry,
+      reminderTapIntents: tapIntents,
       close: resources.close,
     );
   } catch (_) {
@@ -84,6 +117,24 @@ Future<AppRuntime> createNativeRuntime({
     } catch (_) {}
     rethrow;
   }
+}
+
+ReminderNotificationText _notificationText(Job job, String languageCode) {
+  final language = switch (languageCode) {
+    'bn' => AppLang.bn,
+    'en' => AppLang.en,
+    _ => throw ArgumentError.value(languageCode, 'languageCode'),
+  };
+  final content = buildReminderNotificationContent(
+    job: job,
+    language: language,
+  );
+  if (content.payloadVariant != reminderPayloadVariant(languageCode)) {
+    throw StateError(
+      'Reminder copy variant does not match the native contract',
+    );
+  }
+  return ReminderNotificationText(title: content.title, body: content.body);
 }
 
 class _RuntimeResources {

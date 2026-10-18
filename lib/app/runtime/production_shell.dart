@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../../contracts/job_repository.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../../features/common/app_language.dart';
+import '../../features/common/reminder_sync_status.dart';
 import '../../features/common/strings.dart';
+import 'runtime_reminder_session.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/saved/saved_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
@@ -33,6 +35,8 @@ class _ProductionShellState extends State<ProductionShell>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     appLanguage.addListener(_languageChanged);
+    widget.runtime.reminderTapIntents?.addListener(_reminderTapReceived);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _drainReminderTap());
     // Refresh is asynchronous so cache hydration can be rendered immediately.
     unawaited(_initialRefresh());
   }
@@ -62,6 +66,53 @@ class _ProductionShellState extends State<ProductionShell>
     }
   }
 
+  void _reminderTapReceived() {
+    if (!mounted) return;
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) => _drainReminderTap());
+    binding.ensureVisualUpdate();
+  }
+
+  void _drainReminderTap() {
+    if (!mounted) return;
+    final queue = widget.runtime.reminderTapIntents;
+    final jobId = queue?.consume(
+      navigationReady: _navigator.currentState != null,
+    );
+    if (jobId != null) _openJob(jobId);
+  }
+
+  Future<void> _retryReminderSync() async {
+    try {
+      await widget.runtime.retryReminderSync?.call();
+    } catch (_) {
+      _notify(
+        'রিমাইন্ডারের অবস্থা যাচাই করা যায়নি। / Could not check reminders. Please retry.',
+      );
+    }
+  }
+
+  Widget _reminderStatus(AppLang language) {
+    final status = widget.runtime.reminderStatus;
+    if (status == null) return const SizedBox.shrink();
+    return ValueListenableBuilder<RuntimeReminderStatus>(
+      valueListenable: status,
+      builder: (context, current, _) {
+        if (current.phase == ReminderSyncUiPhase.idle) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          child: ReminderSyncStatusBanner(
+            phase: current.phase,
+            language: language,
+            onRetry: () => unawaited(_retryReminderSync()),
+          ),
+        );
+      },
+    );
+  }
+
   void _languageChanged() {
     final selected = appLanguage.value;
     unawaited(_saveLanguage(selected));
@@ -89,6 +140,7 @@ class _ProductionShellState extends State<ProductionShell>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     appLanguage.removeListener(_languageChanged);
+    widget.runtime.reminderTapIntents?.removeListener(_reminderTapReceived);
     super.dispose();
   }
 
@@ -109,28 +161,35 @@ class _ProductionShellState extends State<ProductionShell>
       title: 'Karmopath',
       theme: KarmopathTheme.light(),
       home: Scaffold(
-        body: IndexedStack(
-          index: _tab,
+        body: Column(
           children: [
-            HomeScreen(
-              repository: widget.runtime.repository,
-              preferences: widget.runtime.preferences,
-              onOpenJob: _openJob,
-            ),
-            SavedScreen(
-              repository: widget.runtime.repository,
-              preferences: widget.runtime.preferences,
-              onOpenJob: _openJob,
-            ),
-            CalendarScreen(
-              repository: widget.runtime.repository,
-              preferences: widget.runtime.preferences,
-              onOpenJob: _openJob,
-            ),
-            SettingsScreen(
-              actions: widget.runtime.actions,
-              preferences: widget.runtime.preferences,
-              repository: widget.runtime.repository,
+            _reminderStatus(lang),
+            Expanded(
+              child: IndexedStack(
+                index: _tab,
+                children: [
+                  HomeScreen(
+                    repository: widget.runtime.repository,
+                    preferences: widget.runtime.preferences,
+                    onOpenJob: _openJob,
+                  ),
+                  SavedScreen(
+                    repository: widget.runtime.repository,
+                    preferences: widget.runtime.preferences,
+                    onOpenJob: _openJob,
+                  ),
+                  CalendarScreen(
+                    repository: widget.runtime.repository,
+                    preferences: widget.runtime.preferences,
+                    onOpenJob: _openJob,
+                  ),
+                  SettingsScreen(
+                    actions: widget.runtime.actions,
+                    preferences: widget.runtime.preferences,
+                    repository: widget.runtime.repository,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

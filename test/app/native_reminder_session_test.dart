@@ -2,244 +2,215 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:karmopath/app/runtime/native_reminder_session.dart';
-import 'package:karmopath/contracts/job.dart';
 import 'package:karmopath/contracts/job_repository.dart';
-import 'package:karmopath/data/reminders/reminder_apply.dart';
-import 'package:karmopath/data/reminders/reminder_plan.dart';
+import 'package:karmopath/contracts/native_reminders.dart';
 import 'package:karmopath/features/common/app_language.dart';
+import 'package:karmopath/features/common/reminder_sync_status.dart';
 
-import '../data/fakes.dart' show jobJson;
 import '../features/support/fakes.dart';
 
-const success = ReminderApplyResult(
-  cancelledJobIds: [],
-  scheduledEntries: [],
-  failures: [],
-);
-Job job({String id = 'a-job', String status = 'open'}) => Job.fromJson(
-  jobJson(id: id, status: status, applicationEndDate: '2030-01-05'),
+class RecordingSynchronizer implements ReminderSynchronizer {
+  final calls = <ReminderSyncInput>[];
+  Future<ReminderSyncReport> Function(ReminderSyncInput input)? onSync;
+  int closes = 0;
+
+  @override
+  Future<ReminderSyncReport> synchronize(ReminderSyncInput input) async {
+    calls.add(input);
+    return onSync?.call(input) ?? report(feedAvailable: input.jobs != null);
+  }
+
+  @override
+  Future<void> close() async {
+    closes++;
+  }
+}
+
+ReminderSyncReport report({
+  required bool feedAvailable,
+  List<ReminderSyncProblem> problems = const [],
+}) => ReminderSyncReport(
+  permission: ReminderPermission.granted,
+  feedAvailable: feedAvailable,
+  scheduledJobIds: const [],
+  cancelledJobIds: const [],
+  cancelledOrphanIds: const [],
+  problems: problems,
 );
 
 void main() {
-  late FakeJobRepository repo;
-  late FakePreferences prefs;
-  late DateTime now;
-  late List<(ReminderPlan, AppLang)> calls;
+  late FakeJobRepository repository;
+  late FakePreferences preferences;
+  late RecordingSynchronizer synchronizer;
   late NativeReminderSession session;
   Future<void> tick() => Future<void>.delayed(Duration.zero);
+
+  NativeReminderSession createSession() => NativeReminderSession(
+    repository: repository,
+    preferences: preferences,
+    synchronizer: synchronizer,
+    initialLanguage: AppLang.bn,
+  );
+
   setUp(() {
-    repo = FakeJobRepository(readyState([job(), job(id: 'b-job')]));
-    prefs = FakePreferences(reminders: {'a-job'});
-    now = DateTime.utc(2030, 1, 1);
-    calls = [];
-    session = NativeReminderSession(
-      repository: repo,
-      preferences: prefs,
-      initialLanguage: AppLang.bn,
-      now: () => now,
-      reconcile: (plan, language) async {
-        calls.add((plan, language));
-        return success;
-      },
-    );
+    repository = FakeJobRepository(readyState([makeJob(id: 'a-job')]));
+    preferences = FakePreferences(reminders: {'a-job'});
+    synchronizer = RecordingSynchronizer();
+    session = createSession();
   });
   tearDown(() async => session.close());
 
   test(
-    'startup waits for a validated feed rather than cancelling from no feed',
+    'start is idempotent and synchronizes the validated feed and intent',
     () async {
-      repo.state.value = const JobFeedState(
-        isOffline: true,
-        lastError: 'No cache',
-      );
       await session.start();
-      await session.resumed();
-      expect(calls, isEmpty);
-      expect(prefs.reminderJobIds.value, {'a-job'});
-      repo.state.value = readyState([job()]);
-      await tick();
-      expect(calls.single.$1.entries.single.jobId, 'a-job');
+      await session.start();
+      expect(synchronizer.calls, hasLength(1));
+      expect(synchronizer.calls.single.jobs!.map((job) => job.id), ['a-job']);
+      expect(synchronizer.calls.single.selectedJobIds, {'a-job'});
+      expect(synchronizer.calls.single.languageCode, 'bn');
+      expect(session.status.value.phase, ReminderSyncUiPhase.idle);
     },
   );
-  test('startup is idempotent and preserves stored intent', () async {
+
+  test('unloaded feed is not treated as a successful empty feed', () async {
+    repository.state.value = const JobFeedState();
     await session.start();
-    await session.start();
-    expect(calls, hasLength(1));
-    expect(calls.single.$2, AppLang.bn);
-    expect(calls.single.$1.entries.single.jobId, 'a-job');
-    expect(prefs.reminderCalls, isEmpty);
+    expect(synchronizer.calls, isEmpty);
+    expect(session.status.value.phase, ReminderSyncUiPhase.idle);
   });
+
   test(
-    'stored-intent changes and feed withdrawal generate fresh plans',
+    'offline cached feed is passed as unavailable, never as an empty snapshot',
     () async {
+      repository.state.value = JobFeedState(
+        feed: makeFeed([makeJob(id: 'a-job')]),
+        isOffline: true,
+        lastError: 'offline',
+      );
       await session.start();
-      await prefs.setReminder('b-job', true);
-      await tick();
-      expect(calls.last.$1.entries.map((e) => e.jobId), ['a-job', 'b-job']);
-      repo.state.value = readyState([
-        job(status: 'withdrawn'),
-        job(id: 'b-job'),
-      ]);
-      await tick();
-      expect(calls.last.$1.entries.map((e) => e.jobId), ['b-job']);
-      expect(prefs.reminderJobIds.value, {'a-job', 'b-job'});
+      expect(synchronizer.calls, hasLength(1));
+      expect(synchronizer.calls.single.jobs, isNull);
+      expect(session.status.value.phase, ReminderSyncUiPhase.failed);
+      expect(session.status.value.report!.feedAvailable, isFalse);
     },
   );
+
   test(
-    'language change triggers with explicit language, duplicates do not',
+    'preference and verified-feed changes reconcile with fresh values',
     () async {
       await session.start();
-      session.languageChanged(AppLang.en);
-      await tick();
-      expect(calls.map((c) => c.$2), [AppLang.bn, AppLang.en]);
-      session.languageChanged(AppLang.en);
-      await tick();
-      expect(calls, hasLength(2));
-    },
-  );
-  test(
-    'resume recomputes the clock cutoff without catch-up or intent mutation',
-    () async {
-      await session.start();
-      now = calls.single.$1.entries.single.dueAtUtc;
+      await preferences.setReminder('b-job', true);
       await session.resumed();
-      expect(calls.last.$1.entries, isEmpty);
-      expect(
-        calls.last.$1.skipped.single.reason,
-        ReminderSkipReason.optedInTooLate,
-      );
-      expect(prefs.reminderCalls, isEmpty);
-      expect(prefs.reminderJobIds.value, {'a-job'});
+      expect(synchronizer.calls.last.selectedJobIds, {'a-job', 'b-job'});
+
+      repository.state.value = readyState([makeJob(id: 'b-job')]);
+      await session.resumed();
+      expect(synchronizer.calls.last.jobs!.map((job) => job.id), ['b-job']);
+      expect(preferences.reminderJobIds.value, {'a-job', 'b-job'});
     },
   );
+
+  test('a validated empty feed is distinct from an unavailable feed', () async {
+    repository.state.value = readyState([]);
+    await session.start();
+    expect(synchronizer.calls.single.jobs, isEmpty);
+    expect(session.status.value.phase, ReminderSyncUiPhase.idle);
+  });
+
+  test('language change triggers sync with explicit language; duplicate is a no-op', () async {
+    await session.start();
+    session.languageChanged(AppLang.en);
+    await session.resumed();
+    expect(synchronizer.calls.last.languageCode, 'en');
+    final count = synchronizer.calls.length;
+    session.languageChanged(AppLang.en);
+    await tick();
+    expect(synchronizer.calls, hasLength(count));
+  });
+
+  test('resume rechecks without changing user intent', () async {
+    await session.start();
+    await session.resumed();
+    expect(synchronizer.calls, hasLength(2));
+    expect(preferences.reminderCalls, isEmpty);
+    expect(preferences.reminderJobIds.value, {'a-job'});
+  });
+
   test(
-    'a validated empty feed really does produce an empty desired plan',
+    'sync failures show generic failed state and explicit retry clears it',
     () async {
-      await session.start();
-      repo.state.value = readyState([]);
-      await tick();
-      expect(calls.last.$1.entries, isEmpty);
-      expect(
-        calls.last.$1.skipped.single.reason,
-        ReminderSkipReason.jobUnavailable,
-      );
-    },
-  );
-  test(
-    'callback failure stays explicit and does not poison retry queue',
-    () async {
-      await session.close();
       var fail = true;
-      final error = StateError('pending query failed');
-      session = NativeReminderSession(
-        repository: repo,
-        preferences: prefs,
-        initialLanguage: AppLang.bn,
-        now: () => now,
-        reconcile: (_, _) async {
-          if (fail) throw error;
-          return success;
-        },
-      );
-      await expectLater(session.start(), throwsA(same(error)));
-      expect(session.state.value.error, same(error));
-      expect(session.state.value.hasFailure, isTrue);
-      fail = false;
-      await session.resumed();
-      expect(session.state.value.error, isNull);
-      expect(session.state.value.hasFailure, isFalse);
-    },
-  );
-  test(
-    'per-job failure is retained, not turned into whole-plan success',
-    () async {
-      await session.close();
-      final failure = ReminderApplyFailure(
-        jobId: 'a-job',
-        error: StateError('denied'),
-        stackTrace: StackTrace.current,
-        duringCancellation: false,
-      );
-      session = NativeReminderSession(
-        repository: repo,
-        preferences: prefs,
-        initialLanguage: AppLang.bn,
-        now: () => now,
-        reconcile: (_, _) async => ReminderApplyResult(
-          cancelledJobIds: [],
-          scheduledEntries: [],
-          failures: [failure],
-        ),
+      synchronizer.onSync = (input) async => report(
+        feedAvailable: input.jobs != null,
+        problems: fail
+            ? [
+                ReminderSyncProblem(
+                  stage: ReminderSyncStage.pending,
+                  error: StateError('private backend detail'),
+                ),
+              ]
+            : const [],
       );
       await session.start();
-      expect(session.state.value.hasFailure, isTrue);
-      expect(session.state.value.result!.failures, [failure]);
+      expect(session.status.value.phase, ReminderSyncUiPhase.failed);
+      expect(session.status.value.error, isNull);
+      expect(
+        session.status.value.report!.problems.single.error,
+        isA<StateError>(),
+      );
+
+      fail = false;
+      await session.retry();
+      expect(session.status.value.phase, ReminderSyncUiPhase.idle);
+      expect(synchronizer.calls, hasLength(2));
     },
   );
+
+  test('retry refreshes an unavailable feed before reconciling', () async {
+    repository.state.value = const JobFeedState(
+      isOffline: true,
+      lastError: 'offline',
+    );
+    await session.start();
+    repository.nextState = readyState([makeJob(id: 'a-job')]);
+    await session.retry();
+    expect(repository.refreshCalls, 1);
+    expect(synchronizer.calls.last.jobs!.map((job) => job.id), ['a-job']);
+    expect(session.status.value.phase, ReminderSyncUiPhase.idle);
+  });
+
   test(
-    'all triggers serialize and read fresh language at execution time',
+    'all triggers serialize and close drains active synchronization',
     () async {
-      await session.close();
-      final gate = Completer<void>();
+      final gate = Completer<ReminderSyncReport>();
       var active = 0;
       var maximum = 0;
-      session = NativeReminderSession(
-        repository: repo,
-        preferences: prefs,
-        initialLanguage: AppLang.bn,
-        now: () => now,
-        reconcile: (plan, language) async {
-          active++;
-          if (active > maximum) maximum = active;
-          calls.add((plan, language));
-          if (calls.length == 1) await gate.future;
-          active--;
-          return success;
-        },
-      );
+      synchronizer.onSync = (input) async {
+        active++;
+        if (active > maximum) maximum = active;
+        if (synchronizer.calls.length == 1) await gate.future;
+        active--;
+        return report(feedAvailable: input.jobs != null);
+      };
+
       final starting = session.start();
       await tick();
       session.languageChanged(AppLang.en);
-      final resumed = session.resumed();
-      expect(calls, hasLength(1));
-      gate.complete();
-      await Future.wait([starting, resumed]);
-      expect(maximum, 1);
-      expect(calls.map((c) => c.$2), [AppLang.bn, AppLang.en, AppLang.en]);
-    },
-  );
-  test(
-    'close detaches immediately, drains active call and skips queued work',
-    () async {
-      await session.close();
-      final gate = Completer<void>();
-      session = NativeReminderSession(
-        repository: repo,
-        preferences: prefs,
-        initialLanguage: AppLang.bn,
-        now: () => now,
-        reconcile: (plan, language) async {
-          calls.add((plan, language));
-          await gate.future;
-          return success;
-        },
-      );
-      final starting = session.start();
-      await tick();
       final queued = session.resumed();
       final closing = session.close();
       var closed = false;
       closing.then((_) => closed = true);
-      repo.state.value = readyState([]);
-      session.languageChanged(AppLang.en);
+      repository.state.value = readyState([]);
       await tick();
       expect(closed, isFalse);
-      gate.complete();
+      gate.complete(report(feedAvailable: true));
       await Future.wait([starting, queued, closing]);
+      expect(maximum, 1);
+      expect(synchronizer.calls, hasLength(1));
       expect(closed, isTrue);
-      expect(calls, hasLength(1));
+      expect(synchronizer.closes, 1);
       await session.resumed();
-      await expectLater(session.start(), throwsStateError);
     },
   );
 }

@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
+
 import '../../contracts/app_actions.dart';
 import '../../contracts/job_repository.dart';
 import '../../contracts/user_preferences.dart';
 import '../../features/common/app_language.dart';
+import '../../features/common/reminder_tap_intent.dart';
+import 'runtime_reminder_session.dart';
 
 /// Runtime dependencies are assembled by the captain, never by feature widgets.
 /// The factory must initialize preferences before returning. No plugin/global
@@ -16,6 +20,9 @@ class AppRuntime {
     required this._close,
     this.onLanguageChanged,
     this.onResume,
+    this.reminderStatus,
+    this.retryReminderSync,
+    this.reminderTapIntents,
   });
   final JobRepository repository;
   final UserPreferences preferences;
@@ -24,6 +31,9 @@ class AppRuntime {
   final Future<void> Function(AppLang language) writeLanguage;
   final void Function(AppLang language)? onLanguageChanged;
   final Future<void> Function()? onResume;
+  final ValueListenable<RuntimeReminderStatus>? reminderStatus;
+  final Future<void> Function()? retryReminderSync;
+  final ReminderTapIntentQueue? reminderTapIntents;
   final Future<void> Function() _close;
   Future<void>? _closing;
   Future<void> _pendingWrites = Future<void>.value();

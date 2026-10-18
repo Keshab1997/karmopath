@@ -34,10 +34,11 @@ typedef ReminderNotificationTextBuilder = ReminderNotificationText Function(
 class LedgerNativeReminderSynchronizer implements ReminderSynchronizer {
   LedgerNativeReminderSynchronizer({
     required PreferencesStore store,
+    ReminderStateStore? stateStore,
     required NativeNotifications notifications,
     required ReminderNotificationTextBuilder textForJob,
     DateTime Function()? nowUtc,
-  }) : _store = ReminderStateStore(store: store),
+  }) : _store = stateStore ?? ReminderStateStore(store: store),
        _notifications = notifications,
        _textForJob = textForJob,
        _nowUtc = nowUtc ?? _currentUtc {

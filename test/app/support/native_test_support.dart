@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:karmopath/app/notifications/native_notification_driver.dart';
+import 'package:karmopath/contracts/native_reminders.dart';
 
 typedef ScheduledCall = ({
   int id,
@@ -96,6 +97,92 @@ class FakeNativeNotifications implements NativeNotificationDriver {
     closes++;
     if (closeError case final error?) throw error;
   }
+}
+
+class FakeNativeNotificationBackend implements NativeNotifications {
+  FakeNativeNotificationBackend({List<String>? events}) : events = events ?? [];
+
+  final List<String> events;
+  final scheduled = <NativeReminderRequest>[];
+  final cancelled = <int>[];
+  final pending = <NativePendingReminder>[];
+  bool enabled = true;
+  ReminderPermission permissionResult = ReminderPermission.granted;
+  Object? initError;
+  Object? queryError;
+  Object? pendingError;
+  Object? scheduleError;
+  Object? cancelError;
+  Object? closeError;
+  Future<ReminderPermission>? permissionGate;
+  void Function(String)? _onJobTap;
+  int permissionRequests = 0;
+  int closes = 0;
+
+  @override
+  Future<void> initialize({
+    required void Function(String jobId) onJobTap,
+  }) async {
+    events.add('driver.initialize');
+    _onJobTap = onJobTap;
+    if (initError case final error?) throw error;
+  }
+
+  @override
+  Future<ReminderPermission> permissionStatus() async {
+    events.add('driver.enabled');
+    if (queryError case final error?) throw error;
+    return enabled ? ReminderPermission.granted : ReminderPermission.denied;
+  }
+
+  @override
+  Future<ReminderPermission> requestPermission() async {
+    events.add('driver.request');
+    permissionRequests++;
+    final result = await (permissionGate ?? Future.value(permissionResult));
+    if (result == ReminderPermission.granted) enabled = true;
+    if (result == ReminderPermission.denied) enabled = false;
+    return result;
+  }
+
+  @override
+  Future<List<NativePendingReminder>> pendingReminders() async {
+    events.add('driver.pending');
+    if (pendingError case final error?) throw error;
+    return List<NativePendingReminder>.of(pending);
+  }
+
+  @override
+  Future<void> schedule(NativeReminderRequest request) async {
+    events.add('driver.schedule:${request.platformId}');
+    if (scheduleError case final error?) throw error;
+    scheduled.add(request);
+    pending.add(
+      NativePendingReminder(
+        platformId: request.platformId,
+        isManaged: true,
+        identity: request.identity,
+      ),
+    );
+  }
+
+  @override
+  Future<void> cancel(int platformId) async {
+    events.add('driver.cancel:$platformId');
+    if (cancelError case final error?) throw error;
+    cancelled.add(platformId);
+    pending.removeWhere((record) => record.platformId == platformId);
+  }
+
+  @override
+  Future<void> dispose() async {
+    events.add('driver.close');
+    closes++;
+    _onJobTap = null;
+    if (closeError case final error?) throw error;
+  }
+
+  void tap(String jobId) => _onJobTap?.call(jobId);
 }
 
 class RecordingHttpClient extends http.BaseClient {

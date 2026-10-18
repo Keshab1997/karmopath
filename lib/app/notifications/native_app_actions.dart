@@ -1,14 +1,18 @@
 import 'dart:async';
 
 import '../../contracts/app_actions.dart';
-import 'native_notification_driver.dart';
+import '../../contracts/native_reminders.dart';
 
 /// Explicit user actions; neither construction nor runtime startup prompts.
 /// External URL launching is required/injected, never a fake successful no-op.
 class NativeAppActions implements AppActions {
-  NativeAppActions({required this._notifications, required this._openExternal});
+  NativeAppActions({
+    required NativeNotifications notifications,
+    required Future<void> Function(Uri uri) openExternal,
+  }) : _notifications = notifications,
+       _openExternal = openExternal;
 
-  final NativeNotificationDriver _notifications;
+  final NativeNotifications _notifications;
   final Future<void> Function(Uri uri) _openExternal;
   Future<bool>? _permissionRequest;
   bool _closed = false;
@@ -43,15 +47,17 @@ class NativeAppActions implements AppActions {
 
   Future<void> _request(Completer<bool> attempt) async {
     try {
-      var granted = await _notifications.notificationsEnabled();
+      var permission = await _notifications.permissionStatus();
       _requireOpen();
-      if (!granted) {
-        granted = await _notifications.requestPermission();
+      if (permission != ReminderPermission.granted) {
+        permission = await _notifications.requestPermission();
         _requireOpen();
-        if (granted) granted = await _notifications.notificationsEnabled();
+        if (permission == ReminderPermission.granted) {
+          permission = await _notifications.permissionStatus();
+        }
       }
       _requireOpen();
-      attempt.complete(granted);
+      attempt.complete(permission == ReminderPermission.granted);
     } catch (error, stack) {
       attempt.completeError(error, stack);
     } finally {

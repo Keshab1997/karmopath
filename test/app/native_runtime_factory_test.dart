@@ -47,7 +47,7 @@ class TestSession implements RuntimeReminderSession {
 
 class Harness {
   Harness() {
-    notifications = FakeNativeNotifications(events: events);
+    notifications = FakeNativeNotificationBackend(events: events);
     client = RecordingHttpClient(events);
     session = TestSession(events);
   }
@@ -59,7 +59,7 @@ class Harness {
     },
   );
   final cache = FakeCache();
-  late final FakeNativeNotifications notifications;
+  late final FakeNativeNotificationBackend notifications;
   late final RecordingHttpClient client;
   late final TestSession session;
   ReminderSessionDependencies? dependencies;
@@ -71,7 +71,9 @@ class Harness {
   Object? languageWriteError;
   int storageCloses = 0;
 
-  Future<AppRuntime> create() => createNativeRuntime(
+  Future<AppRuntime> create({
+    bool useDefaultSession = false,
+  }) => createNativeRuntime(
     // Fixture-only injected URL/client, never real production approval/network.
     feed: FeedConfiguration('https://example.org/fixture-feed.json'),
     openExternal: (_) async {},
@@ -98,11 +100,13 @@ class Harness {
     },
     createHttpClient: () => client,
     createNotifications: () => notifications,
-    createReminderSession: (deps) async {
-      dependencies = deps;
-      if (bindError case final error?) throw error;
-      return session;
-    },
+    createReminderSession: useDefaultSession
+        ? null
+        : (deps) async {
+            dependencies = deps;
+            if (bindError case final error?) throw error;
+            return session;
+          },
   );
 }
 
@@ -125,6 +129,46 @@ void main() {
     expect(h.client.closes, 1);
     expect(h.storageCloses, 1);
   });
+  test(
+    'default binding reconciles fresh selected feed through ledger and backend',
+    () async {
+      final h = Harness();
+      h.client.body = feedJson(
+        jobs: [jobJson(id: 'a-job', applicationEndDate: '2027-01-31')],
+      );
+      final runtime = await h.create(useDefaultSession: true);
+      await runtime.repository.refresh();
+      await runtime.resumed();
+
+      expect(h.notifications.scheduled, hasLength(1));
+      expect(h.notifications.permissionRequests, 0);
+      final request = h.notifications.scheduled.single;
+      expect(request.identity.jobId, 'a-job');
+      expect(request.identity.payloadVariant, 'en@reminder-v1');
+      expect(request.title, 'West Bengal Police constable recruitment');
+      expect(request.body, isNotEmpty);
+      expect(h.notifications.pending.single.identity, request.identity);
+      await runtime.close();
+    },
+  );
+
+  test(
+    'default binding wires the backend, sync status, retry, and tap queue',
+    () async {
+      final h = Harness();
+      final runtime = await h.create(useDefaultSession: true);
+      expect(runtime.reminderStatus, isNotNull);
+      expect(runtime.retryReminderSync, isNotNull);
+      final taps = runtime.reminderTapIntents!;
+      h.notifications.tap('a-job');
+      expect(taps.pendingJobId, 'a-job');
+      h.notifications.tap('bad/job');
+      expect(taps.pendingJobId, 'a-job');
+      await runtime.close();
+      expect(taps.hasPending, isFalse);
+    },
+  );
+
   test('storage-open error does not pretend empty preferences or acquire later resources', () async {
     final h = Harness();
     final error = StateError('storage unavailable');
