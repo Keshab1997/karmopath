@@ -8,6 +8,7 @@ import '../common/app_language.dart';
 import '../common/deadline_clock.dart';
 import '../common/formatting.dart';
 import '../common/palette.dart';
+import '../common/reminder_intent_state.dart';
 import '../common/strings.dart';
 import '../common/widgets/category_circle.dart';
 import '../common/widgets/job_card.dart';
@@ -335,18 +336,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   : (lang == AppLang.bn
                                         ? byId[id]!.titleBn
                                         : byId[id]!.titleEn),
-                              subtitle: byId[id] == null
-                                  ? null
-                                  : (deadlineLabel(
-                                          deadlineInfo(byId[id]!, now),
-                                          byId[id]!.kind,
-                                          lang,
-                                          endDateOnly:
-                                              byId[id]!.applicationEndAt == null
-                                              ? byId[id]!.applicationEndDate
-                                              : null,
-                                        ) ??
-                                        kindLabel(byId[id]!.kind, lang)),
+                              subtitle: reminderRowSubtitle(
+                                job: byId[id],
+                                now: now,
+                                lang: lang,
+                              ),
                               onTap: () {
                                 Navigator.of(sheetContext).pop();
                                 widget.onOpenJob(id);

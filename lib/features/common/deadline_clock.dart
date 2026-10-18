@@ -134,8 +134,9 @@ DateTime nextIstMidnightUtc(DateTime now) {
 }
 
 /// Every instant at which deadline UI built from [jobs] can change:
-/// the deadline itself, the start of its three-day "closing soon" window and
-/// the next IST day rollover (for relative "posted ..." labels).
+/// the deadline itself, the start of its three-day "closing soon" window, the
+/// 24-hour reminder cutoff (when a new reminder stops being possible) and the
+/// next IST day rollover (for relative "posted ..." labels).
 ///
 /// Past instants are harmless: [DeadlineTicker.watch] filters them.
 Iterable<DateTime> deadlineWatchInstants(
@@ -146,6 +147,9 @@ Iterable<DateTime> deadlineWatchInstants(
     final closes = effectiveClosingUtc(job);
     if (closes == null) continue;
     yield closes.subtract(const Duration(days: 3));
+    // The single reminder is due 24 h before the deadline: at that instant the
+    // enable control must become "too late" without a refresh.
+    yield closes.subtract(const Duration(hours: 24));
     yield closes;
   }
   yield nextIstMidnightUtc(now);

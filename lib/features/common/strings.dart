@@ -265,6 +265,10 @@ abstract final class K {
     'রিমাইন্ডারের অনুরোধ সংরক্ষণ করা যায়নি। আগের অবস্থা অপরিবর্তিত আছে।',
     'The reminder request could not be saved. Your previous state is unchanged.',
   );
+  static const reminderTooLateMsg = KText(
+    'ডেডলাইনের ২৪ ঘণ্টা আগের সময় পার হয়ে গেছে, তাই নতুন রিমাইন্ডারের অনুরোধ সংরক্ষণ করা হয়নি।',
+    'The 24-hour reminder time before this deadline has passed, so no new reminder request was saved.',
+  );
   static const reminderClosedMsg = KText(
     'সময় শেষ হওয়ায় নতুন রিমাইন্ডার চালু করা যাবে না।',
     'This opportunity has closed; new reminders are unavailable.',
@@ -272,6 +276,30 @@ abstract final class K {
   static const reminderNoDeadlineMsg = KText(
     'এই আপডেটে কোনো আবেদনের শেষ তারিখ নেই, তাই রিমাইন্ডার দেওয়া যায় না।',
     'This update has no application deadline, so reminders are unavailable.',
+  );
+  // Stored reminder intents. Every label states that the request is stored
+  // only; none of them claims a notification was scheduled, delivered or
+  // missed, because the operating system state is not visible here.
+  static const reminderStored = KText('সংরক্ষিত অনুরোধ', 'Stored request');
+  static const reminderRowDuePassed = KText(
+    'ডেডলাইনের ২৪ ঘণ্টা আগের সময় পেরিয়ে গেছে; নোটিফিকেশন এসেছিল কিনা তা জানা যায় না।',
+    'The 24-hour reminder time has passed; whether a notification appeared is unknown.',
+  );
+  static const reminderRowClosed = KText(
+    'শেষ তারিখ পেরিয়ে গেছে; নোটিফিকেশন এসেছিল কিনা তা জানা যায় না।',
+    'The deadline has passed; whether a notification appeared is unknown.',
+  );
+  static const reminderRowWithdrawn = KText(
+    'নিয়োগটি প্রত্যাহার করা হয়েছে; সংরক্ষিত অনুরোধটি এখনো তালিকায় আছে।',
+    'This recruitment was withdrawn; the stored request is still listed.',
+  );
+  static const reminderRowUnavailable = KText(
+    'চাকরিটি এখন ফিডে নেই; সংরক্ষিত অনুরোধটি এখনো তালিকায় আছে।',
+    'This job is no longer in the feed; the stored request is still listed.',
+  );
+  static const reminderRowNoDeadline = KText(
+    'এখন কোনো শেষ তারিখ নেই; অনুরোধটি শুধু সংরক্ষিত অবস্থায় আছে।',
+    'There is no deadline for this update now; the request stays stored only.',
   );
   static const closedBanner = KText(
     'আবেদনের সময় শেষ। তথ্য রেফারেন্সের জন্য রাখা হয়েছে।',

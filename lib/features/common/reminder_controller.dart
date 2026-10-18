@@ -24,9 +24,34 @@ enum ReminderOutcome {
   /// Deadline already passed or the job was withdrawn.
   closed,
 
+  /// The job is still open, but the single reminder for it is due 24 hours
+  /// before the deadline and that instant has already arrived. Nothing is
+  /// requested or persisted: the policy has no catch-up alert.
+  tooLate,
+
   /// The job carries no supported deadline (e.g. result/admit card), so there
   /// is nothing to remind about. Nothing is requested or persisted.
   noDeadline,
+}
+
+/// Instant at which the single reminder for [closesAtUtc] becomes due.
+///
+/// Frozen policy: exactly one reminder, 24 hours before the effective
+/// deadline. This helper only does arithmetic on the instant the feature
+/// already computed; it never invents a closing time.
+DateTime reminderDueAtUtc(DateTime closesAtUtc) =>
+    closesAtUtc.toUtc().subtract(const Duration(hours: 24));
+
+/// Whether a *new* reminder request may still be stored at [now].
+///
+/// A request is accepted only while the job is open and **strictly before**
+/// the due instant: at equality the reminder is already due, so it is too
+/// late. Turning an existing intent off never consults this.
+bool reminderWindowOpen(DeadlineInfo info, DateTime now) {
+  final closes = info.closesAtUtc;
+  if (closes == null) return false;
+  if (info.isClosed || info.isWithdrawn) return false;
+  return now.toUtc().isBefore(reminderDueAtUtc(closes));
 }
 
 /// Single place for the "remind me" flow so detail and calendar agree.
@@ -35,10 +60,15 @@ enum ReminderOutcome {
 /// and only persist the preference when it is granted. The captain schedules
 /// and cancels the actual notification.
 ///
+/// Order for enabling is fixed: supported deadline, then closed/withdrawn,
+/// then the 24-hour cutoff, and only then the permission prompt. Nothing is
+/// requested or stored for a late or closed job.
+///
 /// [deadlineAt] normally recomputes the deadline for a given instant. It is
 /// re-evaluated after the permission prompt returns: a dialog can stay open
-/// across the deadline, and an enable intent must not be written for a job
-/// that has closed in the meantime.
+/// across the deadline (or across the 24-hour cutoff) and across a feed
+/// correction, so the current fields and the current clock decide whether the
+/// intent may be written.
 Future<ReminderOutcome> setReminderIntent({
   required UserPreferences preferences,
   required AppActions actions,
@@ -57,13 +87,20 @@ Future<ReminderOutcome> setReminderIntent({
     }
   }
   final clock = now ?? DeadlineClock.now;
+
+  // Status before cutoff: a closed or withdrawn job answers "closed" even
+  // when its 24-hour instant is also in the past.
+  ReminderOutcome? ineligible(DeadlineInfo? info) {
+    if (info == null || !info.hasDeadline) return ReminderOutcome.noDeadline;
+    if (info.isClosed || info.isWithdrawn) return ReminderOutcome.closed;
+    if (!reminderWindowOpen(info, clock())) return ReminderOutcome.tooLate;
+    return null;
+  }
+
   final current = deadlineAt?.call(clock()) ?? deadline;
-  if (current == null || !current.hasDeadline) {
-    return ReminderOutcome.noDeadline;
-  }
-  if (current.isClosed || current.isWithdrawn) {
-    return ReminderOutcome.closed;
-  }
+  final blocked = ineligible(current);
+  if (blocked != null) return blocked;
+
   final bool granted;
   try {
     granted = await actions.requestReminderPermission();
@@ -72,13 +109,13 @@ Future<ReminderOutcome> setReminderIntent({
   }
   if (!granted) return ReminderOutcome.permissionDenied;
 
-  // Permission may have outlived the deadline: recheck before persisting.
+  // The prompt may have outlived the deadline or the 24-hour cutoff, and a
+  // feed correction may have changed the job while it was open: re-evaluate
+  // everything against the current fields and the current clock.
   final afterPermission = deadlineAt?.call(clock());
   if (afterPermission != null) {
-    if (!afterPermission.hasDeadline) return ReminderOutcome.noDeadline;
-    if (afterPermission.isClosed || afterPermission.isWithdrawn) {
-      return ReminderOutcome.closed;
-    }
+    final blockedAfter = ineligible(afterPermission);
+    if (blockedAfter != null) return blockedAfter;
   }
   try {
     await preferences.setReminder(jobId, true);
@@ -95,5 +132,6 @@ KText reminderOutcomeMessage(ReminderOutcome outcome) => switch (outcome) {
   ReminderOutcome.permissionError => K.reminderPermissionErrorMsg,
   ReminderOutcome.failed => K.reminderFailedMsg,
   ReminderOutcome.closed => K.reminderClosedMsg,
+  ReminderOutcome.tooLate => K.reminderTooLateMsg,
   ReminderOutcome.noDeadline => K.reminderNoDeadlineMsg,
 };

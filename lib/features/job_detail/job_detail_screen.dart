@@ -10,6 +10,7 @@ import '../common/external_link.dart';
 import '../common/formatting.dart';
 import '../common/palette.dart';
 import '../common/reminder_controller.dart';
+import '../common/reminder_intent_state.dart';
 import '../common/strings.dart';
 import '../common/widgets/category_circle.dart';
 import '../common/widgets/state_views.dart';
@@ -132,6 +133,13 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           final ageNote = lang == AppLang.bn ? job.ageNoteBn : job.ageNoteEn;
           final closedForReminder = info.isClosed || info.isWithdrawn;
           final hasDeadline = info.hasDeadline;
+          // Still open, but the single reminder is due 24 h before the
+          // deadline and that instant has arrived: no new request can be
+          // stored, and the control stays tappable so it can say so.
+          final lateForReminder =
+              hasDeadline &&
+              !closedForReminder &&
+              !reminderWindowOpen(info, now);
 
           return Scaffold(
             backgroundColor: KarmopathTheme.background,
@@ -199,6 +207,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   busy: _reminderBusy,
                   closedForReminder: closedForReminder,
                   hasDeadline: hasDeadline,
+                  lateForReminder: lateForReminder,
+                  info: info,
+                  now: now,
                   onReminder: _toggleReminder,
                 ),
                 const SizedBox(height: 16),
@@ -546,6 +557,9 @@ class _ActionPanel extends StatelessWidget {
     required this.busy,
     required this.closedForReminder,
     required this.hasDeadline,
+    required this.lateForReminder,
+    required this.info,
+    required this.now,
     required this.onReminder,
   });
 
@@ -555,6 +569,15 @@ class _ActionPanel extends StatelessWidget {
   final bool busy;
   final bool closedForReminder;
   final bool hasDeadline;
+
+  /// Open, but the 24-hour reminder instant has already passed.
+  final bool lateForReminder;
+
+  /// Current deadline model, used to classify a stored intent.
+  final DeadlineInfo info;
+
+  /// Current instant from the screen's clock, never a build-time snapshot.
+  final DateTime now;
   final Future<void> Function(bool enabled, AppLang lang) onReminder;
 
   @override
@@ -564,7 +587,8 @@ class _ActionPanel extends StatelessWidget {
       builder: (context, reminderIds, _) {
         final enabled = reminderIds.contains(job.id);
         // An existing intent can always be switched off; enabling needs a
-        // supported deadline that has not passed.
+        // supported deadline that has not passed. "Too late" deliberately
+        // stays tappable so the refusal is explained instead of silent.
         final blocked =
             busy || (!enabled && (closedForReminder || !hasDeadline));
         final String? unavailableText = enabled
@@ -573,7 +597,17 @@ class _ActionPanel extends StatelessWidget {
                   ? K.reminderNoDeadlineMsg.inLang(lang)
                   : (closedForReminder
                         ? K.reminderClosedMsg.inLang(lang)
-                        : null));
+                        : (lateForReminder
+                              ? K.reminderTooLateMsg.inLang(lang)
+                              : null)));
+        // A stored request is described by the job's current state; it is
+        // never reported as scheduled, delivered or missed.
+        final storedState = enabled
+            ? storedReminderState(info: info, now: now)
+            : null;
+        final storedText = storedState == null
+            ? null
+            : storedReminderMessage(storedState);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -602,6 +636,19 @@ class _ActionPanel extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   unavailableText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.35,
+                    color: KarmopathTheme.ink.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+            if (storedText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  storedText.inLang(lang),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11.5,

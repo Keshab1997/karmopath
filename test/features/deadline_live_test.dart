@@ -321,13 +321,15 @@ void main() {
     test(
       'controller refuses to persist an enable intent after expiry',
       () async {
+        // The deadline is more than 24 h away so the reminder window is open
+        // when the tap happens; the prompt then outlives the deadline itself.
         final job = makeJob(
-          applicationEndAt: base.add(const Duration(minutes: 2)),
+          applicationEndAt: base.add(const Duration(hours: 26)),
         );
         final prefs = FakePreferences();
         final actions = AdvancingPermissionActions(
           clock: clock,
-          advance: const Duration(minutes: 5),
+          advance: const Duration(hours: 27),
         );
 
         final outcome = await setReminderIntent(
@@ -351,7 +353,7 @@ void main() {
       'controller still enables when permission returns before expiry',
       () async {
         final job = makeJob(
-          applicationEndAt: base.add(const Duration(hours: 2)),
+          applicationEndAt: base.add(const Duration(hours: 26)),
         );
         final prefs = FakePreferences();
         final actions = AdvancingPermissionActions(
@@ -377,17 +379,16 @@ void main() {
     testWidgets('detail shows the closed message and writes nothing', (
       tester,
     ) async {
-      final closes = base.add(const Duration(minutes: 2));
+      final closes = base.add(const Duration(hours: 26));
       final job = makeJob(applicationEndAt: closes);
       final prefs = FakePreferences();
-      final actions = SlowPermissionActions(delay: const Duration(minutes: 5));
+      final actions = SlowPermissionActions(delay: const Duration(hours: 27));
       await pumpScreen(tester, detail(job, prefs: prefs, actions: actions));
 
       await tester.tap(find.text('রিমাইন্ডার দিন'));
       await tester.pump();
       // The permission dialog stays open while wall time passes the deadline.
-      clock.value = clock.value.add(const Duration(minutes: 5));
-      await tester.pump(const Duration(minutes: 5));
+      await clock.advance(tester, const Duration(hours: 27));
       await tester.pump();
 
       expect(actions.requests, 1);
@@ -407,18 +408,22 @@ void main() {
       tester,
     ) async {
       final job = makeJob(
-        applicationEndAt: base.add(const Duration(minutes: 2)),
+        applicationEndAt: base.add(const Duration(hours: 26)),
       );
       final prefs = FakePreferences();
-      await pumpScreen(
-        tester,
-        detail(job, prefs: prefs, actions: FakeActions(permission: false)),
+      final actions = SlowPermissionActions(
+        delay: const Duration(hours: 27),
+        granted: false,
       );
+      await pumpScreen(tester, detail(job, prefs: prefs, actions: actions));
 
       await tester.tap(find.text('রিমাইন্ডার দিন'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
+      // The denial arrives after the deadline has passed; it still wins.
+      await clock.advance(tester, const Duration(hours: 27));
+      await tester.pump();
 
+      expect(actions.requests, 1);
       expect(prefs.reminderCalls, isEmpty);
       expect(find.text(K.reminderDeniedMsg.bn), findsOneWidget);
     });
