@@ -2,7 +2,7 @@
 Captain owns main; maximum three workers. Workers push their named branches in independent workspaces; only Captain reviews/integrates/pushes main. Workers never merge, tag, release, trigger CI, change repository settings, or copy/expose credentials. Never work in /tmp. Reuse your own valid GitHub pairing. No file-transfer handoff: push a branch, then report.
 
 ## Captain-owned / DO NOT TOUCH
-pubspec.yaml, pubspec.lock, .github/workflows/**, AGENTS.md, android/**, ios/**, lib/main.dart, lib/app/**, lib/contracts/**, lib/design_system/**, tool/preflight.py, test/contracts/**, test/fixtures/**, generated files including *.g.dart, version numbers, root docs and assets/**. Workers may read these but must not edit them. No dependency additions.
+pubspec.yaml, pubspec.lock, .github/workflows/**, AGENTS.md, android/**, ios/**, lib/main.dart, lib/app/**, lib/contracts/**, lib/design_system/**, tool/preflight.py, test/contracts/**, test/fixtures/**, generated files including *.g.dart, version numbers, root docs and assets/**. Workers may read these but must not edit them. No dependency additions. No stub success, fabricated gates, fake production data or committed credentials.
 
 ## Active dispatch: Batch 7
 The owner requested parallel implementation on 2026-10-18. This supersedes the earlier captain-only **assignment** in docs/BATCH_7.md, not the shared-surface or release restrictions. Read docs/DISPATCH_BATCH_7.md, docs/BATCH_7_CONTRACTS.md and your Batch 7 brief from origin/main before checking out its frozen code base. Do not execute historical Batch 1–6 briefs.

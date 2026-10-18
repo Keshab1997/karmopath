@@ -18,7 +18,8 @@ Metadata/source reviewed at https://pub.dev/packages/flutter_local_notifications
 and https://pub.dev/packages/url_launcher/versions/6.3.3 .
 
 Captain supplies Android INTERNET, POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED,
-plugin scheduled/boot receivers, `ic_stat_karmopath` and desugaring 2.1.4. The
+plugin scheduled/boot receivers, `ic_stat_karmopath` with an explicit resource-
+shrinker keep rule, and desugaring 2.1.4. The
 verified SDK's inherited compile/target SDK is 36, min SDK 24; AGP/Gradle pins
 are not downgraded. **Android compilation, permission UI, reboot and actual
 notification delivery are NOT proven by this foundation or by unit tests.**
@@ -38,7 +39,7 @@ exact delivery or translate OS acceptance into a delivered/missed badge.
 - `NativeReminderIdentity`: full jobId, dueAtUtc, closesAtUtc, contentKey,
   payloadVariant. Equality compares every field; no truncated IDs/fingerprints.
 - `NativeReminderRequest`: platformId + identity + localized title/body.
-- `NativePendingReminder`: OS platformId, isManaged, nullable decoded identity.
+- `NativePendingReminder`: backend platformId, isManaged, nullable decoded identity.
   Return even foreign/unknown payloads, so ID collisions cannot be overlooked.
 - `ReminderSyncInput`: nullable jobs, copied selectedJobIds, languageCode bn/en.
   **jobs == null means no verified feed; it is not an empty feed.**
@@ -75,7 +76,7 @@ body is the current job's title_bn/title_en + newline +
 `মূল বিজ্ঞপ্তিতে শেষ সময় যাচাই করুন।` / `Verify the deadline in the original notice.`
 Variant tracks the input language; contentKey comes from the existing planner.
 
-Before apply: load ledger, passively query permission and the OS pending list.
+Before apply: load ledger, passively query permission and backend pending records.
 Unreadable/corrupt ledger or unreadable/unknown permission/pending state means
 no guessed empty state or destructive apply; return/throw an observable failure.
 A missing OS record is confirmed by idempotent cancel before clearing applied
@@ -118,6 +119,11 @@ Only the exact namespace is managed. A decodable matching namespace with invalid
 fields yields isManaged=true, identity=null; undecodable/foreign payloads are
 unmanaged. Valid foreground/cold-start taps forward only a validated jobId,
 never arbitrary URLs. Ignore callbacks after disposal; initialization is retryable.
+
+Return every record from pendingNotificationRequests, not only managed ones.
+That API reports the plugin's pending registry, not an independent AlarmManager
+audit or delivery receipt; do not claim it detects every OS/OEM failure or IDs
+managed outside this backend. Real-device reboot/delivery gates remain required.
 
 Create the channel with default importance, no permission dialog. User permission
 requests serialize and return the subsequent actual status, not an assumed grant;

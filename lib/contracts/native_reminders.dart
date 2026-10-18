@@ -79,8 +79,9 @@ class NativeReminderRequest {
   final String body;
 }
 
-/// Every OS-pending ID is reported, including unrecognised payloads, so a
-/// reserved ID cannot accidentally overwrite another notification.
+/// Every backend-reported pending ID is included, even unrecognised payloads,
+/// so a reserved ID cannot overwrite another reported notification. The plugin
+/// registry is not independent proof that an OS alarm exists or was delivered.
 class NativePendingReminder {
   const NativePendingReminder({
     required this.platformId,
@@ -108,7 +109,7 @@ abstract class NativeNotifications {
   /// Called only by an explicit user action, never startup or resume.
   Future<ReminderPermission> requestPermission();
 
-  /// Failure throws; an unreadable OS list is never represented as an empty one.
+  /// Failure throws; an unreadable backend list is never treated as empty.
   Future<List<NativePendingReminder>> pendingReminders();
   Future<void> schedule(NativeReminderRequest request);
 
