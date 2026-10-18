@@ -105,6 +105,10 @@ abstract final class K {
       ? '${_num(n, lang)}টি রিমাইন্ডার চালু'
       : '$n reminder${n == 1 ? '' : 's'}';
 
+  static String storedReminderCount(int n, AppLang lang) => lang == AppLang.bn
+      ? '${_num(n, lang)}টি সংরক্ষিত রিমাইন্ডার'
+      : '$n stored reminder${n == 1 ? '' : 's'}';
+
   // Card / list semantics.
   // Filters (batch 2).
   static const districtFilter = KText('জেলা', 'District');

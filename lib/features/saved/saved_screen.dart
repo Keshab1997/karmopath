@@ -6,6 +6,7 @@ import '../../contracts/user_preferences.dart';
 import '../../design_system/karmopath_theme.dart';
 import '../common/app_language.dart';
 import '../common/deadline_clock.dart';
+import '../common/reminder_intent_state.dart';
 import '../common/strings.dart';
 import '../common/widgets/job_card.dart';
 import '../common/widgets/state_views.dart';
@@ -91,120 +92,160 @@ class _SavedScreenState extends State<SavedScreen> {
                 return ValueListenableBuilder<Set<String>>(
                   valueListenable: widget.preferences.savedJobIds,
                   builder: (context, savedIds, _) {
-                    final now = _ticker.now;
-                    _ticker.watch(
-                      deadlineWatchInstants(
-                        state.feed?.jobs ?? const <Job>[],
-                        now,
-                      ),
-                    );
-                    final byId = <String, Job>{
-                      for (final job in state.feed?.jobs ?? const <Job>[])
-                        job.id: job,
-                    };
-                    final resolved =
-                        savedIds.map((id) => byId[id]).whereType<Job>().toList()
-                          ..sort(
-                            (a, b) => b.publishedAt.compareTo(a.publishedAt),
-                          );
-                    final unavailable =
-                        savedIds.where((id) => byId[id] == null).toList()
-                          ..sort();
-
-                    final Widget body;
-                    if (state.feed == null && state.isLoading) {
-                      body = LoadingView(lang: lang);
-                    } else if (state.feed == null && state.lastError != null) {
-                      body = MessageView(
-                        lang: lang,
-                        icon: Icons.cloud_off_outlined,
-                        title: K.errorTitle,
-                        body: K.errorBody,
-                        actionLabel: K.retry,
-                        onAction: widget.repository.refresh,
-                        tone: KarmopathTheme.coral,
-                      );
-                    } else if (savedIds.isEmpty) {
-                      body = MessageView(
-                        lang: lang,
-                        icon: Icons.bookmark_border,
-                        title: K.noSavedTitle,
-                        body: K.noSavedBody,
-                      );
-                    } else {
-                      body = Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-                            child: Text(
-                              K.savedCount(savedIds.length, lang),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: KarmopathTheme.teal,
-                              ),
-                            ),
+                    return ValueListenableBuilder<Set<String>>(
+                      valueListenable: widget.preferences.reminderJobIds,
+                      builder: (context, reminderIds, _) {
+                        final now = _ticker.now;
+                        _ticker.watch(
+                          deadlineWatchInstants(
+                            state.feed?.jobs ?? const <Job>[],
+                            now,
                           ),
-                          if (state.isOffline && state.feed != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: OfflineBanner(
-                                lang: lang,
-                                lastFeedUpdate: state.feed?.updatedAt,
-                              ),
-                            )
-                          else if (state.lastError != null &&
-                              state.feed != null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: OfflineBanner(lang: lang, staleOnly: true),
-                            ),
-                          Expanded(
-                            child: RefreshIndicator(
-                              onRefresh: widget.repository.refresh,
-                              child: ListView(
-                                physics: const AlwaysScrollableScrollPhysics(),
+                        );
+                        final byId = <String, Job>{
+                          for (final job in state.feed?.jobs ?? const <Job>[])
+                            job.id: job,
+                        };
+                        final resolved =
+                            savedIds
+                                .map((id) => byId[id])
+                                .whereType<Job>()
+                                .toList()
+                              ..sort(
+                                (a, b) =>
+                                    b.publishedAt.compareTo(a.publishedAt),
+                              );
+                        final unavailable =
+                            savedIds.where((id) => byId[id] == null).toList()
+                              ..sort();
+
+                        final Widget body;
+                        if (state.feed == null && state.isLoading) {
+                          body = LoadingView(lang: lang);
+                        } else if (state.feed == null &&
+                            state.lastError != null) {
+                          body = MessageView(
+                            lang: lang,
+                            icon: Icons.cloud_off_outlined,
+                            title: K.errorTitle,
+                            body: K.errorBody,
+                            actionLabel: K.retry,
+                            onAction: widget.repository.refresh,
+                            tone: KarmopathTheme.coral,
+                          );
+                        } else if (savedIds.isEmpty) {
+                          body = MessageView(
+                            lang: lang,
+                            icon: Icons.bookmark_border,
+                            title: K.noSavedTitle,
+                            body: K.noSavedBody,
+                          );
+                        } else {
+                          body = Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
                                 padding: const EdgeInsets.fromLTRB(
                                   20,
-                                  0,
+                                  4,
                                   20,
-                                  28,
+                                  10,
                                 ),
-                                children: [
-                                  for (final job in resolved)
-                                    JobCard(
-                                      job: job,
-                                      lang: lang,
-                                      now: now,
-                                      preferences: widget.preferences,
-                                      onTap: () => widget.onOpenJob(job.id),
-                                    ),
-                                  for (final id in unavailable)
-                                    UnavailableJobTile(
-                                      lang: lang,
-                                      jobId: id,
-                                      onRemove: _pendingRemovals.contains(id)
-                                          ? null
-                                          : () => _remove(id, lang),
-                                    ),
-                                ],
+                                child: Text(
+                                  K.savedCount(savedIds.length, lang),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: KarmopathTheme.teal,
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (state.isOffline && state.feed != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  child: OfflineBanner(
+                                    lang: lang,
+                                    lastFeedUpdate: state.feed?.updatedAt,
+                                  ),
+                                )
+                              else if (state.lastError != null &&
+                                  state.feed != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  child: OfflineBanner(
+                                    lang: lang,
+                                    staleOnly: true,
+                                  ),
+                                ),
+                              Expanded(
+                                child: RefreshIndicator(
+                                  onRefresh: widget.repository.refresh,
+                                  child: ListView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      0,
+                                      20,
+                                      28,
+                                    ),
+                                    children: [
+                                      for (final job in resolved) ...[
+                                        JobCard(
+                                          job: job,
+                                          lang: lang,
+                                          now: now,
+                                          preferences: widget.preferences,
+                                          onTap: () => widget.onOpenJob(job.id),
+                                        ),
+                                        if (reminderIds.contains(job.id))
+                                          _SavedReminderSubtitle(
+                                            subtitle: reminderRowSubtitle(
+                                              job: job,
+                                              now: now,
+                                              lang: lang,
+                                            ),
+                                            onTap: () =>
+                                                widget.onOpenJob(job.id),
+                                          ),
+                                      ],
+                                      for (final id in unavailable) ...[
+                                        UnavailableJobTile(
+                                          lang: lang,
+                                          jobId: id,
+                                          onRemove:
+                                              _pendingRemovals.contains(id)
+                                              ? null
+                                              : () => _remove(id, lang),
+                                        ),
+                                        if (reminderIds.contains(id))
+                                          _SavedReminderSubtitle(
+                                            subtitle: reminderRowSubtitle(
+                                              job: null,
+                                              now: now,
+                                              lang: lang,
+                                            ),
+                                          ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        return SafeArea(
+                          top: false,
+                          child: _RefreshableBody(
+                            onRefresh: widget.repository.refresh,
+                            child: body,
                           ),
-                        ],
-                      );
-                    }
-                    return SafeArea(
-                      top: false,
-                      child: _RefreshableBody(
-                        onRefresh: widget.repository.refresh,
-                        child: body,
-                      ),
+                        );
+                      },
                     );
                   },
                 );
@@ -234,6 +275,63 @@ class _RefreshableBody extends StatelessWidget {
               children: [child],
             )
           : child,
+    );
+  }
+}
+
+/// Truthful stored-reminder line rendered directly under a saved card when the
+/// job ID is present in [UserPreferences.reminderJobIds].
+class _SavedReminderSubtitle extends StatelessWidget {
+  const _SavedReminderSubtitle({required this.subtitle, this.onTap});
+
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: KarmopathTheme.teal.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.alarm_on_outlined,
+                    size: 16,
+                    color: KarmopathTheme.teal,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: KarmopathTheme.ink.withValues(alpha: 0.75),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

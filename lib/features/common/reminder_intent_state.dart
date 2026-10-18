@@ -60,7 +60,8 @@ KText? storedReminderMessage(StoredReminderState state) => switch (state) {
   StoredReminderState.noDeadline => K.reminderRowNoDeadline,
 };
 
-/// Subtitle for one row of the home reminder sheet.
+/// Subtitle for a job row or card that has a stored reminder intent (home
+/// reminder sheet, calendar and saved list).
 ///
 /// A row always describes a *stored request*. Its second line states the
 /// job's current situation in plain words; when the reminder is still ahead it
@@ -88,4 +89,37 @@ String reminderRowSubtitle({
       ) ??
       kindLabel(job.kind, lang);
   return '${K.reminderStored.inLang(lang)} · $label';
+}
+
+/// Truthful one-line summary subtitle for the stored-reminder count row in
+/// Settings, derived from [reminderIds] and the current [jobs] (when loaded).
+String storedRemindersSummarySubtitle({
+  required Set<String> reminderIds,
+  List<Job>? jobs,
+  required DateTime now,
+  required AppLang lang,
+}) {
+  if (reminderIds.isEmpty) return K.noRemindersTitle.inLang(lang);
+  if (jobs != null) {
+    final byId = <String, Job>{for (final job in jobs) job.id: job};
+    if (reminderIds.length == 1) {
+      return reminderRowSubtitle(
+        job: byId[reminderIds.first],
+        now: now,
+        lang: lang,
+      );
+    }
+    final states = <StoredReminderState>{
+      for (final id in reminderIds)
+        storedReminderState(
+          info: byId[id] == null ? null : deadlineInfo(byId[id]!, now),
+          now: now,
+        ),
+    };
+    if (states.length == 1) {
+      final message = storedReminderMessage(states.first);
+      if (message != null) return message.inLang(lang);
+    }
+  }
+  return '${K.reminderStored.inLang(lang)} · ${K.reminderSheetPolicy.inLang(lang)}';
 }

@@ -8,6 +8,7 @@ import '../common/app_language.dart';
 import '../common/deadline_clock.dart';
 import '../common/formatting.dart';
 import '../common/palette.dart';
+import '../common/reminder_intent_state.dart';
 import '../common/strings.dart';
 import '../common/widgets/state_views.dart';
 
@@ -215,11 +216,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         );
       }
+      final hasReminder = reminderIds.contains(entry.job.id);
       widgets.add(
         _DeadlineTile(
           entry: entry,
           lang: lang,
-          reminderEnabled: reminderIds.contains(entry.job.id),
+          reminderEnabled: hasReminder,
+          reminderSubtitle: hasReminder
+              ? reminderRowSubtitle(job: entry.job, now: now, lang: lang)
+              : null,
           onOpen: () => widget.onOpenJob(entry.job.id),
         ),
       );
@@ -328,12 +333,14 @@ class _DeadlineTile extends StatelessWidget {
     required this.entry,
     required this.lang,
     required this.reminderEnabled,
+    required this.reminderSubtitle,
     required this.onOpen,
   });
 
   final _CalendarEntry entry;
   final AppLang lang;
   final bool reminderEnabled;
+  final String? reminderSubtitle;
   final VoidCallback onOpen;
 
   @override
@@ -429,6 +436,17 @@ class _DeadlineTile extends StatelessWidget {
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                             color: accent,
+                          ),
+                        ),
+                      ],
+                      if (reminderSubtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          reminderSubtitle!,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.35,
+                            color: KarmopathTheme.ink.withValues(alpha: 0.68),
                           ),
                         ),
                       ],
