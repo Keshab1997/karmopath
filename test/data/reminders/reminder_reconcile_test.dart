@@ -558,7 +558,7 @@ void main() {
       () async {
         final stack = _Stack();
         final desiredEntry = _entry('record-retry');
-        stack.platform.onSchedule = (_, __) {
+        stack.platform.onSchedule = (_, _) {
           stack.prefs.writeError = StateError('ledger write failed');
         };
 
