@@ -10,7 +10,7 @@ This is a dependency-free, browser-local editor for human-reviewed candidate pos
 4. Import an existing candidate feed or a saved draft backup. The tool validates an entire candidate feed before offering replacement; a bad import leaves the current workspace unchanged. Replacing drafts requires confirmation.
 5. Preview in Bengali or English. The preview and imported values are rendered as text, not HTML. The tool only links to HTTPS URLs and never fetches the linked pages.
 6. After personally checking the original notice, eligibility, and dates, use **Confirm source review**. This records an owner attestation; it does not prove that a source is official. A new item gets a candidate `published_at` initialized to the review time. That time is not a publication event; the captain must set the actual timestamp when approving the candidate.
-7. **Export candidate** includes reviewed records only, blocks if any existing record still needs review, and names any omitted new drafts. It downloads `karmopath-candidate-feed.json`; there is no publish action or endpoint. Run the CLI validator and review the candidate diff before any separately approved publication.
+7. **Export candidate** includes reviewed records only, blocks if any existing record still needs review, and names any omitted new drafts. It downloads `karmopath-candidate-feed.json`; there is no publish action or endpoint. After the export validates, a read-only publish-checklist panel appears with per-job source/notice/published-at pass/fail counts; it is a snapshot, not an approval. Run the CLI validator, the publish-readiness checklist, and review the candidate diff before any separately approved publication.
 
 ## Edit and persistence model
 
@@ -20,13 +20,14 @@ Typing changes the selected draft in **this tab's memory only**. Each draft and 
 
 A best-effort `beforeunload` warning appears while the workspace has unsaved edits. Browser warnings depend on browser policy and user action: they are not durable storage, do not guarantee recovery, and are not a substitute for saving or exporting a private backup. Browser local storage itself is also not a durable backup.
 
-## Local export, validation, and comparison handoff
+## Local export, validation, comparison, and checklist handoff
 
-The candidate export is a local review artifact, not a publication. Keep it separate from the exact local snapshot of the currently published schema-v1 feed. From the repository root, validate first and then compare:
+The candidate export is a local review artifact, not a publication. Keep it separate from the exact local snapshot of the currently published schema-v1 feed. From the repository root, run the offline chain in this order — export → validate → compare (if a baseline exists) → publish checklist → human verification; publication itself is a separate owner-authorized step:
 
 ```sh
 python3 tools/feed/validate.py path/to/karmopath-candidate-feed.json
 python3 tools/feed/compare.py path/to/currently-published-feed.json path/to/karmopath-candidate-feed.json
+python3 tools/feed/check_publish.py path/to/karmopath-candidate-feed.json
 ```
 
 The comparison validates **both** files before summarizing added, unchanged, changed (with field names), withdrawn, and missing IDs in deterministic ID order. It rejects invalid/duplicate IDs, prior-ID deletion (including remove-plus-add replacement), a backwards feed envelope or existing-job `updated_at`, a changed existing `published_at`, and content changes without both advancing `updated_at` and a fresh advancing `reviewed_at`. Timestamp ordering uses parsed UTC instants, including fractional seconds. Equivalent spellings of `application_end_at` also compare as instants, not content edits. Field additions/removals (even null-valued extensions) and JSON value/type changes require fresh review; object-key order does not. Unchanged content may keep its timestamps; valid additions and a schema-v1 empty-baseline bootstrap are allowed. A passing result only establishes contract/comparison consistency; it does not authenticate sources, establish truth, or authorize publication. Both commands are offline, read-only, and report nonzero on errors.
@@ -35,6 +36,28 @@ After a passing comparison, a human must review the **original source and notice
 
 Before any separately authorized publication, retain the last known-good published feed and its publication record, plan cache/CDN invalidation and propagation, and verify the served feed after cache expiry/invalidation. Keep a rollback plan that accounts for caches and preserves auditability. Do not blindly restore an old timestamped object as a new candidate: this gate rejects backwards envelope/job timestamps, and existing IDs must retain `published_at`; an approved rollback/reversion may need to be represented as a newly reviewed, advancing candidate. None of these publication or rollback actions are performed here.
 
+## Publish-readiness checklist (offline, read-only)
+
+`tools/feed/check_publish.py` is the last offline gate before a human decides anything. It does not upload, publish, fetch, or write any file, and it never forks the frozen validator rules: it first runs the unchanged `tools/feed/validate.py` rules, then adds these publication-readiness checks per job and rejects with actionable field paths and job IDs:
+
+- `source_url` and `notice_url` are nonempty absolute HTTPS URLs without embedded credentials and without a fragment (the fragment rule is additive; the other link rules are the validator's own);
+- `published_at` is present, a valid UTC timestamp, and not in the future beyond the same 5-minute clock tolerance the validator applies;
+- `districts` and `qualifications` have at least one entry where applicable. Empty arrays are reported as `[WARN]` and do not fail the run by default; pass `--strict` to treat warnings as failures. Every other rule stays owned by the validator, so a structurally invalid feed still fails there.
+
+Useful invocations:
+
+```sh
+python3 tools/feed/check_publish.py path/to/karmopath-candidate-feed.json
+python3 tools/feed/check_publish.py path/to/karmopath-candidate-feed.json --now 2026-10-18T06:00:00Z  # deterministic rerun
+python3 tools/feed/check_publish.py path/to/karmopath-candidate-feed.json --strict                    # warnings fail
+```
+
+Exit `0` means validation and every failing checklist item passed; exit `1` means validation or the checklist rejected the candidate (including unreadable/invalid JSON input). Output is deterministic for the same input and `--now`: items print in job/field order with `[PASS]`/`[FAIL]`/`[WARN]` prefixes, a counts summary, and a final `RESULT: READY …` or `RESULT: NOT READY …` line. `READY` is deliberately narrow: it proves only offline structure and readiness signals, never official-source authenticity, notice contents, editorial truth, or publication authorization.
+
+The admin panel shows the same checks read-only. After a **candidate export validates**, the preview column renders a publish-checklist panel listing the same per-job `source_url` / `notice_url` / `published_at` checks (plus empty `districts`/`qualifications` warnings) with pass/fail counts. It is a labeled snapshot of that export: later edits do not update it, a blocked or invalid export hides it, and importing or recovering a workspace clears it. The panel never blocks an export that validation already allowed, never auto-approves, and never publishes. `tools/feed/check_publish.py` run on the exported file remains the authoritative checklist.
+
+Full handoff for the owner: **export** the candidate → **validate** (`validate.py`) → **compare** against the currently published baseline if one exists (`compare.py`) → **checklist** (`check_publish.py`, and read the panel) → **human verification** of the original source and notice, eligibility, deadlines, and every listed change → **owner-authorized publication** as a separate step with its own rollback plan. No step here performs that publication.
+
 ## Validator and tests
 
 From the repository root:
@@ -42,6 +65,7 @@ From the repository root:
 ```sh
 python3 tools/feed/validate.py path/to/karmopath-candidate-feed.json
 python3 tools/feed/compare.py path/to/currently-published-feed.json path/to/karmopath-candidate-feed.json
+python3 tools/feed/check_publish.py path/to/karmopath-candidate-feed.json
 python3 -m unittest discover -s tests/feed
 node --check admin/admin-core.js
 node --check admin/app.js

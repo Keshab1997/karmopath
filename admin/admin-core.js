@@ -117,13 +117,75 @@
     });
   }
 
+  // Publication-readiness link rule (additive checklist only; the validator in
+  // app.js/tools keeps owning the frozen contract rules). Returns null when the
+  // value is a nonempty absolute HTTPS URL without credentials or fragment.
+  function httpsLinkIssue(value) {
+    if (value === null || value === undefined) return 'is null or missing; publication requires a nonempty absolute HTTPS URL';
+    if (typeof value !== 'string' || !value.trim() || /\s/.test(value)) return 'is empty; publication requires a nonempty absolute HTTPS URL';
+    let url;
+    try { url = new URL(value); } catch (_) { return 'must be an absolute HTTPS URL'; }
+    if (url.protocol !== 'https:' || !url.hostname) return 'must be an absolute HTTPS URL';
+    if (url.username || url.password) return 'must not embed credentials';
+    if (url.hash) return 'must not contain a fragment (#...); link to the page itself';
+    return null;
+  }
+
+  // Read-only publish-readiness checklist over exported candidate jobs.
+  // Mirrors tools/feed/check_publish.py: source_url/notice_url links,
+  // published_at presence/future check (same 5-minute clock tolerance as the
+  // validator), and empty districts/qualifications warnings. It never blocks
+  // or approves anything; it only reports deterministic counts.
+  function publishChecklist(jobs, nowMs) {
+    const items = [];
+    let jobsChecked = 0;
+    let passed = 0;
+    let failed = 0;
+    let warned = 0;
+    const list = Array.isArray(jobs) ? jobs : [];
+    list.forEach((job, index) => {
+      if (!job || typeof job !== 'object' || Array.isArray(job)) return;
+      jobsChecked += 1;
+      const path = `jobs[${index}]`;
+      const jobId = typeof job.id === 'string' && job.id ? job.id : '(missing id)';
+      const add = (field, status, detail) => {
+        if (status === 'PASS') passed += 1;
+        else if (status === 'FAIL') failed += 1;
+        else warned += 1;
+        items.push({ path, jobId, field, status, detail });
+      };
+      for (const field of ['source_url', 'notice_url']) {
+        const issue = httpsLinkIssue(job[field]);
+        add(field, issue ? 'FAIL' : 'PASS', issue || 'nonempty absolute HTTPS, no credentials, no fragment');
+      }
+      const published = job.published_at;
+      if (published === null || published === undefined) {
+        add('published_at', 'FAIL', 'is missing; the actual publication time must be set before publication review');
+      } else if (timestampMilliseconds(published) === null) {
+        add('published_at', 'FAIL', 'must be an ISO 8601 UTC timestamp ending in Z');
+      } else if (timestampMilliseconds(published) > nowMs + 5 * 60 * 1000) {
+        add('published_at', 'FAIL', 'is in the future; must not be ahead of now beyond the 5-minute clock tolerance');
+      } else {
+        add('published_at', 'PASS', 'present and not in the future (5-minute clock tolerance)');
+      }
+      for (const field of ['districts', 'qualifications']) {
+        if (Array.isArray(job[field]) && job[field].length === 0) {
+          add(field, 'WARN', 'is empty; add at least one entry where applicable (statewide uses the literal "West Bengal")');
+        }
+      }
+    });
+    return { items, jobsChecked, passed, failed, warned, ready: failed === 0 };
+  }
+
   return {
     canDeleteDraft,
     closingDeadlineMilliseconds,
     commitWorkspace,
     effectiveStatus,
+    httpsLinkIssue,
     loadWorkspace,
     planCandidate,
+    publishChecklist,
     recoverWorkspace,
   };
 });

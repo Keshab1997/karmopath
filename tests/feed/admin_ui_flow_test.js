@@ -667,3 +667,68 @@ test('expired preview shows Closed but leaves the declared feed status unchanged
   assert.equal(candidate.jobs[0].status, 'open');
   assert.equal(candidate.jobs[0].id, 'expired-open');
 });
+
+function checklistRows(harness) {
+  return harness.get('checklistItems').childNodes.map((node) => node.textContent);
+}
+
+test('validated export renders a read-only publish checklist that never blocks or approves', async () => {
+  const ready = validJob('checklist-ready');
+  const fragment = validJob('checklist-fragment', { notice_url: 'https://example.org/notice.pdf#page=2' });
+  const harness = runAdmin();
+  assert.equal(harness.get('checklistSummary').textContent, ''); // starts empty in a fresh workspace
+
+  click(harness, 'candidateExportButton');
+  assert.equal(harness.get('publishChecklist').hidden, true); // blocked export shows no checklist
+
+  await importJson(harness, validFeed(ready, fragment));
+  click(harness, 'candidateExportButton');
+  const candidate = downloadedCandidate(harness);
+  assert.ok(candidate, 'export with a failing checklist item must still download');
+  assert.equal(harness.get('publishChecklist').hidden, false);
+  assert.match(harness.get('checklistSummary').textContent,
+    /5 passed · 1 failed · 0 warning\(s\) across 2 exported job\(s\)/);
+  const rows = checklistRows(harness);
+  assert.equal(rows.length, 6); // 2 jobs × (source_url + notice_url + published_at)
+  assert.match(rows[0], /^PASS jobs\[0\] \(id=checklist-ready\) source_url:/);
+  assert.match(rows[4], /^FAIL jobs\[1\] \(id=checklist-fragment\) notice_url:.*fragment/);
+  const failRow = rows.find((row) => row.startsWith('FAIL'));
+  assert.ok(failRow, 'FAIL rows are displayed, not hidden');
+  assert.match(harness.get('feedback').textContent, /read-only snapshot and is not an approval/);
+  assert.match(harness.get('checklistSummary').textContent, /snapshot of export at/);
+});
+
+test('blocked or invalid exports hide the stale checklist panel', async () => {
+  const job = validJob('stale-check');
+  const harness = runAdmin();
+  await importJson(harness, validFeed(job));
+  click(harness, 'candidateExportButton');
+  assert.equal(harness.get('publishChecklist').hidden, false);
+
+  enter(harness, 'summary_en', 'Edit invalidates review');
+  click(harness, 'candidateExportButton');
+  assert.match(harness.get('feedback').textContent, /existing record.*cannot be omitted/i);
+  assert.equal(harness.get('publishChecklist').hidden, true);
+
+  // A workspace whose reviewed record fails validation blocks export and
+  // clears any previously rendered checklist snapshot.
+  const invalid = validJob('invalid-reviewed', { notice_url: 'not a url at all' });
+  const seeded = makeStorage(seedWorkspace([savedDraft('invalid-key', invalid)]));
+  const blocked = runAdmin(seeded);
+  blocked.get('publishChecklist').hidden = false; // simulate a stale visible snapshot
+  click(blocked, 'candidateExportButton');
+  assert.match(blocked.get('feedback').textContent, /Candidate blocked by validation/);
+  assert.equal(downloadedCandidate(blocked), null);
+  assert.equal(blocked.get('publishChecklist').hidden, true);
+});
+
+test('import replacement and storage recovery clear the previous checklist snapshot', async () => {
+  const job = validJob('snapshot-one');
+  const harness = runAdmin();
+  await importJson(harness, validFeed(job));
+  click(harness, 'candidateExportButton');
+  assert.equal(harness.get('publishChecklist').hidden, false);
+
+  await importJson(harness, validFeed(validJob('snapshot-two')));
+  assert.equal(harness.get('publishChecklist').hidden, true);
+});

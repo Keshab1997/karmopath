@@ -25,6 +25,8 @@
     recoveryPanel: $('recoveryPanel'), recoveryMessage: $('recoveryMessage'),
     rawBackupButton: $('rawBackupButton'), confirmRecoveryButton: $('confirmRecoveryButton'),
     newDraftButton: $('newDraftButton'), importButton: $('importButton'),
+    checklistPanel: $('publishChecklist'), checklistSummary: $('checklistSummary'),
+    checklistItems: $('checklistItems'),
   };
   let drafts = [];
   let currentKey = null;
@@ -607,8 +609,32 @@
       backupDownloaded: storageRecovery.backupDownloaded, confirmed: true,
     });
     if (!applyWorkspaceResult(result)) return;
+    hideChecklist();
     renderAll();
     setFeedback('Recovery confirmed; unreadable storage was replaced only after the raw backup step. Import a validated backup or start a new draft.', 'success');
+  }
+
+  // Publish-readiness checklist panel: read-only display of the same additive
+  // checks as tools/feed/check_publish.py, computed over the exported
+  // candidate jobs. It never blocks export, never auto-approves, and is a
+  // stale-labeled snapshot (later edits do not update it).
+  function hideChecklist() {
+    els.checklistPanel.hidden = true;
+    els.checklistSummary.textContent = '';
+    els.checklistItems.replaceChildren();
+  }
+
+  function renderChecklist(result, exportedAt) {
+    els.checklistPanel.hidden = false;
+    els.checklistSummary.textContent = `${result.passed} passed · ${result.failed} failed · ${result.warned} warning(s) across ${result.jobsChecked} exported job(s)` +
+      (exportedAt ? ` · snapshot of export at ${exportedAt}` : '');
+    els.checklistItems.replaceChildren();
+    for (const item of result.items) {
+      const row = document.createElement('div');
+      row.className = `check-item check-${item.status.toLowerCase()}`;
+      row.textContent = `${item.status} ${item.path} (id=${item.jobId}) ${item.field}: ${item.detail}`;
+      els.checklistItems.append(row);
+    }
   }
 
   function exportDrafts() {
@@ -623,22 +649,29 @@
   function exportCandidate() {
     const plan = Core.planCandidate(drafts);
     if (plan.blockingExistingIds.length) {
+      hideChecklist();
       setFeedback(`Candidate export blocked: existing record(s) need re-review and cannot be omitted: ${plan.blockingExistingIds.join(', ')}. Re-review or explicitly close/withdraw each record.`, 'error');
       return;
     }
     if (!plan.jobs.length) {
+      hideChecklist();
       const omitted = plan.omittedNewDraftIds.length ? ` New draft(s) not exported: ${plan.omittedNewDraftIds.join(', ')}.` : '';
       setFeedback(`No reviewed records to export. Confirm a genuine source review first.${omitted}`, 'error');
       return;
     }
     const candidate = { schema_version: 1, updated_at: new Date().toISOString(), jobs: plan.jobs };
     const errors = validateFeed(candidate);
-    if (errors.length) { setFeedback(`Candidate blocked by validation:\n${errors.map((error) => `• ${error}`).join('\n')}`, 'error'); return; }
+    if (errors.length) {
+      hideChecklist();
+      setFeedback(`Candidate blocked by validation:\n${errors.map((error) => `• ${error}`).join('\n')}`, 'error');
+      return;
+    }
     downloadJson('karmopath-candidate-feed.json', candidate);
+    renderChecklist(Core.publishChecklist(plan.jobs, Date.now()), candidate.updated_at);
     const omitted = plan.omittedNewDraftIds.length
       ? ` New never-published draft(s) omitted: ${plan.omittedNewDraftIds.join(', ')}.`
       : '';
-    setFeedback(`Candidate feed exported with ${plan.jobs.length} reviewed record(s).${omitted} Nothing was published; run the CLI validator and ask the captain to review.`, 'success');
+    setFeedback(`Candidate feed exported with ${plan.jobs.length} reviewed record(s).${omitted} Nothing was published; run tools/feed/validate.py and tools/feed/check_publish.py, then ask the captain to review. The checklist panel is a read-only snapshot and is not an approval.`, 'success');
   }
 
   function validDraftBundle(value) {
@@ -672,6 +705,7 @@
     if (!window.confirm(`Replace the current ${drafts.length} local draft(s) with ${imported.length} validated ${kind}? This changes only this browser's local workspace.${unsavedWarning}`)) return;
     const nextKey = imported[0]?.key || null;
     if (!commitDrafts(imported, nextKey)) return;
+    hideChecklist();
     renderAll();
     setFeedback(`${imported.length} ${kind} imported after validation. No network request was made.`, 'success');
   }
