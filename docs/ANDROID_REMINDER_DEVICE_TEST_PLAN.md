@@ -2,14 +2,18 @@
 
 > # **PLAN ONLY — DEVICE TESTS NOT RUN**
 >
-> This document is an owner-run manual procedure, not an execution report. No production feed has been approved, and no Android device evidence, approved test feed, or Captain-provided installable build is available to this plan. Later execution requires a separately owner-approved HTTPS test feed; this plan creates or publishes none. Every `Result` below is intentionally `NOT RUN`.
+> This document is an owner-run manual procedure, not an execution report. The owner-approved public HTTPS non-production fixtures are listed in [`test-feed/README.md`](../test-feed/README.md) and are for device testing only; no production feed is approved. No Captain-provided installable build or Android device evidence is available yet. This plan creates or publishes no feed. Every `Result` below is intentionally `NOT RUN`.
+
+## Owner test-feed approval (test only)
+
+On 2026-10-19, the owner selected test-only feed approval in this conversation and committed `test-feed/README.md`, identifying its public Gist URLs as the approved feed fixtures for Android reminder testing. This approval is limited to those non-production fixtures and this device plan; it does not authorize production-feed use, app activation, build dispatch, device execution, deployment or release.
 
 ## Preconditions and blockers
 
 Do not begin a case until all applicable prerequisites are satisfied. If a prerequisite is absent, mark the case **BLOCKED**, never PASS.
 
 - **Captain integration:** the Captain has reviewed and integrated the reminder runtime/backend binding, payload handling, tap-intent routing, and external-launch safety work. The build under test must contain that integrated code; the Batch 8 worker branches alone are not an activated runtime.
-- **Owner-approved test feed:** the owner has approved an HTTPS test-feed URL and Captain-provided test data, including an open recruitment job with stable identity and suitable future dates. The fixture must support a successfully loaded empty response and a safely unavailable/null response. Do not invent or publish a feed URL, use production data, or shorten a production reminder interval.
+- **Owner-approved test feed:** use only the public HTTPS non-production URLs and sanitized data in [`test-feed/README.md`](../test-feed/README.md). It includes stable open recruitment jobs, a successful-empty fixture, and an unavailable/404 case. Do not invent or substitute a feed URL, use production data, or shorten a production reminder interval.
 - **Installable build:** the Captain has supplied the exact APK/build and its app commit/build SHA, version, package ID, and installation/update instructions. Do not build or sign an APK as part of this plan.
 - **Owner-authorized Android device:** use an owner-authorized Android device with access to app/notification Settings, network controls, restart/reboot, and the approved test account. A fake, widget test, or plugin mock is not device evidence.
 - **Safe diagnostics and time:** use only Captain-approved diagnostics for intent, sync reports, identity, and pending-record inspection. If a value is not exposed, record `NOT OBSERVABLE`; do not infer it. Reserve enough time for the approved one-shot schedule if testing actual appearance.
@@ -79,4 +83,4 @@ Owner/operator:
 - `inexactAllowWhileIdle` notifications may be delayed; do not assert an exact delivery time.
 - Android OEM, OS version, power management, Doze, channel settings, and device state vary; record conditions rather than generalizing one result.
 - A successful fake, unit, widget, or other non-device test is **not Android device evidence**.
-- This plan supplies no feed URL, build, permission approval, device result, production approval, or release evidence. No case is authorized to enable exact alarms, change application code, publish a feed, or deploy a build.
+- The test-feed URLs are maintained in `test-feed/README.md`; this plan supplies no installable build, permission approval, device result, production-feed approval, or release evidence. No case is authorized to enable exact alarms, change application code, publish another feed, or deploy a build.

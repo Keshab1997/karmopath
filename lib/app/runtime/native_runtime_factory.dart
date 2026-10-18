@@ -13,6 +13,7 @@ import '../../features/common/app_language.dart';
 import '../../features/common/reminder_notification_content.dart';
 import '../../features/common/reminder_tap_intent.dart';
 import '../../platform/notifications/android_native_notifications.dart';
+import '../notifications/external_uri_launcher.dart';
 import '../notifications/native_app_actions.dart';
 import 'app_runtime.dart';
 import 'feed_configuration.dart';
@@ -22,14 +23,15 @@ import 'runtime_reminder_session.dart';
 
 /// Native composition, intentionally NOT selected by lib/main.dart yet.
 ///
-/// A reviewed feed config and a real external launcher are required. The
-/// default binding composes the reviewed synchronizer, Android backend,
-/// bilingual content, tap handoff and status/retry session. No demo content or
-/// no-op success is a fallback. Every acquired resource is registered before
-/// the next await; failure unwinds all of them and preserves the primary error.
+/// A reviewed feed config is required. The external launcher defaults to the
+/// real system handler and may be replaced only for tests. The default binding
+/// composes the reviewed synchronizer, Android backend, bilingual content, tap
+/// handoff and status/retry session. No demo content or no-op success is a
+/// fallback. Every acquired resource is registered before the next await;
+/// failure unwinds all of them and preserves the primary error.
 Future<AppRuntime> createNativeRuntime({
   required FeedConfiguration feed,
-  required Future<void> Function(Uri uri) openExternal,
+  Future<void> Function(Uri uri)? openExternal,
   RuntimeReminderSessionFactory? createReminderSession,
   Future<NativeStorage> Function()? openStorage,
   http.Client Function()? createHttpClient,
@@ -63,7 +65,7 @@ Future<AppRuntime> createNativeRuntime({
     resources.add(repository.dispose);
     final actions = NativeAppActions(
       notifications: notifications,
-      openExternal: openExternal,
+      openExternal: openExternal ?? launchExternalHttpsUri,
     );
     resources.add(actions.close);
     final synchronizer = LedgerNativeReminderSynchronizer(

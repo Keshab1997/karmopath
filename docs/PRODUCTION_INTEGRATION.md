@@ -1,29 +1,27 @@
-# Captain production composition — current status
+# Captain native integration — current status
 
-## Present implementation
+## Implemented code (not activated through `main.dart`)
 
-Captain-owned `lib/app/runtime/**` contains the injectable `AppRuntime`, retryable `ProductionBootstrap`, navigation/live ID-based `ProductionShell`, HTTPS syntax-only `FeedConfiguration`, native storage/factory/session and lifecycle/language hooks. `lib/app/notifications/**` contains an Android notification driver, concrete `ReminderPlatform` and explicit user actions. These are reviewed/tested foundation code, **not an activated production native application**.
+Captain-owned runtime code now composes the injectable `AppRuntime`, retryable `ProductionBootstrap`, `ProductionShell`, validated HTTPS feed configuration, persistent native storage, HTTP repository, Android notification backend, shared reminder ledger, default `NativeReminderSession`, and lifecycle/language hooks. The runtime factory is wired to the reviewed ledger-backed synchronizer; it no longer requires a custom session implementation. This is an integrated native runtime, **not an activated production application**.
 
-- Existing screens/detail routes resolve current repository data; removed/missing IDs show unavailable, stale data has a warning, no fake live jobs are substituted.
-- Language read/write uses `karmopath.language.v1` (bn/en); unknown/unreadable settings fail rather than silently reset. Visible language reaches the session immediately even when its serialized persistence fails.
-- Partial native initialization registers and releases acquired preferences/ledger, HTTP client, repository, actions, driver and session in reverse order; cleanup attempts continue after a cleanup error and preserve the primary initialization error. Close is idempotent and waits for language writes/session drain.
-- Session orchestration observes stored intents, verified feed, language and resume; an unloaded feed is not an authoritative empty feed. The actual reconciliation/content closure is REQUIRED, not replaced by a successful no-op.
-- Notification queries do not prompt. Only explicit `AppActions.requestReminderPermission()` may request permission; denial/unknown state is never a grant. Scoped cancellation remains possible after denial. Native scheduling validates ID/content/future time, rechecks the clock after an async permission query and uses UTC one-shot `inexactAllowWhileIdle` without exact-alarm permission.
-- The already-published icon/channel constants, Android manifest/desugaring/keep resources and dependency/lock pins were retained; the older foundation icon literal was adapted to `ic_stat_karmopath`.
-- The factory requires a real external-launch callback; launcher/binding tests use explicit injected fakes only. No default fake-success production launcher is provided.
+- Existing screens and detail routes resolve current repository data; missing IDs show unavailable, stale data has a warning, and no fake live jobs are substituted.
+- Language read/write uses `karmopath.language.v1` (bn/en); unknown/unreadable settings fail rather than silently reset. Visible language reaches the session immediately even when serialized persistence fails.
+- Partial native initialization registers and releases acquired preferences/ledger, HTTP client, repository, actions, notifications, synchronizer and session in reverse order; cleanup attempts continue after a cleanup error and preserve the primary initialization error. Close is idempotent and waits for language writes/session drain.
+- The session serializes synchronization from verified feed, stored intent, language changes, explicit retry and resume. An unloaded or stale offline feed is not treated as an authoritative empty feed. Startup and resume do not prompt for permission.
+- The reconciler compares full notification identity, uses the persistent namespace/ID ledger, preflights duplicate/foreign/reserved-ID conflicts, and only reports effects confirmed by the backend/ledger path. Focused tests cover conflict and repair cases. These tests do not prove a live Android alarm or delivery.
+- The shell exposes bilingual sync status and explicit retry, and drains validated cold/foreground tap intents only when navigation is ready. A tap is an in-memory intent, not a delivery receipt.
+- Notification permission is requested only by an explicit user action. Scheduling is UTC one-shot `inexactAllowWhileIdle`; no exact-alarm permission or shortened production interval is enabled.
+- `external_uri_launcher.dart` now uses the real `url_launcher` system handler by default, validates public HTTPS links, and reports false/platform failures. Tests can inject a launcher; the production default is not a fake-success callback.
+- Existing Android manifest/boot receiver, notification channel/icon resources, desugaring and dependency pins were retained. Code and fake/widget tests cover startup/resume and tap routing, but not real device behavior.
 
-Current gate evidence and reviewed immutable inputs: [CAPTAIN_BATCH_7.md](reports/CAPTAIN_BATCH_7.md). Historical runtime/dispatch/local-phase counts elsewhere are historical snapshots, not additional current test runs or Android/device proof.
+## Activation and verification still pending
 
-## Activation and final binding remain pending
+`lib/main.dart` is intentionally unchanged and still selects the foundation screen on Android; the isolated web demo remains separate. The owner selected test-only approval and committed the public Gist fixtures documented in [`test-feed/README.md`](../test-feed/README.md); the device plan records this approval. These fixtures are not production data. `FeedConfiguration` checks URL syntax only; it does not prove public reachability or source accuracy.
 
-`lib/main.dart` is unchanged: native still selects the foundation; the labeled isolated web demo remains separate. `FeedConfiguration` validates URL syntax only, not host/public reachability or official accuracy. A real endpoint requires explicit owner approval; never guess one or embed credentials.
+The current `.github/workflows/manual-build.yml` only selects APK/AAB format; it has no test-feed URL or Dart-define input. The owner deferred adding that input, so no workflow APK can exercise reminders until a safe, explicit build-time feed-configuration path is approved and added. The owner will dispatch the manual build workflow; signing secrets must remain in GitHub. Release signing configuration now reads `android/key.properties`, but no Android Gradle run or signed artifact has verified it. No build or CI dispatch has been performed.
 
-The delivered A/B work follows the earlier two-worker plan: A extends the applier's pure reconciliation; B supplies pure notification content. The alternative three-worker output names/paths in archived briefs are NOT claims of implemented classes. The shared native ports/tests remain intact as reference for remaining work.
+The Android device plan, `docs/ANDROID_REMINDER_DEVICE_TEST_PLAN.md`, remains entirely `NOT RUN`. Owner-run checks are still required for permission/denial/reenable, cold and foreground taps, successful-empty/unavailable feeds, offline behavior, reboot/package replacement, force-stop/relaunch, timezone and actual notification delivery. The boot receiver and startup/resume reconciliation are code paths only; plugin pending records are not proof of live alarms or delivery. The safe overdue-reminder behavior also needs the planned real-device review; no late-opt-in catch-up was added.
 
-Before activation Captain must connect the real A/B/platform/session binding, namespace/full-identity/foreign-ID conflict handling, safe cold/foreground tap navigation, operational failure/retry state and a real launcher. Plugin `pendingNotificationRequests()` reads a persisted backend registry; matching IDs do not independently prove live AlarmManager alarms survived reboot/force-stop. Finish a safe startup/resume repair strategy and verify handling of previously scheduled overdue reminders. The frozen rule forbids new late-opt-in catch-up; inexact Android delivery can still be delayed.
+## Release blockers remain owner-gated
 
-Real-device permission/denial/reenable, reboot/package replacement/force-stop/cold start, timezone and actual delivery evidence is still NOT RUN. Flutter/widget/method-channel/fake tests do not replace these checks. No local Flutter build/Gradle, CI dispatch/wait or deployment was performed. Explicit code-push approval is not feed/native activation/release approval.
-
-## Release blockers unchanged
-
-Human-reviewed source content, final art/visual acceptance, support/correction/legal URLs, privacy/Data safety/consent, test ads/app-ads.txt, account/testers/signing/store submission remain separate owner-gated work. Do not invent credentials, legal acceptance, publication or Play approval. Future worker tasks require fresh Captain briefs; historical Batch 7 starters are not active assignments.
+Human-reviewed source content, final art/visual acceptance, support/correction/legal URLs, privacy/Data safety/consent, test ads/app-ads.txt, account/testers/signing and Play submission remain separate release work. The owner deferred release preparation. Do not invent credentials, legal acceptance, publication or Play approval.
