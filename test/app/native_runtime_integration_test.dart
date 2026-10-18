@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:karmopath/app/runtime/app_runtime.dart';
 import 'package:karmopath/app/runtime/production_shell.dart';
 import 'package:karmopath/app/runtime/runtime_reminder_session.dart';
-import 'package:karmopath/contracts/native_reminders.dart';
 import 'package:karmopath/features/common/app_language.dart';
 import 'package:karmopath/features/common/reminder_sync_status.dart';
 import 'package:karmopath/features/common/reminder_tap_intent.dart';

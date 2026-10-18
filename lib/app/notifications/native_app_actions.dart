@@ -6,11 +6,7 @@ import '../../contracts/native_reminders.dart';
 /// Explicit user actions; neither construction nor runtime startup prompts.
 /// External URL launching is required/injected, never a fake successful no-op.
 class NativeAppActions implements AppActions {
-  NativeAppActions({
-    required NativeNotifications notifications,
-    required Future<void> Function(Uri uri) openExternal,
-  }) : _notifications = notifications,
-       _openExternal = openExternal;
+  NativeAppActions({required this._notifications, required this._openExternal});
 
   final NativeNotifications _notifications;
   final Future<void> Function(Uri uri) _openExternal;
