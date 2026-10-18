@@ -53,7 +53,7 @@ Read [AGENTS.md](AGENTS.md) before contributing. Contracts and file ownership ar
 | [Workflow guide](docs/WORKFLOWS.md) | Manual Actions and prerequisites |
 
 ### Current dispatch
-[Current Batch 3 hardening briefs](docs/BATCH_3.md). Continue existing worker branches; Batch 2 code is still unmerged pending captain review. [Remaining integration/release plan](docs/BATCH_2.md). Do not use old Batch 1 starters.
+[Current Batch 4 briefs](docs/BATCH_4.md). Batches 2+3 are integrated; start new worker branches from the frozen code base in Batch 4. [Captain verification](docs/reports/CAPTAIN_BATCH_3.md). [Remaining integration/release plan](docs/BATCH_2.md). Do not use old starters.
 
 ### Parallel team
 **A:** data/cache/preferences · **B:** native screens · **C:** local admin/validator.
