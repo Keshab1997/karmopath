@@ -1,3 +1,6 @@
+import com.android.build.api.dsl.ApplicationExtension
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -8,15 +11,15 @@ plugins {
 // .github/workflows/manual-build.yml) decodes ANDROID_KEYSTORE_BASE64 into
 // android/app/upload-keystore.jks and writes android/key.properties before Gradle
 // is configured; a local release build reads the same file when a developer has
-// one. Both paths are git-ignored. Fully-qualified types keep this out of the
-// import block at the top of the file.
-val keystoreProperties = java.util.Properties()
+// one. Both paths are git-ignored. Explicit imports avoid the Gradle java
+// extension shadowing the java package name in this Kotlin script.
+val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
-android {
+extensions.configure<ApplicationExtension> {
     namespace = "com.keshabstudios.karmopath"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
