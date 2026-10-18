@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:karmopath/contracts/native_reminders.dart';
 import 'package:karmopath/data/reminders/reminder_apply.dart';
 import 'package:karmopath/data/reminders/reminder_plan.dart';
 import 'package:karmopath/data/reminders/reminder_state.dart';
@@ -32,7 +33,10 @@ ReminderPlan _plan(List<ReminderPlanEntry> entries) => ReminderPlan(
 
 class _RecordingPlatform implements ReminderPlatform {
   final List<String> events = <String>[];
-  final Set<int> pendingIds = <int>{};
+  final Map<int, NativePendingReminder> _pending =
+      <int, NativePendingReminder>{};
+  final List<NativePendingReminder> duplicatePendingRecords =
+      <NativePendingReminder>[];
   final Set<int> failingCancelIds = <int>{};
   final Set<String> failingScheduleJobs = <String>{};
 
@@ -44,13 +48,58 @@ class _RecordingPlatform implements ReminderPlatform {
   int cancelCalls = 0;
   int scheduleCalls = 0;
 
+  List<NativePendingReminder> get pendingRecords =>
+      List<NativePendingReminder>.unmodifiable([
+        ..._pending.values,
+        ...duplicatePendingRecords,
+      ]);
+
+  Set<int> get pendingIds => <int>{
+    ..._pending.keys,
+    ...duplicatePendingRecords.map((record) => record.platformId),
+  };
+
+  void addManagedPending(
+    int id,
+    ReminderPlanEntry entry, {
+    String variant = 'bn@copy-1',
+  }) {
+    _pending[id] = NativePendingReminder(
+      platformId: id,
+      isManaged: true,
+      identity: NativeReminderIdentity(
+        jobId: entry.jobId,
+        dueAtUtc: entry.dueAtUtc,
+        closesAtUtc: entry.closesAtUtc,
+        contentKey: entry.contentKey,
+        payloadVariant: variant,
+      ),
+    );
+  }
+
+  void addMalformedManagedPending(int id) {
+    _pending[id] = NativePendingReminder(
+      platformId: id,
+      isManaged: true,
+      identity: null,
+    );
+  }
+
+  void addForeignPending(int id) {
+    _pending[id] = NativePendingReminder(
+      platformId: id,
+      isManaged: false,
+      identity: null,
+    );
+  }
+
   @override
   Future<void> cancel(int id) async {
     cancelCalls++;
     events.add('cancel:$id');
     onCancel?.call(id);
     if (failingCancelIds.contains(id)) throw cancelError;
-    pendingIds.remove(id);
+    _pending.remove(id);
   }
 
   @override
@@ -61,7 +110,7 @@ class _RecordingPlatform implements ReminderPlatform {
     final gate = scheduleGate;
     if (gate != null) await gate;
     if (failingScheduleJobs.contains(entry.jobId)) throw scheduleError;
-    pendingIds.add(platformId);
+    addManagedPending(platformId, entry);
   }
 }
 
@@ -104,7 +153,7 @@ void main() {
         final stack = _Stack();
         final desiredEntry = _entry('a-job');
         final id = await _seedApplied(stack, desiredEntry);
-        stack.platform.pendingIds.add(id);
+        stack.platform.addManagedPending(id, desiredEntry);
         final writesBefore = stack.writes;
         var queryCalls = 0;
 
@@ -112,9 +161,9 @@ void main() {
           _plan([desiredEntry]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async {
+          readPendingReminders: () async {
             queryCalls++;
-            return stack.platform.pendingIds;
+            return stack.platform.pendingRecords;
           },
         );
 
@@ -138,7 +187,7 @@ void main() {
         _plan([desiredEntry]),
         stack.platform,
         'bn@copy-1',
-        readPendingPlatformIds: () async => stack.platform.pendingIds,
+        readPendingReminders: () async => stack.platform.pendingRecords,
       );
 
       expect(stack.platform.events, ['cancel:$id', 'schedule:a-job:$id']);
@@ -165,7 +214,12 @@ void main() {
           staleVariant,
           variant: 'bn@copy-0',
         );
-        stack.platform.pendingIds.addAll([changedId, variantId]);
+        stack.platform.addManagedPending(changedId, changedOld);
+        stack.platform.addManagedPending(
+          variantId,
+          staleVariant,
+          variant: 'bn@copy-0',
+        );
         final changedNew = _entry(
           'a-changed',
           dueAtUtc: _utc(22),
@@ -176,7 +230,7 @@ void main() {
           _plan([staleVariant, changedNew]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, [
@@ -204,20 +258,72 @@ void main() {
         stack.dispose();
       },
     );
+
+    test('same-job stale pending identity is not a no-op match', () async {
+      final stack = _Stack();
+      final desiredEntry = _entry('identity-job');
+      final id = await _seedApplied(stack, desiredEntry);
+      stack.platform.addManagedPending(id, desiredEntry, variant: 'bn@copy-0');
+
+      final result = await stack.applier.reconcile(
+        _plan([desiredEntry]),
+        stack.platform,
+        'bn@copy-1',
+        readPendingReminders: () async => stack.platform.pendingRecords,
+      );
+
+      expect(stack.platform.events, [
+        'cancel:$id',
+        'schedule:identity-job:$id',
+      ]);
+      expect(result.cancelledJobIds, ['identity-job']);
+      expect(result.scheduledEntries, [desiredEntry]);
+      expect(
+        stack.store.snapshot.appliedFor('identity-job')?.payloadVariant,
+        'bn@copy-1',
+      );
+      stack.dispose();
+    });
+
+    test(
+      'malformed exact-namespace record at a reserved ID is replaced safely',
+      () async {
+        final stack = _Stack();
+        final desiredEntry = _entry('malformed-job');
+        final id = await _seedApplied(stack, desiredEntry);
+        stack.platform.addMalformedManagedPending(id);
+
+        final result = await stack.applier.reconcile(
+          _plan([desiredEntry]),
+          stack.platform,
+          'bn@copy-1',
+          readPendingReminders: () async => stack.platform.pendingRecords,
+        );
+
+        expect(stack.platform.events, [
+          'cancel:$id',
+          'schedule:malformed-job:$id',
+        ]);
+        expect(result.cancelledJobIds, ['malformed-job']);
+        expect(result.scheduledEntries, [desiredEntry]);
+        stack.dispose();
+      },
+    );
   });
 
   group('removals and reservations', () {
     test('applied-but-removed work is cancelled and recorded', () async {
       final stack = _Stack();
-      final id = await _seedApplied(stack, _entry('removed-job'));
-      stack.platform.pendingIds.add(id);
+      final removedEntry = _entry('removed-job');
+      final id = await _seedApplied(stack, removedEntry);
+      stack.platform.addManagedPending(id, removedEntry);
       final writesBefore = stack.writes;
 
       final result = await stack.applier.reconcile(
         _plan(const []),
         stack.platform,
         'bn@copy-1',
-        readPendingPlatformIds: () async => stack.platform.pendingIds,
+        readPendingReminders: () async => stack.platform.pendingRecords,
       );
 
       expect(stack.platform.events, ['cancel:$id']);
@@ -234,15 +340,15 @@ void main() {
       () async {
         final stack = _Stack();
         final reservation = await stack.store.reserve('orphan-job');
-        stack.platform.pendingIds.add(reservation.platformId);
         final desiredEntry = _entry('orphan-job');
+        stack.platform.addManagedPending(reservation.platformId, desiredEntry);
         final writesBefore = stack.writes;
 
         final result = await stack.applier.reconcile(
           _plan([desiredEntry]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, [
@@ -273,14 +379,14 @@ void main() {
       () async {
         final stack = _Stack();
         final reservation = await stack.store.reserve('orphan-job');
-        stack.platform.pendingIds.add(reservation.platformId);
+        stack.platform.addMalformedManagedPending(reservation.platformId);
         final writesBefore = stack.writes;
 
         final result = await stack.applier.reconcile(
           _plan(const []),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, ['cancel:${reservation.platformId}']);
@@ -311,7 +417,7 @@ void main() {
           _plan(const []),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(result.isNoOp, isTrue);
@@ -324,13 +430,13 @@ void main() {
 
     test('unregistered OS IDs are left alone', () async {
       final stack = _Stack();
-      stack.platform.pendingIds.add(777);
+      stack.platform.addForeignPending(777);
 
       final result = await stack.applier.reconcile(
         _plan(const []),
         stack.platform,
         'bn@copy-1',
-        readPendingPlatformIds: () async => stack.platform.pendingIds,
+        readPendingReminders: () async => stack.platform.pendingRecords,
       );
 
       expect(result.isNoOp, isTrue);
@@ -341,26 +447,156 @@ void main() {
     });
 
     test(
-      'new allocation will not overwrite an unregistered pending ID',
+      'foreign pending ID needed by a new reservation is a global conflict',
       () async {
         final stack = _Stack();
-        stack.platform.pendingIds.add(1);
+        stack.platform.addForeignPending(1);
 
-        final result = await stack.applier.reconcile(
-          _plan([_entry('new-job')]),
-          stack.platform,
-          'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+        await expectLater(
+          stack.applier.reconcile(
+            _plan([_entry('new-job')]),
+            stack.platform,
+            'bn@copy-1',
+            readPendingReminders: () async => stack.platform.pendingRecords,
+          ),
+          throwsA(isA<StateError>()),
         );
 
         expect(stack.platform.events, isEmpty);
         expect(stack.platform.pendingIds, {1});
-        expect(result.scheduledEntries, isEmpty);
-        expect(result.failures, hasLength(1));
-        expect(result.failures.single.jobId, 'new-job');
-        expect(result.failures.single.duringCancellation, isFalse);
         expect(stack.store.snapshot.platformIdFor('new-job'), isNull);
         expect(stack.writes, 0);
+        stack.dispose();
+      },
+    );
+
+    test(
+      'foreign pending ID colliding with a ledger reservation aborts cleanup',
+      () async {
+        final stack = _Stack();
+        final entry = _entry('known-job');
+        final id = await _seedApplied(stack, entry);
+        stack.platform.addForeignPending(id);
+        final writesBefore = stack.writes;
+
+        await expectLater(
+          stack.applier.reconcile(
+            _plan(const []),
+            stack.platform,
+            'bn@copy-1',
+            readPendingReminders: () async => stack.platform.pendingRecords,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(stack.platform.events, isEmpty);
+        expect(stack.platform.pendingIds, {id});
+        expect(stack.store.snapshot.appliedFor('known-job'), isNotNull);
+        expect(stack.writes, writesBefore);
+        stack.dispose();
+      },
+    );
+
+    test(
+      'duplicate pending IDs fail before any platform or ledger effect',
+      () async {
+        final stack = _Stack();
+        stack.platform.addForeignPending(55);
+        stack.platform.duplicatePendingRecords.add(
+          const NativePendingReminder(
+            platformId: 55,
+            isManaged: true,
+            identity: null,
+          ),
+        );
+
+        await expectLater(
+          stack.applier.reconcile(
+            _plan(const []),
+            stack.platform,
+            'bn@copy-1',
+            readPendingReminders: () async => stack.platform.pendingRecords,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(stack.platform.events, isEmpty);
+        expect(stack.writes, 0);
+        stack.dispose();
+      },
+    );
+
+    test(
+      'managed identity claiming another reservation is a global conflict',
+      () async {
+        final stack = _Stack();
+        final ownerEntry = _entry('owner-job');
+        final claimedEntry = _entry('claimed-job', dueAtUtc: _utc(20));
+        final ownerId = await _seedApplied(stack, ownerEntry);
+        await _seedApplied(stack, claimedEntry);
+        stack.platform.addManagedPending(ownerId, claimedEntry);
+        final writesBefore = stack.writes;
+
+        await expectLater(
+          stack.applier.reconcile(
+            _plan(const []),
+            stack.platform,
+            'bn@copy-1',
+            readPendingReminders: () async => stack.platform.pendingRecords,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(stack.platform.events, isEmpty);
+        expect(stack.store.snapshot.appliedFor('owner-job'), isNotNull);
+        expect(stack.store.snapshot.appliedFor('claimed-job'), isNotNull);
+        expect(stack.writes, writesBefore);
+        stack.dispose();
+      },
+    );
+
+    test(
+      'unknown managed orphan blocks allocation only when IDs collide',
+      () async {
+        final stack = _Stack();
+        stack.platform.addMalformedManagedPending(1);
+
+        await expectLater(
+          stack.applier.reconcile(
+            _plan([_entry('new-job')]),
+            stack.platform,
+            'bn@copy-1',
+            readPendingReminders: () async => stack.platform.pendingRecords,
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(stack.platform.events, isEmpty);
+        expect(stack.platform.pendingIds, {1});
+        expect(stack.store.snapshot.platformIdFor('new-job'), isNull);
+        expect(stack.writes, 0);
+        stack.dispose();
+      },
+    );
+
+    test(
+      'noncolliding managed orphan remains untouched while safe work schedules',
+      () async {
+        final stack = _Stack();
+        stack.platform.addMalformedManagedPending(777);
+        final desired = _entry('new-job');
+
+        final result = await stack.applier.reconcile(
+          _plan([desired]),
+          stack.platform,
+          'bn@copy-1',
+          readPendingReminders: () async => stack.platform.pendingRecords,
+        );
+
+        expect(stack.platform.events, ['schedule:new-job:1']);
+        expect(stack.platform.pendingIds, {1, 777});
+        expect(result.scheduledEntries, [desired]);
+        expect(stack.writes, 2);
         stack.dispose();
       },
     );
@@ -373,9 +609,9 @@ void main() {
         final stack = _Stack();
         final duplicate = _entry('same-job');
         var queryCalls = 0;
-        Future<Set<int>> readPending() async {
+        Future<List<NativePendingReminder>> readPending() async {
           queryCalls++;
-          return stack.platform.pendingIds;
+          return stack.platform.pendingRecords;
         }
 
         await expectLater(
@@ -383,7 +619,7 @@ void main() {
             _plan([duplicate]),
             stack.platform,
             '  ',
-            readPendingPlatformIds: readPending,
+            readPendingReminders: readPending,
           ),
           throwsArgumentError,
         );
@@ -392,7 +628,7 @@ void main() {
             _plan([duplicate, duplicate]),
             stack.platform,
             'bn@copy-1',
-            readPendingPlatformIds: readPending,
+            readPendingReminders: readPending,
           ),
           throwsArgumentError,
         );
@@ -413,10 +649,10 @@ void main() {
         final queryError = StateError('pending query failed');
         var failQuery = true;
         var queryCalls = 0;
-        Future<Set<int>> readPending() async {
+        Future<List<NativePendingReminder>> readPending() async {
           queryCalls++;
           if (failQuery) throw queryError;
-          return stack.platform.pendingIds;
+          return stack.platform.pendingRecords;
         }
 
         await expectLater(
@@ -424,7 +660,7 @@ void main() {
             _plan([desiredEntry]),
             stack.platform,
             'bn@copy-1',
-            readPendingPlatformIds: readPending,
+            readPendingReminders: readPending,
           ),
           throwsA(same(queryError)),
         );
@@ -437,7 +673,7 @@ void main() {
           _plan([desiredEntry]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: readPending,
+          readPendingReminders: readPending,
         );
         expect(recovered.failures, isEmpty);
         expect(recovered.scheduledEntries, [desiredEntry]);
@@ -463,9 +699,9 @@ void main() {
             _plan([_entry('a-job')]),
             stack.platform,
             'bn@copy-1',
-            readPendingPlatformIds: () async {
+            readPendingReminders: () async {
               queryCalls++;
-              return stack.platform.pendingIds;
+              return stack.platform.pendingRecords;
             },
           ),
           throwsA(
@@ -490,7 +726,7 @@ void main() {
       final stack = _Stack();
       final oldEntry = _entry('a-change');
       final id = await _seedApplied(stack, oldEntry);
-      stack.platform.pendingIds.add(id);
+      stack.platform.addManagedPending(id, oldEntry);
       stack.platform.failingCancelIds.add(id);
       final changed = _entry('a-change', dueAtUtc: _utc(22), contentKey: 'new');
       final independent = _entry('b-new', dueAtUtc: _utc(20));
@@ -499,7 +735,7 @@ void main() {
         _plan([changed, independent]),
         stack.platform,
         'bn@copy-1',
-        readPendingPlatformIds: () async => stack.platform.pendingIds,
+        readPendingReminders: () async => stack.platform.pendingRecords,
       );
 
       expect(stack.platform.events, ['cancel:$id', 'schedule:b-new:2']);
@@ -522,7 +758,7 @@ void main() {
         final stack = _Stack();
         final oldEntry = _entry('a-job');
         final id = await _seedApplied(stack, oldEntry);
-        stack.platform.pendingIds.add(id);
+        stack.platform.addManagedPending(id, oldEntry);
         stack.platform.onCancel = (_) {
           stack.prefs.writeError = StateError('ledger write failed');
         };
@@ -532,7 +768,7 @@ void main() {
           _plan([changed]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, ['cancel:$id']);
@@ -566,7 +802,7 @@ void main() {
           _plan([desiredEntry]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, ['schedule:record-retry:1']);
@@ -585,7 +821,7 @@ void main() {
           _plan([desiredEntry]),
           stack.platform,
           'bn@copy-1',
-          readPendingPlatformIds: () async => stack.platform.pendingIds,
+          readPendingReminders: () async => stack.platform.pendingRecords,
         );
 
         expect(stack.platform.events, [
@@ -612,7 +848,8 @@ void main() {
     final oldChanged = _entry('b-changed', dueAtUtc: _utc(19));
     final removedId = await _seedApplied(stack, removed);
     final changedId = await _seedApplied(stack, oldChanged);
-    stack.platform.pendingIds.addAll([removedId, changedId]);
+    stack.platform.addManagedPending(removedId, removed);
+    stack.platform.addManagedPending(changedId, oldChanged);
     final changed = _entry('b-changed', dueAtUtc: _utc(25), contentKey: 'new');
     final newEntry = _entry('a-new', dueAtUtc: _utc(18));
 
@@ -620,7 +857,7 @@ void main() {
       _plan([changed, newEntry]),
       stack.platform,
       'bn@copy-1',
-      readPendingPlatformIds: () async => stack.platform.pendingIds,
+      readPendingReminders: () async => stack.platform.pendingRecords,
     );
 
     expect(stack.platform.events, [
@@ -651,15 +888,17 @@ void main() {
       expect(stack.platform.events, ['schedule:a-job:1']);
 
       var queryCalls = 0;
-      Set<int>? pendingSeenByQuery;
+      List<NativePendingReminder>? pendingSeenByQuery;
       final reconciling = stack.applier.reconcile(
         desired,
         stack.platform,
         'bn@copy-1',
-        readPendingPlatformIds: () async {
+        readPendingReminders: () async {
           queryCalls++;
-          pendingSeenByQuery = Set<int>.of(stack.platform.pendingIds);
-          return stack.platform.pendingIds;
+          pendingSeenByQuery = List<NativePendingReminder>.of(
+            stack.platform.pendingRecords,
+          );
+          return stack.platform.pendingRecords;
         },
       );
       await pumpEventQueue();
@@ -678,9 +917,9 @@ void main() {
         'a-job',
       ]);
       expect(queryCalls, 1);
-      expect(pendingSeenByQuery, {
+      expect(pendingSeenByQuery?.map((pending) => pending.platformId), [
         1,
-      }, reason: 'query observes the completed schedule');
+      ], reason: 'query observes the completed schedule');
       expect(reconcileResult.isNoOp, isTrue);
       expect(stack.platform.events, ['schedule:a-job:1']);
       stack.dispose();
