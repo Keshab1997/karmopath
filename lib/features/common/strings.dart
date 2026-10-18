@@ -243,6 +243,14 @@ abstract final class K {
   );
   static const lastVerified = KText('সর্বশেষ যাচাই', 'Last verified');
   static const sourceUrlLabel = KText('সূত্র', 'Source');
+  static const reminderSyncChecking = KText(
+    'রিমাইন্ডারের অবস্থা যাচাই হচ্ছে…',
+    'Checking reminder status…',
+  );
+  static const reminderSyncFailed = KText(
+    'রিমাইন্ডারের অবস্থা যাচাই করা যায়নি। আবার চেষ্টা করুন।',
+    'Could not check reminder status. Try again.',
+  );
   static const reminderNotificationBody = KText(
     'আবেদনের শেষ সময় ও মূল বিজ্ঞপ্তি দেখে নিন।',
     'Check the application deadline and the original notice.',
