@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -25,6 +26,25 @@ import 'feed_transport.dart';
 /// [JobFeedState.isOffline] means "what you see is not fresh from the network":
 /// it is true while a saved copy is on screen or the network failed, and false
 /// when the server answered with unusable data and nothing is shown.
+///
+/// ## Lifecycle contract (batch 3)
+///
+/// `ValueNotifier` listeners run **synchronously** inside [_emit], so a listener
+/// is free to call [refresh] or [dispose] while a state is being published.
+/// This class is built for that:
+///  * The single-flight window opens *before* the first notification is
+///    published, so a listener that refreshes on the loading state joins the
+///    running attempt instead of starting a second one.
+///  * The terminal (success/error) state is published *after* the window
+///    closes, so a listener that retries from an error banner starts a real new
+///    attempt instead of joining one that has already finished.
+///  * [dispose] cancels the attempt: pending [refresh] futures complete, no
+///    further state is published, and no new transport call or cache write is
+///    begun. A platform write that had *already* started is not cancelled
+///    retroactively — the repository simply does not publish its result.
+///  * The internal notifier is disposed one microtask after [dispose] so that a
+///    listener may call `dispose()` directly (Flutter asserts when a
+///    `ChangeNotifier` is disposed during its own `notifyListeners`).
 class CachedJobRepository implements JobRepository {
   CachedJobRepository({required this._transport, required this._cache});
 
@@ -62,7 +82,12 @@ class CachedJobRepository implements JobRepository {
     const JobFeedState(),
   );
 
+  /// The attempt that new `refresh()` calls join, or `null` when idle.
+  Completer<void>? _attempt;
+
+  /// `_attempt?.future`, cached so the in-flight window opens synchronously.
   Future<void>? _inFlight;
+
   bool _disposed = false;
 
   @override
@@ -76,83 +101,148 @@ class CachedJobRepository implements JobRepository {
     if (_disposed) return Future<void>.value();
     final running = _inFlight;
     if (running != null) return running;
-    return _inFlight = _runRefresh();
+    // Register the attempt BEFORE any listener can observe the loading state:
+    // the notifier notifies synchronously, and a listener that calls refresh()
+    // from that callback must join this attempt, not start a second one.
+    final attempt = Completer<void>();
+    _attempt = attempt;
+    _inFlight = attempt.future;
+    _startAttempt(attempt);
+    return attempt.future;
   }
 
   @override
   Future<void> dispose() async {
     if (_disposed) return; // idempotent: double disposal must not assert
-    // Mark first: any in-flight attempt checks this flag before emitting or
-    // writing, so a slow transport cannot revive a disposed repository.
+    // Mark first: any in-flight attempt checks this flag before emitting,
+    // fetching or writing, so a slow provider cannot revive a disposed
+    // repository.
     _disposed = true;
+    // Release anyone awaiting refresh(): the attempt will never publish now.
+    final attempt = _attempt;
+    if (attempt != null) _release(attempt);
+    // Flutter asserts when a ChangeNotifier is disposed during its own
+    // notifyListeners(), and a state listener may call dispose() directly.
+    // Leaving the synchronous stack first makes that legal; no new state can be
+    // published in between because [_disposed] is already set.
+    await Future<void>.microtask(() {});
     _state.dispose();
   }
 
-  Future<void> _runRefresh() async {
+  /// Runs one attempt and always closes its single-flight window, even if an
+  /// unexpected error escapes [_runRefresh].
+  Future<void> _startAttempt(Completer<void> attempt) async {
     try {
-      final previous = _state.value;
-      _emit(
-        feed: previous.feed,
-        isLoading: true,
-        isOffline: previous.isOffline,
-        lastError: previous.lastError,
-      );
-
-      JobFeed? feed = previous.feed;
-      String? cacheNote;
-      if (feed == null) {
-        final saved = await _readSavedFeed();
-        if (_disposed) return;
-        feed = saved.feed;
-        if (feed != null) {
-          // Show the saved copy immediately, still marked as stale/last-known.
-          _emit(feed: feed, isLoading: true, isOffline: true, lastError: null);
-        } else if (saved.corrupt) {
-          cacheNote = corruptCacheMessage;
-        }
-      }
-
-      try {
-        final raw = await _transport.fetch();
-        final fresh = _parse(raw); // validate fully before any cache commit
-        if (_disposed) return;
-        var warning = cacheNote;
-        try {
-          await _cache.write(raw);
-          warning = null; // a successful refresh also repairs a corrupt cache
-        } catch (_) {
-          warning = cacheWriteFailedMessage;
-        }
-        if (_disposed) return;
-        _emit(
-          feed: fresh,
-          isLoading: false,
-          isOffline: false,
-          lastError: warning,
-        );
-      } on _InvalidFeed {
-        if (_disposed) return;
-        _emit(
-          feed: feed,
-          isLoading: false,
-          isOffline: feed != null,
-          lastError: feed == null
-              ? invalidFeedNoCacheMessage
-              : invalidFeedWithCacheMessage,
-        );
-      } catch (_) {
-        if (_disposed) return;
-        _emit(
-          feed: feed,
-          isLoading: false,
-          isOffline: true,
-          lastError: feed == null
-              ? (cacheNote ?? offlineNoCacheMessage)
-              : offlineWithCacheMessage,
-        );
-      }
+      await _runRefresh(attempt);
+    } catch (_) {
+      // _runRefresh converts every expected failure into state; this is only a
+      // last-resort guard so the in-flight marker can never stay stuck.
     } finally {
+      _release(attempt);
+    }
+  }
+
+  /// Closes [attempt]'s single-flight window exactly once.
+  ///
+  /// The identity check matters: a listener may already have started a newer
+  /// attempt from the terminal notification, and that newer window must not be
+  /// cleared by the finishing one.
+  void _release(Completer<void> attempt) {
+    if (identical(_attempt, attempt)) {
+      _attempt = null;
       _inFlight = null;
+    }
+    if (!attempt.isCompleted) attempt.complete();
+  }
+
+  Future<void> _runRefresh(Completer<void> attempt) async {
+    final previous = _state.value;
+    _emit(
+      feed: previous.feed,
+      isLoading: true,
+      isOffline: previous.isOffline,
+      lastError: previous.lastError,
+    );
+    // A listener may have disposed us from that notification.
+    if (_disposed) return;
+
+    JobFeed? feed = previous.feed;
+    String? cacheNote;
+    if (feed == null) {
+      final saved = await _readSavedFeed();
+      if (_disposed) return;
+      feed = saved.feed;
+      if (feed != null) {
+        // Show the saved copy immediately, still marked as stale/last-known.
+        _emit(feed: feed, isLoading: true, isOffline: true, lastError: null);
+        if (_disposed) return;
+      } else if (saved.corrupt) {
+        cacheNote = corruptCacheMessage;
+      }
+    }
+
+    final terminal = await _fetchTerminalState(
+      feed: feed,
+      cacheNote: cacheNote,
+    );
+    if (terminal == null || _disposed) return;
+
+    // Close the window first: a listener that retries from this success/error
+    // state must start a fresh attempt rather than join a finished one.
+    _release(attempt);
+    _emitState(terminal);
+  }
+
+  /// Fetches, validates and (only then) caches, returning the state to publish.
+  ///
+  /// Returns `null` when the repository was disposed mid-flight: in that case no
+  /// state may be published, and no *new* transport call or cache write is
+  /// started. Everything after validation is inside the same error handling, so
+  /// a throwing provider can only ever produce a truthful terminal state.
+  Future<JobFeedState?> _fetchTerminalState({
+    required JobFeed? feed,
+    required String? cacheNote,
+  }) async {
+    try {
+      final raw = await _transport.fetch();
+      final fresh = _parse(raw); // validate fully before any cache commit
+      if (_disposed) return null;
+      var warning = cacheNote;
+      try {
+        await _cache.write(raw);
+        warning = null; // a successful refresh also repairs a corrupt cache
+      } catch (_) {
+        warning = cacheWriteFailedMessage;
+      }
+      // A write that began before disposal is allowed to finish (it cannot be
+      // recalled); its result is simply not published.
+      if (_disposed) return null;
+      return JobFeedState(
+        feed: fresh,
+        isLoading: false,
+        isOffline: false,
+        lastError: warning,
+      );
+    } on _InvalidFeed {
+      if (_disposed) return null;
+      return JobFeedState(
+        feed: feed,
+        isLoading: false,
+        isOffline: feed != null,
+        lastError: feed == null
+            ? invalidFeedNoCacheMessage
+            : invalidFeedWithCacheMessage,
+      );
+    } catch (_) {
+      if (_disposed) return null;
+      return JobFeedState(
+        feed: feed,
+        isLoading: false,
+        isOffline: true,
+        lastError: feed == null
+            ? (cacheNote ?? offlineNoCacheMessage)
+            : offlineWithCacheMessage,
+      );
     }
   }
 
@@ -192,14 +282,18 @@ class CachedJobRepository implements JobRepository {
     required bool isLoading,
     required bool isOffline,
     required String? lastError,
-  }) {
-    if (_disposed) return;
-    _state.value = JobFeedState(
+  }) => _emitState(
+    JobFeedState(
       feed: feed,
       isLoading: isLoading,
       isOffline: isOffline,
       lastError: lastError,
-    );
+    ),
+  );
+
+  void _emitState(JobFeedState state) {
+    if (_disposed) return;
+    _state.value = state;
   }
 }
 
