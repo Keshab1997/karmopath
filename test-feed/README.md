@@ -103,7 +103,10 @@ The owner's approval sentence for this test feed belongs in
 `docs/ANDROID_REMINDER_DEVICE_TEST_PLAN.md`, not here. No production activation,
 build, or device run is authorized by this directory.
 
-Separately: a working feed URL is not by itself enough to run the device cases.
-`createNativeRuntime()` (`lib/app/runtime/native_runtime_factory.dart`) is still
-not called from `lib/main.dart`, so the native reminder entrypoint is not active
-in any build.
+A working feed URL is not by itself evidence that a device case ran. `lib/main.dart`
+selects `createNativeRuntime()` only when the compile-time
+`KARMOPATH_FEED_URL` is non-empty. The manual APK workflow accepts an optional
+`test_feed_url` input and forwards it as that define; leave it blank for the
+foundation screen. AAB builds ignore the test URL. The owner must dispatch the
+workflow, install the APK, and run the device plan; this README is not evidence
+of a build or device result.

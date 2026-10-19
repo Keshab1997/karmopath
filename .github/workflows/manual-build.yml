@@ -11,6 +11,14 @@ on:
           - apk
           - aab
         default: apk
+      test_feed_url:
+        description: >-
+          Public HTTPS non-production fixture URL for an APK test build only.
+          The URL is embedded in the binary; never include credentials or tokens.
+          Leave blank to build the foundation screen. AAB builds ignore this.
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -22,6 +30,8 @@ jobs:
       flutter-channel: stable
       build-apk: ${{ inputs.format == 'apk' }}
       build-aab: ${{ inputs.format == 'aab' }}
+      dart-defines: >-
+        ${{ inputs.format == 'apk' && inputs.test_feed_url != '' && format('KARMOPATH_FEED_URL={0}', inputs.test_feed_url) || '' }}
       artifact-retention-days: 14
     secrets:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
