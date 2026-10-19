@@ -199,19 +199,23 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                   ),
                 _Headline(job: job, lang: lang, info: info, title: title),
-                const SizedBox(height: 16),
-                _ActionPanel(
-                  job: job,
-                  lang: lang,
-                  preferences: widget.preferences,
-                  busy: _reminderBusy,
-                  closedForReminder: closedForReminder,
-                  hasDeadline: hasDeadline,
-                  lateForReminder: lateForReminder,
-                  info: info,
-                  now: now,
-                  onReminder: _toggleReminder,
-                ),
+                // A notice-only card links to the original notice. It carries
+                // no deadline, so offering a reminder would invent one.
+                if (job.kind != JobKind.notice) ...[
+                  const SizedBox(height: 16),
+                  _ActionPanel(
+                    job: job,
+                    lang: lang,
+                    preferences: widget.preferences,
+                    busy: _reminderBusy,
+                    closedForReminder: closedForReminder,
+                    hasDeadline: hasDeadline,
+                    lateForReminder: lateForReminder,
+                    info: info,
+                    now: now,
+                    onReminder: _toggleReminder,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _Section(
                   title: K.overview,
@@ -256,38 +260,42 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                _Section(
-                  title: K.importantDates,
-                  lang: lang,
-                  icon: Icons.event_outlined,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _FactRow(
-                        icon: Icons.play_circle_outline,
-                        label: K.applicationStart,
-                        value: job.applicationStartDate == null
-                            ? K.notSpecified.inLang(lang)
-                            : formatDateOnly(job.applicationStartDate!, lang),
-                      ),
-                      const SizedBox(height: 8),
-                      _FactRow(
-                        icon: Icons.event_busy,
-                        label: K.applicationEnd,
-                        value: _deadlineText(job, info, lang),
-                      ),
-                      if (job.examDate != null) ...[
+                // Notices do not claim application dates; the original notice
+                // is the only place those may be read.
+                if (job.kind != JobKind.notice) ...[
+                  const SizedBox(height: 12),
+                  _Section(
+                    title: K.importantDates,
+                    lang: lang,
+                    icon: Icons.event_outlined,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _FactRow(
+                          icon: Icons.play_circle_outline,
+                          label: K.applicationStart,
+                          value: job.applicationStartDate == null
+                              ? K.notSpecified.inLang(lang)
+                              : formatDateOnly(job.applicationStartDate!, lang),
+                        ),
                         const SizedBox(height: 8),
                         _FactRow(
-                          icon: Icons.edit_calendar_outlined,
-                          label: K.examDate,
-                          value: formatDateOnly(job.examDate!, lang),
+                          icon: Icons.event_busy,
+                          label: K.applicationEnd,
+                          value: _deadlineText(job, info, lang),
                         ),
+                        if (job.examDate != null) ...[
+                          const SizedBox(height: 8),
+                          _FactRow(
+                            icon: Icons.edit_calendar_outlined,
+                            label: K.examDate,
+                            value: formatDateOnly(job.examDate!, lang),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
+                ],
                 if (howToApply.trim().isNotEmpty) ...[
                   const SizedBox(height: 12),
                   _Section(

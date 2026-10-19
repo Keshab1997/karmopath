@@ -183,6 +183,20 @@ void main() {
       );
     });
 
+    test('notice label is bilingual and carries no deadline text', () {
+      expect(kindLabel(JobKind.notice, AppLang.bn), 'নোটিশ');
+      expect(kindLabel(JobKind.notice, AppLang.en), 'Notice');
+      final job = makeJob(
+        kind: JobKind.notice,
+        status: JobStatus.published,
+        hasDeadline: false,
+      );
+      expect(
+        deadlineLabel(deadlineInfo(job, utcNow()), job.kind, AppLang.en),
+        isNull,
+      );
+    });
+
     test('results without a deadline show no deadline label', () {
       final job = makeJob(
         kind: JobKind.result,

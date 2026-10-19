@@ -1,4 +1,4 @@
-enum JobKind { recruitment, result, admitCard }
+enum JobKind { recruitment, result, admitCard, notice }
 
 enum JobCategory { police, railway, banking, teaching, medical, office, other }
 
@@ -192,6 +192,7 @@ Job parseJob(Map<String, dynamic> j) {
       'recruitment': JobKind.recruitment,
       'result': JobKind.result,
       'admit_card': JobKind.admitCard,
+      'notice': JobKind.notice,
     }, 'kind'),
     titleBn: _text(j, 'title_bn'),
     titleEn: _text(j, 'title_en'),

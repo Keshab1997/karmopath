@@ -5,22 +5,22 @@ Captain has implemented `lib/contracts/job.dart`, `job_feed.dart`, `job_reposito
 Envelope: schema_version (integer 1), updated_at (UTC string), jobs (array).
 Job required fields:
 - id: unique stable lowercase slug, [a-z0-9-], max 100; never derived from mutable title alone
-- kind: recruitment | result | admit_card
+- kind: recruitment | result | admit_card | notice
 - title_bn, title_en: nonempty strings
 - organization: nonempty display string, not affiliation claim
 - category: police | railway | banking | teaching | medical | office | other
 - districts: array of nonempty strings; statewide uses literal West Bengal
 - qualifications: array of nonempty strings; no guessed equivalence
-- status: open | closed | withdrawn | published (published for result/admit_card)
+- status: open | closed | withdrawn | published (published for result/admit_card/notice)
 - source_url: HTTPS official page URL; notice_url: HTTPS original notice URL
 - reviewed_at, published_at, updated_at: UTC timestamps
 - summary_bn, summary_en: nonempty original factual summaries
 - how_to_apply_bn, how_to_apply_en: strings; may be empty for non-recruitment
 Nullable required keys: vacancies (nonnegative integer or null), application_start_date, application_end_date (date or null), application_end_at (UTC timestamp or null), exam_date (date or null), apply_url (HTTPS URL or null), age_note_bn, age_note_en (string or null).
-Source URLs must be reviewed as genuinely official; .org/.in alone is neither proof nor rejection. No HTML/scripts in text. Unknown enum/schema version fails feed load. Invalid job fails whole candidate feed, retains last good cache. IDs unique. updated_at >= published_at; reviewed_at <= updated_at. No future reviewed/published timestamps beyond documented clock tolerance of 5 minutes. Date ordering must be valid. Open recruitment requires application_end_date; unknown deadline remains draft. Result/admit_card must not claim open application status.
+Source URLs must be reviewed as genuinely official; .org/.in alone is neither proof nor rejection. A `notice` card is notice-only: `status` is published (or withdrawn), it carries no deadline, vacancies or apply link, and its bilingual summary says eligibility and dates were not checked. Notice cards are written only by the `approve-notice` publisher after a human checks the official link. No HTML/scripts in text. Unknown enum/schema version fails feed load. Invalid job fails whole candidate feed, retains last good cache. IDs unique. updated_at >= published_at; reviewed_at <= updated_at. No future reviewed/published timestamps beyond documented clock tolerance of 5 minutes. Date ordering must be valid. Open recruitment requires application_end_date; unknown deadline remains draft. Result/admit_card/notice must not claim open application status.
 
 ## Dart surface (exact signatures)
-`enum JobKind { recruitment, result, admitCard }`
+`enum JobKind { recruitment, result, admitCard, notice }`
 `enum JobCategory { police, railway, banking, teaching, medical, office, other }`
 `enum JobStatus { open, closed, withdrawn, published }`
 `Job` has final camelCase equivalents of all JSON fields; dates represented as nullable String for date-only, UTC DateTime for timestamps; factories `Job.fromJson(Map<String,dynamic> json)` and `Map<String,dynamic> toJson()`; malformed input throws FormatException.

@@ -73,6 +73,25 @@ class _AnchorCollector(HTMLParser):
             self._href = None
 
 
+def encode_url_spaces(url: str) -> str:
+    """Percent-encode literal spaces in the path and query.
+
+    Official listing pages link PDFs whose filenames contain spaces (RRC-ER
+    does this heavily). A raw space is rejected by the feed validator and by
+    the publisher's link checks, so the discovery output must be launchable.
+    """
+    parts = urlsplit(url)
+    return urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path.replace(" ", "%20"),
+            parts.query.replace(" ", "%20"),
+            parts.fragment.replace(" ", "%20"),
+        )
+    )
+
+
 def normalise_url(base: str, href: str) -> str | None:
     """Resolve href against the page URL. Returns None unless it is plain HTTPS."""
     absolute = urljoin(base, href.strip())
@@ -80,7 +99,9 @@ def normalise_url(base: str, href: str) -> str | None:
     if parts.scheme != "https" or not parts.hostname:
         return None
     # Drop fragments: the same document must not count as two notices.
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ""))
+    return encode_url_spaces(
+        urlunsplit((parts.scheme, parts.netloc, parts.path, parts.query, ""))
+    )
 
 
 def host_allowed(url: str, allowed_domains: list[str]) -> bool:
@@ -117,9 +138,23 @@ def fetch_html(url: str) -> str:
 
 
 def load_seen(path: Path) -> dict[str, str] | None:
+    """Load the seen map, migrating older keys that contain raw spaces.
+
+    The first discovery run recorded links exactly as the listing page wrote
+    them, including spaces in PDF filenames. New runs compare encoded URLs, so
+    the old keys are normalised on read; otherwise every such link would look
+    new once and flood the issue tracker.
+    """
     if not path.exists():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("seen file must be a JSON object")
+    seen: dict[str, str] = {}
+    for url, day in raw.items():
+        if isinstance(url, str) and isinstance(day, str):
+            seen[encode_url_spaces(url)] = day
+    return seen
 
 
 def main(argv: list[str] | None = None) -> int:

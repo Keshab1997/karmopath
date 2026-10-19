@@ -254,6 +254,38 @@ void main() {
     },
   );
 
+  testWidgets('notice card links to the original and offers no reminder', (
+    tester,
+  ) async {
+    final notice = makeJob(
+      kind: JobKind.notice,
+      status: JobStatus.published,
+      hasDeadline: false,
+      qualifications: const [],
+      vacancies: null,
+      summaryBn: 'সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা যাচাই করা হয়নি।',
+      summaryEn: 'Official notice. Eligibility was not checked here.',
+    );
+    final actions = FakeActions();
+    await pumpScreen(
+      tester,
+      detail(notice, FakePreferences(), actions),
+      surfaceSize: const Size(500, 1800),
+    );
+
+    expect(find.text(notice.titleBn), findsOneWidget);
+    expect(find.text(notice.summaryBn), findsOneWidget);
+    // A notice has no deadline, so no reminder is offered and no dates
+    // section claims one.
+    expect(find.text('রিমাইন্ডার দিন'), findsNothing);
+    expect(find.text('গুরুত্বপূর্ণ তারিখ'), findsNothing);
+
+    await scrollTo(tester, find.text('মূল বিজ্ঞপ্তি খুলুন'));
+    await tester.tap(find.text('মূল বিজ্ঞপ্তি খুলুন'));
+    await tester.pump();
+    expect(actions.opened, [Uri.parse(notice.noticeUrl)]);
+  });
+
   testWidgets('app-bar bookmark writes through preferences', (tester) async {
     final job = makeJob();
     final prefs = FakePreferences();

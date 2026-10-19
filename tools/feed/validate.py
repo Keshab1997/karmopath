@@ -18,7 +18,7 @@ import sys
 from typing import Any
 from urllib.parse import urlsplit
 
-KINDS = {"recruitment", "result", "admit_card"}
+KINDS = {"recruitment", "result", "admit_card", "notice"}
 CATEGORIES = {"police", "railway", "banking", "teaching", "medical", "office", "other"}
 STATUSES = {"open", "closed", "withdrawn", "published"}
 ID_RE = re.compile(r"^[a-z0-9-]{1,100}$")
@@ -201,8 +201,8 @@ def validate_job(job: Any, path: str = "jobs[0]", now: datetime | None = None) -
     status = job.get("status")
     if kind == "recruitment" and status == "open" and job.get("application_end_date") is None:
         _error(errors, f"{path}.application_end_date", "is required for open recruitment")
-    if isinstance(kind, str) and kind in {"result", "admit_card"} and isinstance(status, str) and status in {"open", "closed"}:
-        _error(errors, f"{path}.status", "result/admit_card must use published or withdrawn")
+    if isinstance(kind, str) and kind in {"result", "admit_card", "notice"} and isinstance(status, str) and status in {"open", "closed"}:
+        _error(errors, f"{path}.status", "result/admit_card/notice must use published or withdrawn")
 
     return errors
 

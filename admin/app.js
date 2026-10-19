@@ -373,7 +373,7 @@
       if (value !== null && typeof value !== 'string') errors.push(`${path}.${key}: must be a string or null`);
       else if (typeof value === 'string' && /<\/?[a-z][^>]*>/i.test(value)) errors.push(`${path}.${key}: HTML markup is not allowed`);
     }
-    const enums = { kind: ['recruitment', 'result', 'admit_card'], category: ['police', 'railway', 'banking', 'teaching', 'medical', 'office', 'other'], status: ['open', 'closed', 'withdrawn', 'published'] };
+    const enums = { kind: ['recruitment', 'result', 'admit_card', 'notice'], category: ['police', 'railway', 'banking', 'teaching', 'medical', 'office', 'other'], status: ['open', 'closed', 'withdrawn', 'published'] };
     for (const [key, values] of Object.entries(enums)) if (typeof job[key] !== 'string' || !values.includes(job[key])) errors.push(`${path}.${key}: has an unknown value`);
     for (const key of ['districts', 'qualifications']) if (!Array.isArray(job[key]) || job[key].some((item) => typeof item !== 'string' || !item.trim())) errors.push(`${path}.${key}: must be an array of non-empty strings`);
     checkHttps(job.source_url, `${path}.source_url`, errors);
@@ -396,7 +396,7 @@
     if (times.reviewed_at !== undefined && times.updated_at !== undefined && times.reviewed_at > times.updated_at) errors.push(`${path}.reviewed_at: must be at or before updated_at`);
     for (const key of ['reviewed_at', 'published_at']) if (times[key] !== undefined && times[key] > nowMs + 5 * 60 * 1000) errors.push(`${path}.${key}: must not be more than 5 minutes in the future`);
     if (job.kind === 'recruitment' && job.status === 'open' && job.application_end_date === null) errors.push(`${path}.application_end_date: is required for open recruitment`);
-    if (['result', 'admit_card'].includes(job.kind) && ['open', 'closed'].includes(job.status)) errors.push(`${path}.status: result/admit_card must use published or withdrawn`);
+    if (['result', 'admit_card', 'notice'].includes(job.kind) && ['open', 'closed'].includes(job.status)) errors.push(`${path}.status: result/admit_card/notice must use published or withdrawn`);
     return errors;
   }
 

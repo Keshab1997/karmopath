@@ -61,6 +61,7 @@ abstract final class K {
   static const kindRecruitment = KText('নিয়োগ', 'Recruitment');
   static const kindResult = KText('ফলাফল', 'Result');
   static const kindAdmitCard = KText('অ্যাডমিট কার্ড', 'Admit card');
+  static const kindNotice = KText('নোটিশ', 'Notice');
 
   // Categories.
   static const categoryPolice = KText('পুলিশ', 'Police');

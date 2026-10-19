@@ -215,6 +215,27 @@ void main() {
     expect(find.textContaining('জেলা ·'), findsNothing);
   });
 
+  testWidgets('notice chip shows only notice cards', (tester) async {
+    final notice = makeJob(
+      id: 'rrc-cultural-quota-notice',
+      kind: JobKind.notice,
+      status: JobStatus.published,
+      hasDeadline: false,
+      qualifications: const [],
+      titleBn: 'সাংস্কৃতিক কোটা বিজ্ঞপ্তি',
+    );
+    final repo = FakeJobRepository(readyState([police, notice]));
+    await pumpScreen(tester, home(repo), surfaceSize: const Size(420, 1400));
+
+    final noticeChip = find.widgetWithText(HomeFilterChip, 'নোটিশ');
+    await tester.ensureVisible(noticeChip);
+    await tester.pumpAndSettle();
+    await tester.tap(noticeChip);
+    await tester.pumpAndSettle();
+    expect(find.text(notice.titleBn), findsOneWidget);
+    expect(find.text(police.titleBn), findsNothing);
+  });
+
   testWidgets('facet chips are hidden when the feed offers no values', (
     tester,
   ) async {

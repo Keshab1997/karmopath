@@ -1,8 +1,9 @@
 # Manual workflow callers
 Source: Keshab1997/flutter-builder examples, v1.15.0 (resolved commit ae20ac39b0b12ea4633c93370e5e795026171f72 when installed). Release-tag references follow upstream examples; re-review upstream before changing pins.
 
-All events are workflow_dispatch only; no push, PR or delete event runs a job automatically. Owner runs Actions → chosen workflow → Run workflow only when ready. No CI dispatched by captain or workers.
+All workflows are manual (`workflow_dispatch`) except `publish-notice.yml`, which runs on an `issues: labeled` event. No push, PR or delete event runs a job automatically. Owner runs Actions → chosen workflow → Run workflow only when ready. No CI dispatched by captain or workers.
 
+- `publish-notice.yml`: runs when a `notice-review` issue receives the `approve-notice` label. Re-checks the link against `ops/notice_sources.json`, appends one notice-only card to `feed/jobs.json`, validates it offline, pushes to `main`, then comments on and closes the issue. This is the only path that writes the public feed.
 - ci.yml: formatting/analyze/test; no APK/AAB.
 - widget-tests.yml: focused Flutter widget diagnostics.
 - ui-screenshots.yml: web build screenshots; Flutter web support required; public artifact/image branch implications apply.

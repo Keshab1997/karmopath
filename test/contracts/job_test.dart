@@ -28,6 +28,7 @@ void main() {
     'missing Bengali': {'title_bn': ''},
     'future review': {'reviewed_at': '2099-01-01T00:00:00Z'},
     'result cannot be open': {'kind': 'result'},
+    'notice cannot be open': {'kind': 'notice'},
   };
   for (final entry in cases.entries) {
     test(entry.key, () {
@@ -37,6 +38,25 @@ void main() {
       );
     });
   }
+  test('notice card is notice-only and round trips', () {
+    final notice = Job.fromJson({
+      ...sample(),
+      'kind': 'notice',
+      'status': 'published',
+      'application_start_date': null,
+      'application_end_date': null,
+      'application_end_at': null,
+      'exam_date': null,
+      'qualifications': <String>[],
+      'vacancies': null,
+      'apply_url': null,
+    });
+    expect(notice.kind, JobKind.notice);
+    expect(notice.applicationEndDate, isNull);
+    expect(notice.applicationEndAt, isNull);
+    expect(Job.fromJson(notice.toJson()).toJson(), notice.toJson());
+  });
+
   test('duplicate ID rejected', () {
     final j = sample();
     expect(
