@@ -24,8 +24,7 @@ Widget buildAppRoot({required bool preview, required String feedUrl}) {
   if (preview) return const KarmopathPreviewApp();
   if (feedUrl.trim().isEmpty) return const KarmopathApp();
   return ProductionBootstrap(
-    createRuntime: () =>
-        createNativeRuntime(feed: FeedConfiguration(feedUrl)),
+    createRuntime: () => createNativeRuntime(feed: FeedConfiguration(feedUrl)),
   );
 }
 

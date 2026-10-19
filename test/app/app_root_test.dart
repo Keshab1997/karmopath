@@ -10,7 +10,10 @@ import 'package:karmopath/main.dart';
 /// storage and notification plugin.
 void main() {
   test('the preview flag selects the isolated demo', () {
-    expect(buildAppRoot(preview: true, feedUrl: ''), isA<KarmopathPreviewApp>());
+    expect(
+      buildAppRoot(preview: true, feedUrl: ''),
+      isA<KarmopathPreviewApp>(),
+    );
   });
 
   test('the preview flag wins over a configured feed URL', () {
