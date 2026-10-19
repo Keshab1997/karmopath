@@ -149,9 +149,9 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     fontFamily: 'monospace',
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                             ),
                           ),
