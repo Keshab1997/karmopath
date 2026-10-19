@@ -1,0 +1,28 @@
+name: TEMP — verify APK with the live feed URL
+
+# Branch-only verification helper. This file never goes to main. It uses the
+# same reusable builder as Build Android APK or AAB (Manual), with the feed URL
+# that the owner asked for, because this integration cannot dispatch a
+# workflow_dispatch run.
+on:
+  push:
+    branches: [arena/697a8d1c-karmopath]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: Keshab1997/flutter-builder/.github/workflows/flutter-build.yml@v1.15.0
+    with:
+      flutter-channel: stable
+      build-apk: true
+      build-aab: false
+      dart-defines: >-
+        KARMOPATH_FEED_URL=https://raw.githubusercontent.com/Keshab1997/karmopath/main/feed/jobs.json
+      artifact-retention-days: 7
+    secrets:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
