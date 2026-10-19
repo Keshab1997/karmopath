@@ -5,11 +5,6 @@ name: Flutter CI — Format, Analyze & Test
 # workflow. That keeps small edits from spending a CI run each.
 on:
   workflow_dispatch:
-  # TEMPORARY branch-only trigger: the Arena GitHub integration cannot
-  # dispatch workflows (403), so this push runs CI for this branch.
-  # Removed before merge.
-  push:
-    branches: [arena/c19cf3cb-karmopath]
 
 permissions:
   contents: read
