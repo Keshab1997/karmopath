@@ -1,0 +1,74 @@
+name: Discover new official notices (daily)
+
+# Finds NEW notice links on approved official listing pages and opens one
+# GitHub issue per notice for a human to check. It never publishes to the app
+# feed. Scheduled runs only start from the default branch.
+on:
+  schedule:
+    - cron: "30 3 * * *"   # 03:30 UTC = 09:00 Asia/Kolkata
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: discover-notices
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run offline tests for the discovery script
+        run: python3 -m unittest discover -s tests/ops -p "test_*.py" -v
+
+      - name: Discover new notices
+        run: |
+          python3 scripts/discover_notices.py \
+            --sources ops/notice_sources.json \
+            --seen ops/notice_seen.json \
+            --out new_notices.json \
+            --max-new 20
+
+      - name: Open one review issue per new notice
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create notice-review --color FBCA04 \
+            --description "Official notice found automatically; needs human check" \
+            2>/dev/null || true
+          jq -c '.new[]' new_notices.json | while read -r item; do
+            title=$(jq -r '.title' <<<"$item")
+            url=$(jq -r '.url' <<<"$item")
+            source=$(jq -r '.source' <<<"$item")
+            body=$(printf '%s\n\n- Source listing: %s\n- Notice link: %s\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis issue was opened automatically. It is not a verification.' "$title" "$source" "$url")
+            gh issue create --title "[notice] $title" --body "$body" --label notice-review
+          done
+          if jq -e '.truncated' new_notices.json >/dev/null; then
+            gh issue create --title "[notice] More new notices than the daily cap" \
+              --body "More than 20 new notices were found in one run. Check the official listing pages directly." \
+              --label notice-review
+          fi
+          if jq -e '.failures | length > 0' new_notices.json >/dev/null; then
+            gh issue create --title "[notice] Some official sources could not be read" \
+              --body "$(jq -r '.failures | join("\n")' new_notices.json)" \
+              --label notice-review
+          fi
+
+      - name: Save seen-notice state
+        run: |
+          git config user.name "karmopath-notice-bot"
+          git config user.email "karmopath-notice-bot@users.noreply.github.com"
+          git add ops/notice_seen.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: record seen official notices"
+            git push
+          fi

@@ -28,12 +28,18 @@ Widget buildAppRoot({required bool preview, required String feedUrl}) {
   );
 }
 
-void main() => runApp(
-  buildAppRoot(
-    preview: const bool.fromEnvironment(
-      'KARMOPATH_PREVIEW',
-      defaultValue: kIsWeb,
+/// The web demo is only the default when no feed URL is configured. A web build
+/// that supplies `KARMOPATH_FEED_URL` therefore shows the reviewed feed instead
+/// of sample data; `KARMOPATH_PREVIEW=true` still forces the demo explicitly.
+void main() {
+  const feedUrl = String.fromEnvironment('KARMOPATH_FEED_URL');
+  runApp(
+    buildAppRoot(
+      preview: bool.fromEnvironment(
+        'KARMOPATH_PREVIEW',
+        defaultValue: kIsWeb && feedUrl == '',
+      ),
+      feedUrl: feedUrl,
     ),
-    feedUrl: const String.fromEnvironment('KARMOPATH_FEED_URL'),
-  ),
-);
+  );
+}
