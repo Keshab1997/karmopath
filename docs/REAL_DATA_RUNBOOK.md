@@ -15,7 +15,8 @@ published by this repository.
 
 ## Steps
 
-1. **Approve the source.** The owner names the official notice sources. Nothing
+1. **Approve the source.** The owner names the official notice sources. Verified
+   candidates are listed in [`OFFICIAL_SOURCES.md`](OFFICIAL_SOURCES.md). Nothing
    is scraped or guessed. Each job needs `source_url`, `notice_url`,
    `reviewed_at` and a human check of dates and eligibility.
 2. **Create the candidate feed.** Use `admin/index.html` (run locally). Fill both
