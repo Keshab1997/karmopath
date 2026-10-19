@@ -5,10 +5,6 @@ name: Flutter CI — Format, Analyze & Test
 # workflow. That keeps small edits from spending a CI run each.
 on:
   workflow_dispatch:
-  # TEMPORARY branch-only trigger: verify this PR without dispatch permission.
-  # Removed before merge.
-  push:
-    branches: [arena/697a8d1c-karmopath]
 
 permissions:
   contents: read
