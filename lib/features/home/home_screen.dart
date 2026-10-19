@@ -965,6 +965,7 @@ class _FilterRow extends StatelessWidget {
             JobKind.recruitment: K.kindRecruitment,
             JobKind.result: K.kindResult,
             JobKind.admitCard: K.kindAdmitCard,
+            JobKind.notice: K.kindNotice,
           }.entries)
             Padding(
               padding: const EdgeInsets.only(right: 8),

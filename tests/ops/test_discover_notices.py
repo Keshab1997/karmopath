@@ -21,6 +21,7 @@ PAGE = """
   <a href="mailto:help@psc.wb.gov.in">Email help desk for notification queries</a>
   <a href="/about">About us page</a>
   <a href="https://www.rrcer.org/x.pdf">Notice of Cultural Quota recruitment</a>
+  <a href="https://www.rrcer.org/Cultural Quota Notification 2026-27..pdf">Cultural Quota Notification 2026-27</a>
 </body></html>
 """
 
@@ -36,6 +37,15 @@ class ExtractTests(unittest.TestCase):
                 "https://psc.wb.gov.in/Download?param1=x.pdf",
                 "https://psc.wb.gov.in/notice.pdf",
             ],
+        )
+
+    def test_spaces_in_link_are_percent_encoded(self):
+        found = dn.extract_notices(
+            "https://www.rrcer.org/", PAGE, ["rrcer.org"]
+        )
+        self.assertIn(
+            "https://www.rrcer.org/Cultural%20Quota%20Notification%202026-27..pdf",
+            found,
         )
 
     def test_fragment_is_dropped_so_it_is_not_counted_twice(self):
@@ -98,6 +108,19 @@ class MainTests(unittest.TestCase):
         self.assertEqual(out["new"], [])
         recorded = json.loads(seen_path.read_text(encoding="utf-8"))
         self.assertEqual(len(recorded), 2)
+
+    def test_old_seen_keys_with_spaces_are_migrated(self):
+        seen = {
+            "https://www.rrcer.org/Cultural Quota Notification 2026-27..pdf": "2026-10-19"
+        }
+        tmp = Path(tempfile.mkdtemp())
+        seen_path = tmp / "seen.json"
+        seen_path.write_text(json.dumps(seen), encoding="utf-8")
+        migrated = dn.load_seen(seen_path)
+        self.assertIn(
+            "https://www.rrcer.org/Cultural%20Quota%20Notification%202026-27..pdf",
+            migrated,
+        )
 
     def test_later_run_reports_only_unseen_links(self):
         seen = {"https://psc.wb.gov.in/Download?param1=x.pdf": "2026-10-19"}

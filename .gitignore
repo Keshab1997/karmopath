@@ -20,3 +20,7 @@ key.properties
 *.p12
 android/local.properties
 .agent-pack-backups/
+
+# Python cache (generated, never source)
+__pycache__/
+*.pyc

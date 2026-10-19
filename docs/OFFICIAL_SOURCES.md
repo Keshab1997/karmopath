@@ -45,9 +45,9 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
 - **West Bengal Staff Selection Commission** — state clerical and Group C/D
   posts. Domain not verified yet.
 
-## Still needed before any feed
+## Still needed before a verified job feed
 
-1. A human opens each row above and checks it matches the official notice.
+1. A human opens each row above and checks it matches the official notice. (Notice-only cards follow the `approve-notice` path in `REAL_DATA_RUNBOOK.md`; they do not claim vacancies, eligibility or dates.)
 2. Each job added to a feed carries its own `source_url` and `notice_url` taken
    from the official notice page, plus a human `reviewed_at` date.
 3. Owner approval for the production feed, as set out in `AGENTS.md`.

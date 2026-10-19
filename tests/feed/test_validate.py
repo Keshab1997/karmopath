@@ -110,10 +110,22 @@ class FeedValidationTests(unittest.TestCase):
         for prefix in ("jobs[0].source_url:", "jobs[0].title_en:", "jobs[0].vacancies:"):
             self.assertTrue(any(error.startswith(prefix) for error in errors), errors)
 
-    def test_result_and_admit_card_cannot_be_open_or_closed(self):
-        for kind in ("result", "admit_card"):
+    def test_result_admit_card_and_notice_cannot_be_open_or_closed(self):
+        for kind in ("result", "admit_card", "notice"):
             errors = validate.validate_feed(valid_feed(valid_job(kind=kind, status="closed")), NOW)
             self.assertTrue(any(error.startswith("jobs[0].status:") for error in errors), errors)
+
+    def test_notice_card_needs_no_deadline_or_vacancies(self):
+        job = valid_job(
+            kind="notice",
+            status="published",
+            application_start_date=None,
+            application_end_date=None,
+            vacancies=None,
+            qualifications=[],
+            apply_url=None,
+        )
+        self.assertEqual(validate.validate_feed(valid_feed(job), NOW), [])
 
     def test_cli_invalid_json_exits_nonzero_with_message(self):
         with tempfile.TemporaryDirectory(dir=ROOT.parent) as temp:
@@ -217,7 +229,7 @@ class FeedValidationTests(unittest.TestCase):
         self.assertEqual(validate.validate_feed(valid_feed(valid_job(
             status="withdrawn", application_end_date=None
         )), NOW), [])
-        for kind in ("result", "admit_card"):
+        for kind in ("result", "admit_card", "notice"):
             for status in ("published", "withdrawn"):
                 with self.subTest(kind=kind, status=status):
                     self.assertEqual(validate.validate_feed(valid_feed(valid_job(kind=kind, status=status)), NOW), [])

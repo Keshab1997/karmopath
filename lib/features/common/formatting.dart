@@ -244,6 +244,7 @@ String kindLabel(JobKind kind, AppLang lang) => switch (kind) {
   JobKind.recruitment => K.kindRecruitment.inLang(lang),
   JobKind.result => K.kindResult.inLang(lang),
   JobKind.admitCard => K.kindAdmitCard.inLang(lang),
+  JobKind.notice => K.kindNotice.inLang(lang),
 };
 
 String categoryLabel(JobCategory category, AppLang lang) => switch (category) {
