@@ -62,6 +62,16 @@ extensions.configure<ApplicationExtension> {
 
     buildTypes {
         release {
+            // AGP 9 turns R8 on for release by default. R8 renames
+            // kotlin.coroutines.Continuation (seen as `i5` in the dex), but
+            // Pigeon's native-interop path — the one shared_preferences_android
+            // uses for its async API — resolves Java methods by their exact JVM
+            // descriptor, so every preferences read failed on device with
+            // java.lang.NoSuchMethodError: ...getStringList(...Continuation;)...
+            // Keep release unshrunk until keep rules cover JNI lookups; the
+            // alternative is a mapping that breaks again with the next plugin.
+            isMinifyEnabled = false
+            isShrinkResources = false
             // Without this the release artifact stays unsigned and Play rejects
             // the upload. Only wired up when the upload key is actually present.
             if (keystorePropertiesFile.exists()) {
