@@ -17,8 +17,14 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
 | West Bengal Police Recruitment Board (WBPRB) | https://prb.wb.gov.in/ | Constable and other police recruitment notices, results, merit lists | Official notice PDF names `https://prb.wb.gov.in` and `www.wbpolice.gov.in`; recruitment pages found on the domain. Homepage not fetched directly |
 | West Bengal Police (main portal) | https://www.wbpolice.gov.in/ | Police department news and links | Named as the police website inside the WBPRB official notice PDF. Not fetched directly |
 | West Bengal Health Recruitment Board (WBHRB) | https://www.hrb.wb.gov.in/ | Staff Nurse, Medical Officer, faculty and health posts | Notice page labelled "Only Official Website"; govt advertisement PDF gives `www.hrb.wb.gov.in`. Direct fetch returned 403 |
+| Railway Recruitment Cell, Eastern Railway (RRC-ER, Kolkata) | https://www.rrcer.org/ | Cultural Quota, Scouts & Guides Quota, Act Apprentice notices (Eastern Railway units) | Notice board page opened; Cultural Quota 2026-27 PDF opened |
+| Railway Recruitment Boards (RRB) central portal | https://rrbapply.gov.in/ (apply), https://rrb.indianrailways.gov.in/ (notices) | RRB NTPC, Group D and other CENs | `rrbapply.gov.in` named as the apply portal by several sources, but the page did not render and the notice PDF could not be opened. Not verified directly |
+| RRB Kolkata (RRB for Eastern Railway) | https://www.rrbkolkata.gov.in/ | RRB Kolkata CEN notices | Named in the RRB all-RRBs listing; homepage fetch failed. Not opened directly |
+| RRB Siliguri | https://www.rrbsiliguri.gov.in/ | RRB Siliguri CEN notices | Named in the RRB all-RRBs listing and a city-intimation page on the domain. Not opened directly |
 
 ## Not yet verified
+
+- **Railway NTPC/Group D PDFs:** the official notice PDF did not open from the sandbox, so the dates and vacancy figures for those notices come from third-party articles and need checking against the PDF.
 
 - **West Bengal Staff Selection Commission (WBSSC, Group C/D and clerical):**
   search results give different domains (`wbssc.gov.in`, `wbssc.wb.gov.in`).
