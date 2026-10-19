@@ -19,6 +19,13 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
   bool _loading = true;
   bool _failed = false;
   int _attempt = 0;
+
+  /// The startup failure as it happened. The headline alone cannot say which
+  /// step failed (preferences, ledger, language or the notification plugin),
+  /// and a device-only failure has no debugger attached, so the cause is kept
+  /// and shown instead of being swallowed.
+  Object? _failure;
+  StackTrace? _failureStack;
   @override
   void initState() {
     super.initState();
@@ -41,16 +48,22 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
         _loading = false;
         _failed = false;
       });
-    } catch (_) {
+    } catch (error, stack) {
       if (candidate != null) {
         try {
           await candidate.close();
         } catch (_) {}
       }
       if (!mounted || attempt != _attempt) return;
+      // Print for logcat as well: the screen can be screenshotted, the log is
+      // what a tethered device or a bug report needs.
+      debugPrint('Karmopath startup failed: $error');
+      debugPrintStack(stackTrace: stack);
       setState(() {
         _loading = false;
         _failed = true;
+        _failure = error;
+        _failureStack = stack;
       });
     }
   }
@@ -63,6 +76,17 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
       _closeQuietly(runtime);
     }
     super.dispose();
+  }
+
+  /// Short cause plus the first stack frames: enough to name the failing step
+  /// without pasting an unbounded trace into the layout.
+  String get _failureDetail {
+    final error = _failure;
+    if (error == null) return '';
+    final stack = _failureStack?.toString().trimRight();
+    if (stack == null || stack.isEmpty) return error.toString();
+    final frames = stack.split('\n').take(12).join('\n');
+    return '$error\n\n$frames';
   }
 
   Future<void> _closeQuietly(AppRuntime runtime) async {
@@ -97,7 +121,7 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
                         : 'অ্যাপ প্রস্তুত হচ্ছে… / Preparing app…',
                     textAlign: TextAlign.center,
                   ),
-                  if (_failed)
+                  if (_failed) ...[
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: FilledButton(
@@ -105,12 +129,35 @@ class _ProductionBootstrapState extends State<ProductionBootstrap> {
                           setState(() {
                             _loading = true;
                             _failed = false;
+                            _failure = null;
+                            _failureStack = null;
                           });
                           _initialize();
                         },
                         child: const Text('আবার চেষ্টা / Retry'),
                       ),
                     ),
+                    if (_failure != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 180),
+                          child: SingleChildScrollView(
+                            child: SelectableText(
+                              _failureDetail,
+                              textAlign: TextAlign.left,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontFamily: 'monospace',
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),

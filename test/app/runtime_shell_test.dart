@@ -55,11 +55,14 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('Could not initialize'), findsOneWidget);
-    expect(find.textContaining('private details'), findsNothing);
+    // The cause is shown rather than swallowed: a startup failure that only
+    // happens on a device has no debugger attached to it.
+    expect(find.textContaining('private details'), findsOneWidget);
     await tester.tap(find.text('আবার চেষ্টা / Retry'));
     await tester.pumpAndSettle();
     expect(calls, 2);
     expect(find.text('Home'), findsOneWidget);
+    expect(find.textContaining('private details'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
   testWidgets('opened detail follows updates and missing ID safely', (
