@@ -17,6 +17,82 @@ the official link.
 Discovery still never publishes to the feed. The label is the only publication
 gate, and it can only be applied by someone with repository write access.
 
+## Notices that discovery will never report
+
+Step 1 records links before it reports them, so anything already on a listing
+page at the time of the first successful crawl is invisible to the pipeline for
+good. Two consequences, both seen on 2026-10-20:
+
+- **A thin feed is not a broken feed.** On 2026-10-20 the live feed carried one
+  card, and that card was the only notice the pipeline had ever reached. The
+  other current notices on the three approved boards had been recorded as seen
+  without ever being proposed.
+- **A source that has never answered has never been crawled at all.** Every
+  scheduled run of 2026-10-19/20 reported `WBPSC ... <urlopen error timed out>`
+  and `ops/notice_seen.json` holds zero `psc.wb.gov.in` keys.
+
+The read-only backfill for both cases is `scripts/notice_proposals.py`. It
+accepts a discovery report or a hand-curated list, prints one notice-only card
+per link using the publisher's own builder, and writes `gh issue create`
+commands. It never touches `feed/jobs.json` (it refuses any path inside
+`feed/`) and never applies `approve-notice`, so the gate is unchanged:
+
+Scratch files stay outside the repo (`../scratch/`) so no artifact is ever committed:
+
+```bash
+# 1. What is live right now, including links an earlier run already recorded.
+#    This writes nothing: the seen file is left alone on purpose.
+python3 scripts/discover_notices.py \
+  --sources ops/notice_sources.json --seen ops/notice_seen.json \
+  --out ../scratch/candidates.json --report-candidates --max-new 40
+
+# 2. Turn the links worth a review into proposals + an issue script.
+python3 scripts/notice_proposals.py \
+  --candidates ../scratch/candidates.json --sources ops/notice_sources.json \
+  --seen ops/notice_seen.json --feed feed/jobs.json \
+  --out docs/proposals/batch.json --feed-preview docs/proposals/batch.preview.json \
+  --issues-out docs/proposals/batch.sh --limit 14
+```
+
+`docs/proposals/notice-only-batch-2026-10-20.*` is the result of the first such
+run (14 cards, 2 links skipped: one already in the feed, one on a host the
+source does not allow). Approving it means opening the issues, checking each
+notice on the official site and labelling it — not merging the preview.
+
+## Adding a source that has never been crawled (state or central)
+
+Level of employer is not a filter: WBPSC, WBSSC, RRC-ER and IBPS are all approved
+sources now. A new source needs three things, in this order:
+
+1. Open the listing page and confirm the domain is the body's own, then record
+   it in `docs/OFFICIAL_SOURCES.md` - including a failure, and why.
+2. Check the served HTML actually contains the notice anchors. Commission sites
+   that render their board in JavaScript (SSC, UPSC) are not crawlable by this
+   script, and `HTTP 500` from a datacenter connection (RRB) is not proof of a
+   dead site. Both are recorded rather than guessed at.
+3. Give it a `districts` list in `ops/notice_sources.json`: where that body's
+   *posts* are, not where its office is. The publisher refuses a source that has
+   not declared it, because stamping every card `West Bengal` was the old default
+   and it is wrong for a zonal or all-India body (RRC-ER selects for ER units that
+   include Bihar divisions; an IBPS CRP allocates across participating banks in
+   many states, so it is `All India`).
+4. Before the first successful crawl, `--seed` it (see *Flaky sources*), or the
+   run opens one issue per historic notice up to `--max-new`.
+
+## Flaky sources
+
+`scripts/discover_notices.py` now retries each listing URL (default 3 attempts
+with a short backoff, `--retries`/`--backoff`/`--timeout` to tune) and, when a
+source defines `alternates`, falls through to those URLs before declaring the
+source unreadable. A source is reported as failed only when every URL for it has
+exhausted its retries, so a slow mirror can no longer look like "no new
+notices". WBPSC carries `https://www.psc.wb.gov.in/` as an alternate.
+
+After a source that has been unreachable finally works, seed it before you want
+issues: `--seed` records the whole current listing and reports nothing. Without
+it, the first successful WBPSC crawl opens one issue per historic notice up to
+`--max-new`.
+
 ## What a notice card contains
 
 - `kind: notice`, `status: published`.
@@ -60,6 +136,10 @@ python3 tools/feed/validate.py feed/jobs.json
 (cd tools/feed && python3 check_publish.py ../../feed/jobs.json)
 python3 -m unittest discover -s tests/ops -p "test_*.py"
 python3 -m unittest discover -s tests/feed -p "test_validate.py"
+
+# Proposals only: the preview must validate, and the issue text must round
+# trip through the publisher's own parser (tests/ops/test_notice_proposals.py).
+python3 tools/feed/validate.py docs/proposals/notice-only-batch-2026-10-20.preview.json
 ```
 
 A pass proves structure and readiness signals only. It cannot establish that a

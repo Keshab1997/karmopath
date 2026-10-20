@@ -14,6 +14,10 @@ import 'category_circle.dart';
 /// Only feed values are rendered; nothing is invented. The bookmark writes
 /// through [UserPreferences] and reflects the stored value.
 class JobCard extends StatelessWidget {
+  /// Eligibility lines a card shows before pointing at the detail page. Two
+  /// keeps the card scannable; the count line makes the rest visible as a gap.
+  static const int maxQualifications = 2;
+
   const JobCard({
     super.key,
     required this.job,
@@ -41,9 +45,12 @@ class JobCard extends StatelessWidget {
     final urgent = info.closesSoon;
     final title = lang == AppLang.bn ? job.titleBn : job.titleEn;
     final districtText = job.districts.join(', ');
-    final qualificationText = job.qualifications.isEmpty
-        ? null
-        : job.qualifications.first;
+    // A feed entry can list several eligibility routes (12th, or 10th + ITI,
+    // plus the cultural qualification). Showing only the first hid the rest
+    // behind no signal at all, so the card shows up to two lines and says how
+    // many more the detail page holds.
+    final shown = job.qualifications.take(maxQualifications).toList();
+    final hidden = job.qualifications.length - shown.length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -118,12 +125,20 @@ class JobCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _MetaLine(icon: Icons.place_outlined, text: districtText),
-                if (qualificationText != null) ...[
+                if (shown.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  _MetaLine(
-                    icon: Icons.school_outlined,
-                    text: qualificationText,
-                  ),
+                  for (var index = 0; index < shown.length; index++)
+                    _MetaLine(
+                      icon: index == 0 ? Icons.school_outlined : null,
+                      text: shown[index],
+                      maxLines: 2,
+                    ),
+                  if (hidden > 0)
+                    _MetaLine(
+                      icon: null,
+                      text: K.moreQualifications(hidden, lang),
+                      hint: true,
+                    ),
                 ],
                 Padding(
                   padding: const EdgeInsets.only(top: 10, right: 8),
@@ -205,26 +220,49 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
+/// One icon-led line in the card's meta block.
+///
+/// [maxLines] stays 1 for single-value lines (district) and grows to 2 for the
+/// eligibility routes, which are long strings a feed supplies verbatim. A null
+/// [icon] keeps the same left offset, so a continuation line aligns under the
+/// first one instead of shifting left.
 class _MetaLine extends StatelessWidget {
-  const _MetaLine({required this.icon, required this.text});
+  const _MetaLine({
+    required this.text,
+    this.icon,
+    this.maxLines = 1,
+    this.hint = false,
+  });
 
-  final IconData icon;
+  final IconData? icon;
   final String text;
+  final int maxLines;
+  final bool hint;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: KarmopathTheme.ink.withValues(alpha: 0.5)),
-        const SizedBox(width: 6),
+        if (icon != null) ...[
+          Icon(
+            icon,
+            size: 16,
+            color: KarmopathTheme.ink.withValues(alpha: 0.5),
+          ),
+          const SizedBox(width: 6),
+        ] else
+          const SizedBox(width: 22),
         Expanded(
           child: Text(
             text,
-            maxLines: 1,
+            maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12.5,
-              color: KarmopathTheme.ink.withValues(alpha: 0.7),
+              fontWeight: hint ? FontWeight.w600 : FontWeight.w400,
+              color: KarmopathTheme.ink.withValues(
+                alpha: hint ? 0.62 : 0.7,
+              ),
             ),
           ),
         ),

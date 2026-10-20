@@ -95,9 +95,12 @@ abstract final class K {
     }).join();
   }
 
-  static String updatesCount(int n, AppLang lang) => lang == AppLang.bn
-      ? '${_num(n, lang)}টি আপডেট'
-      : '$n update${n == 1 ? '' : 's'}';
+  /// Count beside the home heading. It counts the cards actually shown, so a
+  /// filter narrows it. It never claims those entries are new: the feed has no
+  /// "seen since" concept, and labelling a total "updates" read as one.
+  static String opportunitiesCount(int n, AppLang lang) => lang == AppLang.bn
+      ? '${_num(n, lang)}টি সুযোগ'
+      : '$n opportunit${n == 1 ? 'y' : 'ies'}';
 
   static String savedCount(int n, AppLang lang) =>
       lang == AppLang.bn ? '${_num(n, lang)}টি সংরক্ষিত' : '$n saved';
@@ -111,6 +114,14 @@ abstract final class K {
       : '$n stored reminder${n == 1 ? '' : 's'}';
 
   // Card / list semantics.
+
+  /// Shown under the visible eligibility lines when a feed entry lists more
+  /// requirements than the card has room for. The full list is on the detail
+  /// page; the card never implies it has shown everything.
+  static String moreQualifications(int n, AppLang lang) => lang == AppLang.bn
+      ? 'আরও ${_num(n, lang)}টি যোগ্যতার শর্ত'
+      : '$n more eligibility requirement${n == 1 ? '' : 's'}';
+
   // Filters (batch 2).
   static const districtFilter = KText('জেলা', 'District');
   static const qualificationFilter = KText('যোগ্যতা', 'Qualification');

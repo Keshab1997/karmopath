@@ -1,20 +1,49 @@
 {
-  "_comment": "Official listing pages checked by scripts/discover_notices.py. Add a source only after a human confirms the domain is official. allowed_domains limits which links may be reported.",
+  "_comment": "Official listing pages checked by scripts/discover_notices.py. Add a source only after a human confirms the domain is official. allowed_domains limits which links may be reported. 'alternates' is an optional list of equivalent official URLs tried only after every attempt at 'url' fails; each alternate needs the same human confirmation, and every link it yields is still checked against allowed_domains. 'districts' is where the body's POSTS are, not where its office is: the publisher copies it onto every card, so a pan-India body says [\"All India\"] and never silently becomes a West Bengal job.",
   "sources": [
     {
       "name": "WBPSC (West Bengal Public Service Commission)",
       "url": "https://psc.wb.gov.in/",
-      "allowed_domains": ["psc.wb.gov.in"]
+      "allowed_domains": [
+        "psc.wb.gov.in"
+      ],
+      "districts": [
+        "West Bengal"
+      ],
+      "alternates": [
+        "https://www.psc.wb.gov.in/"
+      ]
     },
     {
       "name": "West Bengal School Service Commission",
       "url": "https://www.westbengalssc.com/otr/recruitment/",
-      "allowed_domains": ["westbengalssc.com"]
+      "allowed_domains": [
+        "westbengalssc.com"
+      ],
+      "districts": [
+        "West Bengal"
+      ]
     },
     {
       "name": "RRC Eastern Railway (Kolkata)",
       "url": "https://www.rrcer.org/notice_board.html",
-      "allowed_domains": ["rrcer.org"]
+      "allowed_domains": [
+        "rrcer.org"
+      ],
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ]
+    },
+    {
+      "name": "IBPS (Institute of Banking Personnel Selection)",
+      "url": "https://www.ibps.in/index.php/crp-updates/",
+      "allowed_domains": [
+        "ibps.in"
+      ],
+      "districts": [
+        "All India"
+      ]
     }
   ]
 }

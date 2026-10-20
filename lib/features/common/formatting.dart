@@ -5,6 +5,16 @@ import 'strings.dart';
 /// Asia/Kolkata has no DST, so a fixed offset is exact for every date here.
 const Duration istOffset = Duration(hours: 5, minutes: 30);
 
+/// Feed literal for a body whose posts are anywhere in India, e.g. an IBPS or
+/// SSC recruitment. `docs/CONTRACTS.md` fixes `West Bengal` as the literal for
+/// a statewide state entry and leaves every other value free-form, so this is
+/// a data-level convention rather than a contract change.
+///
+/// It is special in one place: the home district filter treats it as matching
+/// any district, because an all-India vacancy does have posts here too and must
+/// not vanish the moment someone filters by district.
+const String allIndiaDistrict = 'All India';
+
 /// Deadline model used by every B screen. Comparisons are UTC-based.
 ///
 /// Date-only values (`application_end_date`) are inclusive through the end of

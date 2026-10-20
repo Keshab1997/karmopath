@@ -231,7 +231,11 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_kind != null && job.kind != _kind) return false;
       if (_category != null && job.category != _category) return false;
       if (_closingSoonOnly && !deadlineInfo(job, now).closesSoon) return false;
-      if (_districts.isNotEmpty && !job.districts.any(_districts.contains)) {
+      // A pan-India vacancy is not a West Bengal vacancy, but it does have
+      // posts here - so it survives a district filter instead of hiding.
+      if (_districts.isNotEmpty &&
+          !job.districts.contains(allIndiaDistrict) &&
+          !job.districts.any(_districts.contains)) {
         return false;
       }
       if (_qualifications.isNotEmpty &&
@@ -478,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               if (state.feed != null)
                                 Text(
-                                  K.updatesCount(visible.length, lang),
+                                  K.opportunitiesCount(visible.length, lang),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,

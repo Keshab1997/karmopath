@@ -1,0 +1,94 @@
+{
+  "_comment": "Live notice links captured on 2026-10-20 from the three approved listing pages. Captured with a manual page fetch from the agent sandbox, where scripts cannot reach rrcer.org / westbengalssc.com / psc.wb.gov.in; from a machine with network access the same list is reproducible with `python3 scripts/discover_notices.py --sources ops/notice_sources.json --seen ops/notice_seen.json --out candidates.json --report-candidates --max-new 40`. Only titles and links are copied from the official pages, with no re-wording. `seen_on`/`is_new` are left to scripts/notice_proposals.py, which reads ops/notice_seen.json. Nothing here is verified: each item still needs a human to open the notice and approve it.",
+  "captured_from": [
+    "https://www.rrcer.org/notice_board.html",
+    "https://www.westbengalssc.com/otr/recruitment/",
+    "https://psc.wb.gov.in/"
+  ],
+  "candidates": [
+    {
+      "url": "https://www.rrcer.org/Cultural%20Quota%20Notification%202026-27..pdf",
+      "title": "Notification of Cultural Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures.",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "_note": "Already live in the feed as the recruitment card rrc-er-cultural-quota-2026-27; listed to prove the dedupe."
+    },
+    {
+      "url": "https://rrceronline.co.in/CQ2627ERv02/",
+      "title": "Link for Online Application against Cultural Quota (Open Advt.) for the year 2026-27.",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "_note": "Host is not in allowed_domains for this source, so the publisher would reject it. Owner decision, not a bug."
+    },
+    {
+      "url": "https://www.rrcer.org/PET%20result%2029.09.2026.pdf",
+      "title": "Result of Physicial Efficiency Test (PET) against CEN 08/2024 dtd. 29.09.2026.",
+      "source": "RRC Eastern Railway (Kolkata)"
+    },
+    {
+      "url": "https://www.rrcer.org/Result%20of%20Physical%20Efficiency%20Test%20(PET)%20against%20CEN%20082024%20held%20on%2021.09.2026..pdf",
+      "title": "Result of Physical Efficiency Test (PET) against CEN 08/2024 held on 21.09.2026.",
+      "source": "RRC Eastern Railway (Kolkata)"
+    },
+    {
+      "url": "https://www.rrcer.org/Important%20notice%20for%20the%20PET%20against%20CEN.pdf",
+      "title": "Important notice regarding Physical Efficiency Test (PET) against CEN 08/2024 dtd 19.09.2026",
+      "source": "RRC Eastern Railway (Kolkata)"
+    },
+    {
+      "url": "https://www.rrcer.org/NOTICE-Block%20Date%20for%20Physical%20Efficiency%20Test%20against%20CEN%2008%202024.pdf",
+      "title": "Notice regarding Block Date for Physical Efficiency Test against CEN 08 2024 dtd. 07.09.2026.",
+      "source": "RRC Eastern Railway (Kolkata)"
+    },
+    {
+      "url": "https://www.rrcer.org/Final%20notification%20S&G%202026-27%20along%20with%20relevant%20annexures%20pdf.pdf",
+      "title": "Notification of Scouts & Guides Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures.",
+      "source": "RRC Eastern Railway (Kolkata)"
+    },
+    {
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_RevisedPriliminaryList_IX-X_2ndSLSTAT2025_12_Oct_2026_merged.pdf",
+      "title": "Notice dated 12.10.2026 regarding Publication of Revised Priliminary List of candidates for Interview for selection to the posts of Assitant Teachers icw 2nd SLST(AT), 2025 for Class Level IX-X.",
+      "source": "West Bengal School Service Commission"
+    },
+    {
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/MeritList_1112_counselling_1P_PARTII.pdf",
+      "title": "Click here to Download Combined Merit List for 1st Phase(Part-II) Counselling icw 2nd SLST(AT), 2025 for Class Level XI-XII.",
+      "source": "West Bengal School Service Commission"
+    },
+    {
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/FINAL_VACANCY_DETAILS_1112%20_SUBSTITUTE_17.04.2026.pdf",
+      "title": "Substitute vacancy for ARABIC(PG) and SOCIOLOGY(PG) for 1st Phase(Part-III) Counselling to be held on 20.04.26 as per WBBSE letter Admin/2139 Dated 17.04.26 icw 2nd SLST(AT), 2025 for Class Level XI-XII",
+      "source": "West Bengal School Service Commission"
+    },
+    {
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_21.01.26.pdf",
+      "title": "Notice for Publication of Provisional Panel and Waiting List in c/w 2nd SLST(AT), 2025 for CLASS LEVEL XI-XII",
+      "source": "West Bengal School Service Commission"
+    },
+    {
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Public%20Notice%20-%20Scribe%20Form%20-%201st%20SLST-NTS%202025%20Dated%20-%2017022026.pdf",
+      "title": "Notice dated 16.02.2026 for availing Scribe facility to eligible candidates icw 1st SLST (NTS), 2025 for the post of Clerk and Group-D.",
+      "source": "West Bengal School Service Commission"
+    },
+    {
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement",
+      "title": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+      "source": "WBPSC (West Bengal Public Service Commission)",
+      "_note": "The captured page was the homepage 'What's New' list and its newest entry was dated Nov 2025. The feed must not carry this until a human confirms the notice is still the current one."
+    },
+    {
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251129151445_INDstono25.pdf&param2=advertisement",
+      "title": "INDICATIVE ADVERTISEMENT FOR ENGLISH STENOGRAPHERS BASIC GRADE (SCHEDULE A&B) RECRUITMENT EXAMINATION, 2025 ADVT NO. 04/2025",
+      "source": "WBPSC (West Bengal Public Service Commission)"
+    },
+    {
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251029173719_Notice_OMR_clerkship.pdf&param2=advertisement",
+      "title": "IMPORTANT NOTICE REGARDING CLERKSHIP EXAMINATION (PRELI) RECRUITMENT EXAMINATION, 2023 [ADVT. NO. 13/2023]",
+      "source": "WBPSC (West Bengal Public Service Commission)"
+    },
+    {
+      "url": "https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement",
+      "title": "SCHEME AND SYLLABUS FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2024 (ADVT. NO. 8/2024)",
+      "source": "WBPSC (West Bengal Public Service Commission)"
+    }
+  ],
+  "_status": "Status 2026-10-20: all 14 were opened as issues #8-#21 (unlabelled - the sandbox token cannot write labels). Re-running the generated .sh would create duplicates, not update those issues."
+}
