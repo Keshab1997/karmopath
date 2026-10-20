@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-19T19:36:45Z",
+  "updated_at": "2026-10-20T06:39:27Z",
   "jobs": [
     {
       "id": "rrc-er-cultural-quota-2026-27",
@@ -34,6 +34,36 @@
       "apply_url": "https://rrceronline.co.in/CQ2627ERv02/",
       "age_note_bn": "01.01.2027 অনুয়ায়ী বয়স: UR/EWS 18–30 বছর; OBC-এর জন্য উর্ধ্বসীমায় 3 বছর এবং SC/ST-এর জন্য 5 বছর শিথিলতা; PwBD, প্রাক্তন সৈনিক, বিধবা/বিচ্ছিন্না মহিলা ও রেলকর্মীদের জন্য বিজ্ঞপ্তি অনুয়ায়ী অতিরিক্ত শিথিলতা।",
       "age_note_en": "Age as on 01.01.2027: 18–30 years for UR/EWS; upper age relaxed by 3 years for OBC and 5 years for SC/ST; further relaxation for PwBD, ex-servicemen, widowed/divorced women and serving railway employees as per the notice."
+    },
+    {
+      "id": "notice-016569a3077c4afd",
+      "kind": "notice",
+      "title_bn": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+      "title_en": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+      "organization": "WBPSC (West Bengal Public Service Commission)",
+      "category": "office",
+      "districts": [
+        "West Bengal"
+      ],
+      "qualifications": [],
+      "status": "published",
+      "source_url": "https://psc.wb.gov.in/",
+      "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement",
+      "reviewed_at": "2026-10-20T06:39:27Z",
+      "published_at": "2026-10-20T06:39:27Z",
+      "updated_at": "2026-10-20T06:39:27Z",
+      "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+      "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+      "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+      "how_to_apply_en": "See the original notice for how to apply and the last date.",
+      "vacancies": null,
+      "application_start_date": null,
+      "application_end_date": null,
+      "application_end_at": null,
+      "exam_date": null,
+      "apply_url": null,
+      "age_note_bn": null,
+      "age_note_en": null
     }
   ]
 }
