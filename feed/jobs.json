@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-20T13:23:47Z",
+  "updated_at": "2026-10-20T13:24:05Z",
   "jobs": [
     {
       "id": "rrc-er-cultural-quota-2026-27",
@@ -144,6 +144,37 @@
       "reviewed_at": "2026-10-20T13:23:47Z",
       "published_at": "2026-10-20T13:23:47Z",
       "updated_at": "2026-10-20T13:23:47Z",
+      "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+      "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+      "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+      "how_to_apply_en": "See the original notice for how to apply and the last date.",
+      "vacancies": null,
+      "application_start_date": null,
+      "application_end_date": null,
+      "application_end_at": null,
+      "exam_date": null,
+      "apply_url": null,
+      "age_note_bn": null,
+      "age_note_en": null
+    },
+    {
+      "id": "notice-cb43b4b416f0497c",
+      "kind": "notice",
+      "title_bn": "Provisional Panel for Engagement of Act Apprentices 2023-24 for training after DV at Jamalpur Workshop(for Jamalpur Workshop, Asansol and Malda division)",
+      "title_en": "Provisional Panel for Engagement of Act Apprentices 2023-24 for training after DV at Jamalpur Workshop(for Jamalpur Workshop, Asansol and Malda division)",
+      "organization": "RRC Eastern Railway (Kolkata)",
+      "category": "railway",
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
+      "qualifications": [],
+      "status": "published",
+      "source_url": "https://www.rrcer.org/notice_board.html",
+      "notice_url": "https://rrcer.org/Provisional%20Panel%20for%20Engagement%20of%20Act%20Apprentices%202023-24%20for%20training%20after%20DV%20at%20Jamalpur%20Workshop(for%20Jamalpur%20Workshop,%20Asansol%20and%20Malda%20division).pdf",
+      "reviewed_at": "2026-10-20T13:24:05Z",
+      "published_at": "2026-10-20T13:24:05Z",
+      "updated_at": "2026-10-20T13:24:05Z",
       "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
       "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
       "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
