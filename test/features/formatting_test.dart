@@ -221,9 +221,23 @@ void main() {
     });
 
     test('Bengali numerals localise counts', () {
-      expect(K.updatesCount(12, AppLang.bn), '১২টি আপডেট');
-      expect(K.updatesCount(1, AppLang.en), '1 update');
+      expect(K.opportunitiesCount(12, AppLang.bn), '১২টি সুযোগ');
+      expect(K.opportunitiesCount(1, AppLang.en), '1 opportunity');
+      expect(K.opportunitiesCount(3, AppLang.en), '3 opportunities');
       expect(K.reminderCount(2, AppLang.bn), '২টি রিমাইন্ডার চালু');
+    });
+
+    test('a card counts the eligibility lines it left out', () {
+      expect(K.moreQualifications(1, AppLang.bn), 'আরও ১টি যোগ্যতার শর্ত');
+      expect(K.moreQualifications(2, AppLang.bn), 'আরও ২টি যোগ্যতার শর্ত');
+      expect(
+        K.moreQualifications(1, AppLang.en),
+        '1 more eligibility requirement',
+      );
+      expect(
+        K.moreQualifications(4, AppLang.en),
+        '4 more eligibility requirements',
+      );
     });
 
     test('month headings use the requested language table', () {

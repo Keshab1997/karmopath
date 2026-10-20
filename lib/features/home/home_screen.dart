@@ -478,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               if (state.feed != null)
                                 Text(
-                                  K.updatesCount(visible.length, lang),
+                                  K.opportunitiesCount(visible.length, lang),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
