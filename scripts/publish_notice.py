@@ -8,6 +8,9 @@ label. Only then does this script run (from ``publish-notice.yml``).
 What it guarantees:
   * The notice link must be on a domain approved in ``ops/notice_sources.json``
     for the named source. A hand-written issue cannot smuggle in another site.
+  * The card's ``districts`` come from that source entry, never from a default.
+    Where a body's posts are is a fact about the notice, so a source that has
+    not declared it is refused instead of being stamped "West Bengal".
   * The card carries no vacancies, deadline, eligibility or apply link. It
     links to the original notice and says in both languages that those details
     were not checked here.
@@ -146,11 +149,24 @@ def parse_issue(issue: dict, sources: list[dict]) -> dict:
     if not isinstance(source_url, str) or urlsplit(source_url).scheme != "https":
         raise NoticeError(f"source {source_name!r} has no approved HTTPS listing URL")
 
+    districts = source.get("districts")
+    if (
+        not isinstance(districts, list)
+        or not districts
+        or any(not isinstance(d, str) or not d.strip() for d in districts)
+    ):
+        raise NoticeError(
+            f"source {source_name!r} must declare non-empty 'districts' in "
+            "ops/notice_sources.json: where the posts are cannot be guessed, "
+            'and a pan-India body must not be tagged "West Bengal"'
+        )
+
     return {
         "title": title,
         "url": url,
         "source_name": source_name,
         "source_url": source_url,
+        "districts": [d.strip() for d in districts],
     }
 
 
@@ -192,7 +208,7 @@ def build_job(notice: dict, now: datetime) -> dict:
         "title_en": notice["title"],
         "organization": notice["source_name"],
         "category": infer_category(notice["source_name"]),
-        "districts": ["West Bengal"],
+        "districts": notice["districts"],
         "qualifications": [],
         "status": "published",
         "source_url": notice["source_url"],

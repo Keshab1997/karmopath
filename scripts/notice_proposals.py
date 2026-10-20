@@ -243,6 +243,7 @@ def build_proposals(
                 "url": url,
                 "source_name": entry["source"],
                 "source_url": source["url"],
+                "districts": source.get("districts"),
             }
             card = pn.build_job(notice, now)
         except (ProposalError, pn.NoticeError, KeyError) as error:
@@ -262,6 +263,7 @@ def build_proposals(
                 "seen_on": entry.get("seen_on"),
                 "is_new": entry.get("is_new"),
                 "title_truncated": truncated,
+                "districts": card["districts"],
                 "card": card,
                 "issue": {"title": f"{pn.TITLE_PREFIX}{title}", "body": body},
             }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:karmopath/contracts/job.dart';
 import 'package:karmopath/features/common/app_language.dart';
+import 'package:karmopath/features/common/formatting.dart';
 import 'package:karmopath/features/home/home_screen.dart';
 
 import 'support/fakes.dart';
@@ -274,5 +275,32 @@ void main() {
       expect(size.height, greaterThanOrEqualTo(48));
     }
     expect(find.text('সম্পন্ন'), findsOneWidget);
+  });
+
+  testWidgets('an all-India vacancy survives a district filter', (
+    tester,
+  ) async {
+    final ibps = makeJob(
+      id: 'ibps-clerk-prelims',
+      titleBn: 'IBPS ক্লার্ক প্রিলিমস',
+      districts: const [allIndiaDistrict],
+      category: JobCategory.banking,
+    );
+    final jobs = [police, railway, medical, ibps];
+    final repo = FakeJobRepository(readyState(jobs));
+    await pumpScreen(tester, home(repo), surfaceSize: const Size(420, 1400));
+
+    await openDistrictSheet(tester);
+    await tester.tap(find.widgetWithText(HomeFilterChip, 'Kolkata'));
+    await tester.pump();
+    await tester.tap(find.text('সম্পন্ন'));
+    await tester.pumpAndSettle();
+
+    // Kolkata is in West Bengal: the state card matches, a Darjeeling-only card
+    // does not. An all-India vacancy has posts here too, so it stays visible.
+    expect(find.text(police.titleBn), findsOneWidget);
+    expect(find.text(railway.titleBn), findsOneWidget);
+    expect(find.text(ibps.titleBn), findsOneWidget);
+    expect(find.text(medical.titleBn), findsNothing);
   });
 }

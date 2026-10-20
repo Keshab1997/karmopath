@@ -20,12 +20,23 @@ SOURCES = [
         "name": "RRC Eastern Railway (Kolkata)",
         "url": "https://www.rrcer.org/notice_board.html",
         "allowed_domains": ["rrcer.org"],
+        "districts": ["West Bengal", "Bihar"],
     },
     {
         "name": "WBPSC (West Bengal Public Service Commission)",
         "url": "https://psc.wb.gov.in/",
         "allowed_domains": ["psc.wb.gov.in"],
+        "districts": ["West Bengal"],
     },
+]
+
+PAN_INDIA_SOURCES = [
+    {
+        "name": "IBPS (Institute of Banking Personnel Selection)",
+        "url": "https://www.ibps.in/index.php/crp-updates/",
+        "allowed_domains": ["ibps.in"],
+        "districts": ["All India"],
+    }
 ]
 
 
@@ -93,6 +104,41 @@ class ParseTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_districts_come_from_the_source_not_a_default(self):
+        """A board's HQ location is not where its posts are."""
+        job = pn.build_job(pn.parse_issue(issue(), SOURCES), NOW)
+        self.assertEqual(job["districts"], ["West Bengal", "Bihar"])
+
+        body = (
+            "Notification for CRP-PO/MTs-XVI\n\n"
+            "- Source listing: IBPS (Institute of Banking Personnel Selection)\n"
+            "- Notice link: https://www.ibps.in/wp-content/uploads/x.pdf\n"
+        )
+        parsed = pn.parse_issue(
+            {"title": "[notice] CRP PO/MT", "body": body}, PAN_INDIA_SOURCES
+        )
+        self.assertEqual(pn.build_job(parsed, NOW)["districts"], ["All India"])
+
+    def test_a_source_without_districts_is_refused(self):
+        undeclared = [
+            {
+                "name": "RRC Eastern Railway (Kolkata)",
+                "url": "https://www.rrcer.org/notice_board.html",
+                "allowed_domains": ["rrcer.org"],
+            }
+        ]
+        with self.assertRaises(pn.NoticeError) as caught:
+            pn.parse_issue(issue(), undeclared)
+        self.assertIn("must declare non-empty 'districts'", str(caught.exception))
+
+    def test_an_empty_districts_list_is_refused(self):
+        broken = [dict(SOURCES[0], districts=[])]
+        with self.assertRaises(pn.NoticeError):
+            pn.parse_issue(issue(), broken)
+        blank = [dict(SOURCES[0], districts=["  "])]
+        with self.assertRaises(pn.NoticeError):
+            pn.parse_issue(issue(), blank)
+
     def test_every_category_is_reachable_from_an_approved_source(self):
         """The chip row and the card must agree, or a filter is permanently empty."""
         cases = {

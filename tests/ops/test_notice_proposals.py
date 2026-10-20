@@ -20,11 +20,13 @@ SOURCES = [
         "name": "RRC Eastern Railway (Kolkata)",
         "url": "https://www.rrcer.org/notice_board.html",
         "allowed_domains": ["rrcer.org"],
+        "districts": ["West Bengal"],
     },
     {
         "name": "West Bengal School Service Commission",
         "url": "https://www.westbengalssc.com/otr/recruitment/",
         "allowed_domains": ["westbengalssc.com"],
+        "districts": ["West Bengal"],
     },
 ]
 
@@ -112,6 +114,7 @@ class ProposalTests(unittest.TestCase):
                 "url": "https://www.rrcer.org/PET%20result%2029.09.2026.pdf",
                 "source_name": "RRC Eastern Railway (Kolkata)",
                 "source_url": "https://www.rrcer.org/notice_board.html",
+                "districts": ["West Bengal"],
             },
             NOW,
         )

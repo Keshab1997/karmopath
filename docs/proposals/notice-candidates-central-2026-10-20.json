@@ -44,5 +44,6 @@
       "title": "Corrigendum dated 14.11.2025 in connection with CRP-CSA-XV",
       "source": "IBPS (Institute of Banking Personnel Selection)"
     }
-  ]
+  ],
+  "_status": "Status 2026-10-20: the 7 accepted rows were opened as issues #22-#28 (unlabelled). Re-running the generated .sh would create duplicates."
 }

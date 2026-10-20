@@ -1,6 +1,6 @@
 {
   "kind": "karmopath-notice-proposals",
-  "generated_at": "2026-10-20T05:30:00Z",
+  "generated_at": "2026-10-20T06:11:45Z",
   "note": "Previews of notice-only cards, built by the same code as the approve-notice publisher. Not a feed, not a verification, not published.",
   "total_candidates": 16,
   "total_usable": 14,
@@ -14,6 +14,10 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
       "card": {
         "id": "notice-dbfd571780ad5490",
         "kind": "notice",
@@ -22,15 +26,16 @@
         "organization": "RRC Eastern Railway (Kolkata)",
         "category": "railway",
         "districts": [
-          "West Bengal"
+          "West Bengal",
+          "Bihar"
         ],
         "qualifications": [],
         "status": "published",
         "source_url": "https://www.rrcer.org/notice_board.html",
         "notice_url": "https://www.rrcer.org/PET%20result%2029.09.2026.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -56,6 +61,10 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
       "card": {
         "id": "notice-8154b14177bebe51",
         "kind": "notice",
@@ -64,15 +73,16 @@
         "organization": "RRC Eastern Railway (Kolkata)",
         "category": "railway",
         "districts": [
-          "West Bengal"
+          "West Bengal",
+          "Bihar"
         ],
         "qualifications": [],
         "status": "published",
         "source_url": "https://www.rrcer.org/notice_board.html",
         "notice_url": "https://www.rrcer.org/Result%20of%20Physical%20Efficiency%20Test%20(PET)%20against%20CEN%20082024%20held%20on%2021.09.2026..pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -98,6 +108,10 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
       "card": {
         "id": "notice-88e7b684b85aa436",
         "kind": "notice",
@@ -106,15 +120,16 @@
         "organization": "RRC Eastern Railway (Kolkata)",
         "category": "railway",
         "districts": [
-          "West Bengal"
+          "West Bengal",
+          "Bihar"
         ],
         "qualifications": [],
         "status": "published",
         "source_url": "https://www.rrcer.org/notice_board.html",
         "notice_url": "https://www.rrcer.org/Important%20notice%20for%20the%20PET%20against%20CEN.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -140,6 +155,10 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
       "card": {
         "id": "notice-4b8da86599f516a4",
         "kind": "notice",
@@ -148,15 +167,16 @@
         "organization": "RRC Eastern Railway (Kolkata)",
         "category": "railway",
         "districts": [
-          "West Bengal"
+          "West Bengal",
+          "Bihar"
         ],
         "qualifications": [],
         "status": "published",
         "source_url": "https://www.rrcer.org/notice_board.html",
         "notice_url": "https://www.rrcer.org/NOTICE-Block%20Date%20for%20Physical%20Efficiency%20Test%20against%20CEN%2008%202024.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -182,6 +202,10 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal",
+        "Bihar"
+      ],
       "card": {
         "id": "notice-c1e6b7832e3209c0",
         "kind": "notice",
@@ -190,15 +214,16 @@
         "organization": "RRC Eastern Railway (Kolkata)",
         "category": "railway",
         "districts": [
-          "West Bengal"
+          "West Bengal",
+          "Bihar"
         ],
         "qualifications": [],
         "status": "published",
         "source_url": "https://www.rrcer.org/notice_board.html",
         "notice_url": "https://www.rrcer.org/Final%20notification%20S&G%202026-27%20along%20with%20relevant%20annexures%20pdf.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -224,6 +249,9 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-e709b920fc82e97e",
         "kind": "notice",
@@ -238,9 +266,9 @@
         "status": "published",
         "source_url": "https://www.westbengalssc.com/otr/recruitment/",
         "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_RevisedPriliminaryList_IX-X_2ndSLSTAT2025_12_Oct_2026_merged.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -266,6 +294,9 @@
       "seen_on": null,
       "is_new": true,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-922f9d29e24bb584",
         "kind": "notice",
@@ -280,9 +311,9 @@
         "status": "published",
         "source_url": "https://www.westbengalssc.com/otr/recruitment/",
         "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/MeritList_1112_counselling_1P_PARTII.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -308,6 +339,9 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": true,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-77f8af1523274fba",
         "kind": "notice",
@@ -322,9 +356,9 @@
         "status": "published",
         "source_url": "https://www.westbengalssc.com/otr/recruitment/",
         "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/FINAL_VACANCY_DETAILS_1112%20_SUBSTITUTE_17.04.2026.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -350,6 +384,9 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-a3f25730b710dbeb",
         "kind": "notice",
@@ -364,9 +401,9 @@
         "status": "published",
         "source_url": "https://www.westbengalssc.com/otr/recruitment/",
         "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_21.01.26.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -392,6 +429,9 @@
       "seen_on": "2026-10-19",
       "is_new": false,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-2c051cf0738e8d4d",
         "kind": "notice",
@@ -406,9 +446,9 @@
         "status": "published",
         "source_url": "https://www.westbengalssc.com/otr/recruitment/",
         "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Public%20Notice%20-%20Scribe%20Form%20-%201st%20SLST-NTS%202025%20Dated%20-%2017022026.pdf",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -434,6 +474,9 @@
       "seen_on": null,
       "is_new": true,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-016569a3077c4afd",
         "kind": "notice",
@@ -448,9 +491,9 @@
         "status": "published",
         "source_url": "https://psc.wb.gov.in/",
         "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -476,6 +519,9 @@
       "seen_on": null,
       "is_new": true,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-a25a1198908572d5",
         "kind": "notice",
@@ -490,9 +536,9 @@
         "status": "published",
         "source_url": "https://psc.wb.gov.in/",
         "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251129151445_INDstono25.pdf&param2=advertisement",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -518,6 +564,9 @@
       "seen_on": null,
       "is_new": true,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-6bc8ded57ecdb4ca",
         "kind": "notice",
@@ -532,9 +581,9 @@
         "status": "published",
         "source_url": "https://psc.wb.gov.in/",
         "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251029173719_Notice_OMR_clerkship.pdf&param2=advertisement",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
@@ -560,6 +609,9 @@
       "seen_on": null,
       "is_new": true,
       "title_truncated": false,
+      "districts": [
+        "West Bengal"
+      ],
       "card": {
         "id": "notice-b724a93fa350e0dc",
         "kind": "notice",
@@ -574,9 +626,9 @@
         "status": "published",
         "source_url": "https://psc.wb.gov.in/",
         "notice_url": "https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement",
-        "reviewed_at": "2026-10-20T05:30:00Z",
-        "published_at": "2026-10-20T05:30:00Z",
-        "updated_at": "2026-10-20T05:30:00Z",
+        "reviewed_at": "2026-10-20T06:11:45Z",
+        "published_at": "2026-10-20T06:11:45Z",
+        "updated_at": "2026-10-20T06:11:45Z",
         "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
         "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
         "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",

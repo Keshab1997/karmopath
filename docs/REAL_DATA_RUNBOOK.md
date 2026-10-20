@@ -70,7 +70,13 @@ sources now. A new source needs three things, in this order:
    that render their board in JavaScript (SSC, UPSC) are not crawlable by this
    script, and `HTTP 500` from a datacenter connection (RRB) is not proof of a
    dead site. Both are recorded rather than guessed at.
-3. Before the first successful crawl, `--seed` it (see *Flaky sources*), or the
+3. Give it a `districts` list in `ops/notice_sources.json`: where that body's
+   *posts* are, not where its office is. The publisher refuses a source that has
+   not declared it, because stamping every card `West Bengal` was the old default
+   and it is wrong for a zonal or all-India body (RRC-ER selects for ER units that
+   include Bihar divisions; an IBPS CRP allocates across participating banks in
+   many states, so it is `All India`).
+4. Before the first successful crawl, `--seed` it (see *Flaky sources*), or the
    run opens one issue per historic notice up to `--max-new`.
 
 ## Flaky sources

@@ -21,7 +21,7 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
 | WBPSC alternate host | https://www.psc.wb.gov.in/ | Same pages as `psc.wb.gov.in` | Used only as a fallback when the primary host times out. Checked 2026-10-20: both hosts returned the identical page title "Public Service Commission,WB" and the same "What's New" entries. Links from either host are still filtered by `allowed_domains` |
 | Institute of Banking Personnel Selection (IBPS, banking/CRP recruitment) | https://www.ibps.in/index.php/crp-updates/ | CRP PO/MT, Clerk, Specialist Officer notifications, corrigenda, exam calendar | Added 2026-10-20: listing page opened, dated rows carry real `<a href>` targets to HTTPS PDFs, so `discover_notices.py` can read it. Domain is the commission's own (`ibps.in`); registration portals live on `ibpsreg.ibps.in` |
 | Railway Recruitment Boards (RRB) central portal | https://rrbapply.gov.in/ (apply), https://rrb.indianrailways.gov.in/ (notices) | RRB NTPC, Group D and other CENs | `rrbapply.gov.in` named as the apply portal by several sources, but the page did not render and the notice PDF could not be opened. Not verified directly |
-| RRB Kolkata (RRB for Eastern Railway) | https://www.rrbkolkata.gov.in/ | RRB Kolkata CEN notices | Named in the RRB all-RRBs listing; homepage fetch failed. Not opened directly |
+| RRB Kolkata (RRB for Eastern Railway) | https://www.rrbkolkata.gov.in/ | CEN notices for Eastern Railway, South Eastern Railway and unit-wise posts | Named in the RRB all-RRBs listing; homepage fetch failed (`HTTP 500`). Not opened directly. Note: an RRB is *zonal*, not state-wide - RRB Kolkata selects for ER/SER posts that include Bihar, Jharkhand and Odisha, so it is neither an all-India body nor a West Bengal-only one |
 | RRB Siliguri | https://www.rrbsiliguri.gov.in/ | RRB Siliguri CEN notices | Named in the RRB all-RRBs listing and a city-intimation page on the domain. Not opened directly |
 
 ## Found while listing these sources (2026-10-20)
@@ -57,6 +57,15 @@ Consequence to keep in mind: an all-India central exam whose notice sits behind
 JS or a WAF cannot be surfaced by the daily crawler at all. If RRB CEN coverage
 matters, the practical route is one hand-checked card per CEN from
 `rrbapply.gov.in`, approved through the label gate, rather than a source entry.
+
+One consequence of the zonal structure: "add RRB Kolkata because the app is about
+West Bengal" is not a valid reason. A CEN selects for a railway *zone*, whose
+post locations are listed in that CEN's own vacancy schedule. `districts` on a card
+therefore comes from the approved source entry in `ops/notice_sources.json`, which
+states where that body's posts generally are - never from a default and never from
+where its office sits. A single all-India CEN that also posts in Bengal is tagged
+`All India`, and the home district filter keeps such a card visible for any district
+(`allIndiaDistrict` in `lib/features/common/formatting.dart`).
 
 ## Not yet verified
 
