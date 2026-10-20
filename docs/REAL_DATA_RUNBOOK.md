@@ -59,6 +59,20 @@ run (14 cards, 2 links skipped: one already in the feed, one on a host the
 source does not allow). Approving it means opening the issues, checking each
 notice on the official site and labelling it — not merging the preview.
 
+## Adding a source that has never been crawled (state or central)
+
+Level of employer is not a filter: WBPSC, WBSSC, RRC-ER and IBPS are all approved
+sources now. A new source needs three things, in this order:
+
+1. Open the listing page and confirm the domain is the body's own, then record
+   it in `docs/OFFICIAL_SOURCES.md` - including a failure, and why.
+2. Check the served HTML actually contains the notice anchors. Commission sites
+   that render their board in JavaScript (SSC, UPSC) are not crawlable by this
+   script, and `HTTP 500` from a datacenter connection (RRB) is not proof of a
+   dead site. Both are recorded rather than guessed at.
+3. Before the first successful crawl, `--seed` it (see *Flaky sources*), or the
+   run opens one issue per historic notice up to `--max-new`.
+
 ## Flaky sources
 
 `scripts/discover_notices.py` now retries each listing URL (default 3 attempts

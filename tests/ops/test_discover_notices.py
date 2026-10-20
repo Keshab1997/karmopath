@@ -279,6 +279,52 @@ class NoticePatternTests(unittest.TestCase):
         self.assertNotIn("https://www.westbengalssc.com/contact.html", found)
 
 
+class CentralListingTests(unittest.TestCase):
+    """How a dated central-board listing row behaves."""
+
+    PAGE = """
+    <html><body>
+      <table><tr>
+        <td>15 Oct 26</td>
+        <td><a href="http://ibpsreg.ibps.in/crpspxvimy26/presta_oct26/login.php?appid=x">
+            Result Status of Online Preliminary Examination for CRP-SPL-XVI</a></td>
+      </tr><tr>
+        <td>01 Jul 26</td>
+        <td><a href="/wp-content/uploads/Detailed-Notification-CRP-PO-XVI.pdf">
+            Notification for Common Recruitment Process for CRP- PO/MTs-XVI</a></td>
+      </tr><tr>
+        <td>16 Jan 26</td>
+        <td><a href="/wp-content/uploads/IBPS_CALENDAR_2026-27_final.pdf">
+            Tentative Calendar of CRP (PSBs &amp; RRBs) Online Examinations</a></td>
+      </tr></table>
+    </body></html>
+    """
+
+    def test_https_notice_rows_are_found_and_plain_http_is_not(self):
+        found = dn.extract_notices(
+            "https://www.ibps.in/index.php/crp-updates/",
+            self.PAGE,
+            ["ibps.in"],
+        )
+        self.assertEqual(
+            sorted(found),
+            [
+                "https://www.ibps.in/wp-content/uploads/Detailed-Notification-CRP-PO-XVI.pdf",
+                "https://www.ibps.in/wp-content/uploads/IBPS_CALENDAR_2026-27_final.pdf",
+            ],
+        )
+
+    def test_ampersand_in_visible_text_is_decoded(self):
+        found = dn.extract_notices(
+            "https://www.ibps.in/index.php/crp-updates/",
+            self.PAGE,
+            ["ibps.in"],
+        )
+        title = found["https://www.ibps.in/wp-content/uploads/IBPS_CALENDAR_2026-27_final.pdf"]
+        self.assertIn("PSBs & RRBs", title)
+
+
+
 class SeedTests(unittest.TestCase):
     def test_seed_records_links_and_reports_nothing(self):
         tmp = Path(tempfile.mkdtemp())

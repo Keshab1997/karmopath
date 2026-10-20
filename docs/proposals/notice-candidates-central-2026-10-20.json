@@ -1,0 +1,48 @@
+{
+  "_comment": "Central-government listings captured 2026-10-20, to pair with the state sources already in the feed. Only https notice links can become cards, so the IBPS registration-portal rows (http://ibpsreg.ibps.in/...) are listed here with their real target to record why they are skipped. Deliberately NOT proposed from the same page: the ISO certification, trademark/fraud-website and PwBD-SOP notices - official, but not a job a candidate can act on. Non-recruitment rows like those still reach the tracker from discovery, and the approve-notice label is what keeps them out of the feed.",
+  "captured_from": [
+    "https://www.ibps.in/index.php/crp-updates/"
+  ],
+  "candidates": [
+    {
+      "url": "http://ibpsreg.ibps.in/crpspxvimy26/presta_oct26/login.php?appid=f8a5692529ba20a12e158903a42a917c",
+      "title": "Result Status of Online Preliminary Examination for CRP-SPL-XVI",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/Detailed-Notification_CRP-PO-XVI_Final_V1_30.06.2026.pdf",
+      "title": "Notification for Common Recruitment Process for CRP- PO/MTs-XVI",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/Detailed-Notification-CRP-SPL-XVI_Final_V1_30.06.2026.pdf",
+      "title": "Notification for Common Recruitment Process for CRP- SPL-XVI",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/PO_SPL_Combined_Window_CRP-XVI.pdf",
+      "title": "Window Notification for CRP-PO/MTs -XVI and SPL-XVI",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/Addendum-06.10.pdf",
+      "title": "Addendum dated 06.10.2026 in respect of Recruitment of Banker Faculty, Banker Faculty (Technical) And Executive Secretary to Director On Fixed Term Contract Basis",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/index.php/careers/",
+      "title": "Recruitment of Various Posts in IBPS",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/IBPS_CALENDAR_2026-27_final.pdf",
+      "title": "Tentative Calendar of CRP (PSBs & RRBs) Online Examinations",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    },
+    {
+      "url": "https://www.ibps.in/wp-content/uploads/Corrigendum-CRP-CSA-XV_Vacancy_update2_14.11.25.pdf",
+      "title": "Corrigendum dated 14.11.2025 in connection with CRP-CSA-XV",
+      "source": "IBPS (Institute of Banking Personnel Selection)"
+    }
+  ]
+}

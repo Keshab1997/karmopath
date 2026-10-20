@@ -126,6 +126,26 @@ def clean_url(url: str) -> str:
     )
 
 
+def link_rejection(url: str) -> str | None:
+    """The publisher's own link rules, applied before a proposal is built.
+
+    ``parse_issue`` in scripts/publish_notice.py refuses anything but a plain
+    HTTPS URL with no credentials or fragment. Checking the same rules here
+    turns those links into a recorded skip instead of an aborted batch, and
+    keeps the reason next to the link the owner asked about.
+    """
+    parts = urlsplit(url)
+    if parts.scheme != "https":
+        return f"notice link must be HTTPS, got {parts.scheme or 'no scheme'}"
+    if not parts.hostname:
+        return "notice link has no host"
+    if parts.username is not None or parts.password is not None:
+        return "notice link must not contain credentials"
+    if parts.fragment:
+        return "notice link must not contain a fragment"
+    return None
+
+
 def feed_notice_urls(path: Path | None) -> dict[str, str]:
     """{notice_url: id} for a feed, read-only. Missing file means an empty feed."""
     if path is None or not path.exists():
@@ -202,6 +222,10 @@ def build_proposals(
                     "reason": f"already-reported-on {entry.get('seen_on')}",
                 }
             )
+            continue
+        rejected = link_rejection(url)
+        if rejected is not None:
+            skipped.append({"url": url, "source": entry["source"], "reason": rejected})
             continue
         try:
             source = pn.source_by_name(sources, entry["source"])

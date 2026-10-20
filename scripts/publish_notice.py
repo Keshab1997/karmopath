@@ -167,6 +167,11 @@ def infer_category(source_name: str) -> str:
         return "police"
     if "railway" in name or "rrc" in name:
         return "railway"
+    # The app has had a banking chip since batch 1 and the publisher could
+    # never fill it: without this branch every IBPS/cooperative-bank card
+    # landed in "other" and the category filter stayed permanently empty.
+    if "banking" in name or "bank" in name or "ibps" in name:
+        return "banking"
     if "school service" in name or "teacher" in name:
         return "teaching"
     if "health" in name or "medical" in name:

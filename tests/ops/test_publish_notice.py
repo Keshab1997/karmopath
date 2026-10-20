@@ -93,6 +93,20 @@ class ParseTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_every_category_is_reachable_from_an_approved_source(self):
+        """The chip row and the card must agree, or a filter is permanently empty."""
+        cases = {
+            "West Bengal Police Recruitment Board": "police",
+            "RRC Eastern Railway (Kolkata)": "railway",
+            "IBPS (Institute of Banking Personnel Selection)": "banking",
+            "West Bengal School Service Commission": "teaching",
+            "West Bengal Health Recruitment Board": "medical",
+            "WBPSC (West Bengal Public Service Commission)": "office",
+            "Some Other Official Body": "other",
+        }
+        for name, expected in cases.items():
+            self.assertEqual(pn.infer_category(name), expected, name)
+
     def test_job_is_a_valid_notice_only_card(self):
         job = pn.build_job(pn.parse_issue(issue(), SOURCES), NOW)
         self.assertEqual(job["kind"], "notice")

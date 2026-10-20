@@ -19,6 +19,7 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
 | West Bengal Health Recruitment Board (WBHRB) | https://www.hrb.wb.gov.in/ | Staff Nurse, Medical Officer, faculty and health posts | Notice page labelled "Only Official Website"; govt advertisement PDF gives `www.hrb.wb.gov.in`. Direct fetch returned 403 |
 | Railway Recruitment Cell, Eastern Railway (RRC-ER, Kolkata) | https://www.rrcer.org/ | Cultural Quota, Scouts & Guides Quota, Act Apprentice notices (Eastern Railway units) | Notice board page opened; Cultural Quota 2026-27 PDF opened |
 | WBPSC alternate host | https://www.psc.wb.gov.in/ | Same pages as `psc.wb.gov.in` | Used only as a fallback when the primary host times out. Checked 2026-10-20: both hosts returned the identical page title "Public Service Commission,WB" and the same "What's New" entries. Links from either host are still filtered by `allowed_domains` |
+| Institute of Banking Personnel Selection (IBPS, banking/CRP recruitment) | https://www.ibps.in/index.php/crp-updates/ | CRP PO/MT, Clerk, Specialist Officer notifications, corrigenda, exam calendar | Added 2026-10-20: listing page opened, dated rows carry real `<a href>` targets to HTTPS PDFs, so `discover_notices.py` can read it. Domain is the commission's own (`ibps.in`); registration portals live on `ibpsreg.ibps.in` |
 | Railway Recruitment Boards (RRB) central portal | https://rrbapply.gov.in/ (apply), https://rrb.indianrailways.gov.in/ (notices) | RRB NTPC, Group D and other CENs | `rrbapply.gov.in` named as the apply portal by several sources, but the page did not render and the notice PDF could not be opened. Not verified directly |
 | RRB Kolkata (RRB for Eastern Railway) | https://www.rrbkolkata.gov.in/ | RRB Kolkata CEN notices | Named in the RRB all-RRBs listing; homepage fetch failed. Not opened directly |
 | RRB Siliguri | https://www.rrbsiliguri.gov.in/ | RRB Siliguri CEN notices | Named in the RRB all-RRBs listing and a city-intimation page on the domain. Not opened directly |
@@ -37,6 +38,25 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
   listed nothing newer or the fetch served a cached page, and the sandbox has no
   network egress to re-check. WBPSC candidates in `docs/proposals/` must be
   confirmed against the live page before any label is applied.
+
+## Central bodies: what could not be crawled (checked 2026-10-20)
+
+Scope includes central recruitments, so each candidate was opened and tested for
+crawlability, not just authenticity. `discover_notices.py` needs a real
+`<a href>` with visible text in the served HTML, HTTPS only.
+
+| Body | Result | Why it is not a source yet |
+|---|---|---|
+| SSC (`ssc.gov.in`) | Homepage loads, Notice Board titles present | The board renders from JavaScript and `ssc.gov.in/notice`, `/notice-board` return the site's 404 view. No anchor targets in the served HTML, so discovery would find nothing |
+| UPSC (`www.upsc.gov.in`) | Homepage loads | Served body is a skip link and nothing else; listings are JS-rendered |
+| RRB Kolkata (`www.rrbkolkata.gov.in`), RRB portal (`www.rrb.gov.in`) | `HTTP 500` from this network | Could not be opened at all, so neither is confirmed official-by-inspection. Likely a WAF rejecting datacenter/foreign requests - retry from an ordinary Indian connection before ruling it out |
+| Employment News (`employmentnews.gov.in/NewEmp/Home.aspx`) | Homepage loads | Notice links are `http://` (rejected: feeds and cards must be HTTPS) and the JOB HIGHLIGHTS table has no per-vacancy anchor. Weekly PDF would need a different reader |
+| IBPS (`www.ibps.in`) | **Added as a source** | Plain HTML, dated rows, HTTPS PDFs. Its own result/registration rows point at `http://ibpsreg.ibps.in/...` and are skipped by the HTTPS rule, so a card can only link the notification PDF, not the login |
+
+Consequence to keep in mind: an all-India central exam whose notice sits behind
+JS or a WAF cannot be surfaced by the daily crawler at all. If RRB CEN coverage
+matters, the practical route is one hand-checked card per CEN from
+`rrbapply.gov.in`, approved through the label gate, rather than a source entry.
 
 ## Not yet verified
 

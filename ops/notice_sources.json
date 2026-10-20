@@ -4,18 +4,33 @@
     {
       "name": "WBPSC (West Bengal Public Service Commission)",
       "url": "https://psc.wb.gov.in/",
-      "allowed_domains": ["psc.wb.gov.in"],
-      "alternates": ["https://www.psc.wb.gov.in/"]
+      "allowed_domains": [
+        "psc.wb.gov.in"
+      ],
+      "alternates": [
+        "https://www.psc.wb.gov.in/"
+      ]
     },
     {
       "name": "West Bengal School Service Commission",
       "url": "https://www.westbengalssc.com/otr/recruitment/",
-      "allowed_domains": ["westbengalssc.com"]
+      "allowed_domains": [
+        "westbengalssc.com"
+      ]
     },
     {
       "name": "RRC Eastern Railway (Kolkata)",
       "url": "https://www.rrcer.org/notice_board.html",
-      "allowed_domains": ["rrcer.org"]
+      "allowed_domains": [
+        "rrcer.org"
+      ]
+    },
+    {
+      "name": "IBPS (Institute of Banking Personnel Selection)",
+      "url": "https://www.ibps.in/index.php/crp-updates/",
+      "allowed_domains": [
+        "ibps.in"
+      ]
     }
   ]
 }
