@@ -1,10 +1,11 @@
 {
-  "_comment": "Official listing pages checked by scripts/discover_notices.py. Add a source only after a human confirms the domain is official. allowed_domains limits which links may be reported.",
+  "_comment": "Official listing pages checked by scripts/discover_notices.py. Add a source only after a human confirms the domain is official. allowed_domains limits which links may be reported. 'alternates' is an optional list of equivalent official URLs tried only after every attempt at 'url' fails; each alternate needs the same human confirmation, and every link it yields is still checked against allowed_domains.",
   "sources": [
     {
       "name": "WBPSC (West Bengal Public Service Commission)",
       "url": "https://psc.wb.gov.in/",
-      "allowed_domains": ["psc.wb.gov.in"]
+      "allowed_domains": ["psc.wb.gov.in"],
+      "alternates": ["https://www.psc.wb.gov.in/"]
     },
     {
       "name": "West Bengal School Service Commission",

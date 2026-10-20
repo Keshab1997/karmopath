@@ -7,7 +7,10 @@ anything, goes into the feed (see docs/REAL_DATA_RUNBOOK.md).
 
 Behaviour:
   * Reads ops/notice_sources.json (approved listing pages + allowed domains).
-  * Fetches each page over HTTPS with a timeout and a size cap.
+  * Fetches each page over HTTPS with a timeout and a size cap, retrying with
+    a backoff and falling back to the source's `alternates` when the primary
+    URL keeps failing (WBPSC times out from some networks; see
+    docs/REAL_DATA_RUNBOOK.md).
   * Keeps <a> links whose visible text looks like a notice and whose target is
     on an allowed domain.
   * Compares against ops/notice_seen.json. Unseen links are reported.
@@ -21,6 +24,13 @@ Usage:
   python3 scripts/discover_notices.py \
       --sources ops/notice_sources.json --seen ops/notice_seen.json \
       --out new_notices.json --max-new 20
+
+  # Human triage of what is live right now, including links an earlier run
+  # already recorded. Nothing is written to the seen file and nothing is
+  # published: the output is a candidate list for a person to approve.
+  python3 scripts/discover_notices.py \
+      --sources ops/notice_sources.json --seen ops/notice_seen.json \
+      --out candidates.json --report-candidates
 """
 
 from __future__ import annotations
@@ -29,6 +39,7 @@ import argparse
 import json
 import re
 import sys
+import time
 import urllib.request
 from datetime import date
 from html.parser import HTMLParser
@@ -38,10 +49,25 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 USER_AGENT = "KarmopathNoticeDiscovery/1.0 (+https://github.com/Keshab1997/karmopath)"
 MAX_BYTES = 2_000_000
 TIMEOUT_SECONDS = 30
+# Government listing sites are intermittently slow from GitHub-hosted runners
+# (WBPSC timed out on every scheduled run of 2026-10-19/20). A single attempt
+# turns a slow site into "no new notices", which is the failure mode this
+# script must never report as success. Two retries with a short backoff cost
+# seconds when the site is fine and recover most transient timeouts.
+ATTEMPTS = 3
+BACKOFF_SECONDS = 2.0
+# Indirect so tests can run the retry loop without real sleeping.
+SLEEP = time.sleep
 
 NOTICE_PATTERN = re.compile(
     r"notice|announcement|advt|advertisement|notification|recruitment|"
-    r"examination|vacancy|answer key|result|admit card|\bCEN\b|apply",
+    r"examination|vacancy|answer key|result|admit card|\bCEN\b|apply|"
+    # Added after the 2026-10-20 review of the live listing pages: WBSSC and
+    # RRC-ER title their stage documents this way, and a miss here means the
+    # link is never recorded, so it can never be proposed for review.
+    r"merit list|waiting list|wait ?list|panel|intimation|call letter|"
+    r"interview|counselling|counseling|schedule|cut[ -]?off|"
+    r"document verification|grievance|corrigendum|provisional|short ?list",
     re.IGNORECASE,
 )
 
@@ -126,15 +152,74 @@ def extract_notices(
     return found
 
 
-def fetch_html(url: str) -> str:
+def fetch_html(url: str, timeout: float = TIMEOUT_SECONDS) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+    with urllib.request.urlopen(request, timeout=timeout) as response:
         if response.status != 200:
             raise RuntimeError(f"HTTP {response.status}")
         body = response.read(MAX_BYTES + 1)
     if len(body) > MAX_BYTES:
         raise RuntimeError("page larger than size cap")
     return body.decode("utf-8", errors="replace")
+
+
+def fetch_html_with_retry(
+    url: str,
+    *,
+    attempts: int = ATTEMPTS,
+    timeout: float = TIMEOUT_SECONDS,
+    backoff: float = BACKOFF_SECONDS,
+) -> str:
+    """Fetch one URL, retrying transient failures. Never returns partial data.
+
+    A listing page that is merely slow must not be reported as "no new
+    notices": the last error is re-raised with the attempt count so the
+    failure issue says what was actually tried.
+    """
+    if attempts < 1:
+        raise ValueError("attempts must be at least 1")
+    last: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return fetch_html(url, timeout)
+        except Exception as error:  # noqa: BLE001 - reported, not hidden
+            last = error
+            if attempt < attempts:
+                SLEEP(backoff * attempt)
+    raise RuntimeError(f"{last} (after {attempts} attempt(s))")
+
+
+def source_urls(source: dict) -> list[str]:
+    """Primary listing URL first, then any human-verified alternates."""
+    urls = [source["url"]]
+    alternates = source.get("alternates")
+    if isinstance(alternates, list):
+        urls.extend(str(url) for url in alternates)
+    return urls
+
+
+def fetch_source_html(
+    source: dict,
+    *,
+    attempts: int = ATTEMPTS,
+    timeout: float = TIMEOUT_SECONDS,
+    backoff: float = BACKOFF_SECONDS,
+) -> tuple[str, str]:
+    """Return (html, url_used), falling through the source's alternates.
+
+    Returns the first listing page that answers. Only when every URL for the
+    source has exhausted its retries does this raise, so one slow mirror cannot
+    hide a working site.
+    """
+    errors: list[str] = []
+    for url in source_urls(source):
+        try:
+            return fetch_html_with_retry(
+                url, attempts=attempts, timeout=timeout, backoff=backoff
+            ), url
+        except Exception as error:  # noqa: BLE001 - collected and reported
+            errors.append(f"{url}: {error}")
+    raise RuntimeError("; ".join(errors))
 
 
 def load_seen(path: Path) -> dict[str, str] | None:
@@ -163,9 +248,38 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seen", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--max-new", type=int, default=20)
+    parser.add_argument(
+        "--source",
+        default="",
+        help="limit the run to approved sources whose name contains this text",
+    )
+    parser.add_argument("--timeout", type=float, default=TIMEOUT_SECONDS)
+    parser.add_argument("--retries", type=int, default=ATTEMPTS)
+    parser.add_argument("--backoff", type=float, default=BACKOFF_SECONDS)
+    parser.add_argument(
+        "--report-candidates",
+        action="store_true",
+        help="report every live notice link with a seen flag; publish nothing "
+        "and do not touch the seen file",
+    )
+    parser.add_argument(
+        "--seed",
+        action="store_true",
+        help="record every live notice link as seen and report nothing",
+    )
     args = parser.parse_args(argv)
 
     config = json.loads(args.sources.read_text(encoding="utf-8"))
+    selected = [
+        source
+        for source in config.get("sources", [])
+        if not args.source
+        or args.source.lower() in str(source.get("name", "")).lower()
+    ]
+    if not selected:
+        print(f"[error] no approved source matches {args.source!r}", file=sys.stderr)
+        return 1
+
     seen = load_seen(args.seen)
     baseline = seen is None
     seen = dict(seen or {})
@@ -173,27 +287,98 @@ def main(argv: list[str] | None = None) -> int:
 
     current: dict[str, dict[str, str]] = {}
     failures: list[str] = []
-    for source in config["sources"]:
+    for source in selected:
         try:
-            html = fetch_html(source["url"])
+            html, url_used = fetch_source_html(
+                source,
+                attempts=args.retries,
+                timeout=args.timeout,
+                backoff=args.backoff,
+            )
         except Exception as error:  # noqa: BLE001 - reported, not hidden
             failures.append(f"{source['name']}: {error}")
             print(f"[warn] {source['name']}: {error}", file=sys.stderr)
             continue
-        notices = extract_notices(source["url"], html, source["allowed_domains"])
+        if url_used != source["url"]:
+            print(f"[info] {source['name']}: recovered via alternate {url_used}")
+        notices = extract_notices(url_used, html, source["allowed_domains"])
         print(f"[info] {source['name']}: {len(notices)} notice-like link(s)")
         for url, title in notices.items():
             current[url] = {"source": source["name"], "title": title}
 
-    if not current and len(failures) == len(config["sources"]):
+    if not current and len(failures) == len(selected):
         print("[error] no source could be fetched", file=sys.stderr)
         return 1
+
+    if args.seed:
+        # A source that has only just become reachable would otherwise open one
+        # issue per historic link. --seed records the current listing and
+        # reports nothing; backfilling a specific old notice stays a human
+        # decision (see scripts/notice_proposals.py).
+        seen.update({url: today for url in current})
+        args.seen.parent.mkdir(parents=True, exist_ok=True)
+        args.seen.write_text(
+            json.dumps(seen, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        args.out.write_text(
+            json.dumps(
+                {
+                    "new": [],
+                    "truncated": False,
+                    "failures": failures,
+                    "seeded": len(current),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        print(f"[info] seeded {len(current)} live link(s); reported none")
+        return 0
 
     new_items = [
         {"url": url, **info}
         for url, info in current.items()
         if url not in seen
     ]
+
+    if args.report_candidates:
+        # Human triage output, not a publication: the whole live listing with a
+        # seen flag, and the seen file is left untouched so a triage run can
+        # never silently mark old notices as already reported.
+        candidates = [
+            {
+                "url": url,
+                "title": info["title"],
+                "source": info["source"],
+                "seen_on": seen.get(url),
+                "is_new": url not in seen,
+            }
+            for url, info in current.items()
+        ]
+        truncated = len(candidates) > args.max_new
+        args.out.write_text(
+            json.dumps(
+                {
+                    "candidates": candidates[: args.max_new],
+                    "total_live": len(candidates),
+                    "truncated": truncated,
+                    "failures": failures,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        fresh = sum(1 for item in candidates if item["is_new"])
+        print(
+            f"[info] live notice links: {len(candidates)} ({fresh} unseen)"
+            + (" (truncated)" if truncated else "")
+        )
+        return 0
 
     for item in new_items:
         seen[item["url"]] = today
@@ -218,8 +403,12 @@ def main(argv: list[str] | None = None) -> int:
         + "\n",
         encoding="utf-8",
     )
-    print(f"[info] new notices reported: {len(new_items)}" + (" (truncated)" if truncated else ""))
+    print(
+        f"[info] new notices reported: {len(new_items)}"
+        + (" (truncated)" if truncated else "")
+    )
     return 0
+
 
 
 if __name__ == "__main__":

@@ -1,0 +1,611 @@
+{
+  "kind": "karmopath-notice-proposals",
+  "generated_at": "2026-10-20T05:30:00Z",
+  "note": "Previews of notice-only cards, built by the same code as the approve-notice publisher. Not a feed, not a verification, not published.",
+  "total_candidates": 16,
+  "total_usable": 14,
+  "limit": 14,
+  "not_proposed_this_batch": 0,
+  "proposals": [
+    {
+      "id": "notice-dbfd571780ad5490",
+      "url": "https://www.rrcer.org/PET%20result%2029.09.2026.pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-dbfd571780ad5490",
+        "kind": "notice",
+        "title_bn": "Result of Physicial Efficiency Test (PET) against CEN 08/2024 dtd. 29.09.2026",
+        "title_en": "Result of Physicial Efficiency Test (PET) against CEN 08/2024 dtd. 29.09.2026",
+        "organization": "RRC Eastern Railway (Kolkata)",
+        "category": "railway",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.rrcer.org/notice_board.html",
+        "notice_url": "https://www.rrcer.org/PET%20result%2029.09.2026.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Result of Physicial Efficiency Test (PET) against CEN 08/2024 dtd. 29.09.2026",
+        "body": "Result of Physicial Efficiency Test (PET) against CEN 08/2024 dtd. 29.09.2026\n\n- Source listing: RRC Eastern Railway (Kolkata)\n- Notice link: https://www.rrcer.org/PET%20result%2029.09.2026.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-8154b14177bebe51",
+      "url": "https://www.rrcer.org/Result%20of%20Physical%20Efficiency%20Test%20(PET)%20against%20CEN%20082024%20held%20on%2021.09.2026..pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-8154b14177bebe51",
+        "kind": "notice",
+        "title_bn": "Result of Physical Efficiency Test (PET) against CEN 08/2024 held on 21.09.2026",
+        "title_en": "Result of Physical Efficiency Test (PET) against CEN 08/2024 held on 21.09.2026",
+        "organization": "RRC Eastern Railway (Kolkata)",
+        "category": "railway",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.rrcer.org/notice_board.html",
+        "notice_url": "https://www.rrcer.org/Result%20of%20Physical%20Efficiency%20Test%20(PET)%20against%20CEN%20082024%20held%20on%2021.09.2026..pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Result of Physical Efficiency Test (PET) against CEN 08/2024 held on 21.09.2026",
+        "body": "Result of Physical Efficiency Test (PET) against CEN 08/2024 held on 21.09.2026\n\n- Source listing: RRC Eastern Railway (Kolkata)\n- Notice link: https://www.rrcer.org/Result%20of%20Physical%20Efficiency%20Test%20(PET)%20against%20CEN%20082024%20held%20on%2021.09.2026..pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-88e7b684b85aa436",
+      "url": "https://www.rrcer.org/Important%20notice%20for%20the%20PET%20against%20CEN.pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-88e7b684b85aa436",
+        "kind": "notice",
+        "title_bn": "Important notice regarding Physical Efficiency Test (PET) against CEN 08/2024 dtd 19.09.2026",
+        "title_en": "Important notice regarding Physical Efficiency Test (PET) against CEN 08/2024 dtd 19.09.2026",
+        "organization": "RRC Eastern Railway (Kolkata)",
+        "category": "railway",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.rrcer.org/notice_board.html",
+        "notice_url": "https://www.rrcer.org/Important%20notice%20for%20the%20PET%20against%20CEN.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Important notice regarding Physical Efficiency Test (PET) against CEN 08/2024 dtd 19.09.2026",
+        "body": "Important notice regarding Physical Efficiency Test (PET) against CEN 08/2024 dtd 19.09.2026\n\n- Source listing: RRC Eastern Railway (Kolkata)\n- Notice link: https://www.rrcer.org/Important%20notice%20for%20the%20PET%20against%20CEN.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-4b8da86599f516a4",
+      "url": "https://www.rrcer.org/NOTICE-Block%20Date%20for%20Physical%20Efficiency%20Test%20against%20CEN%2008%202024.pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-4b8da86599f516a4",
+        "kind": "notice",
+        "title_bn": "Notice regarding Block Date for Physical Efficiency Test against CEN 08 2024 dtd. 07.09.2026",
+        "title_en": "Notice regarding Block Date for Physical Efficiency Test against CEN 08 2024 dtd. 07.09.2026",
+        "organization": "RRC Eastern Railway (Kolkata)",
+        "category": "railway",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.rrcer.org/notice_board.html",
+        "notice_url": "https://www.rrcer.org/NOTICE-Block%20Date%20for%20Physical%20Efficiency%20Test%20against%20CEN%2008%202024.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Notice regarding Block Date for Physical Efficiency Test against CEN 08 2024 dtd. 07.09.2026",
+        "body": "Notice regarding Block Date for Physical Efficiency Test against CEN 08 2024 dtd. 07.09.2026\n\n- Source listing: RRC Eastern Railway (Kolkata)\n- Notice link: https://www.rrcer.org/NOTICE-Block%20Date%20for%20Physical%20Efficiency%20Test%20against%20CEN%2008%202024.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-c1e6b7832e3209c0",
+      "url": "https://www.rrcer.org/Final%20notification%20S&G%202026-27%20along%20with%20relevant%20annexures%20pdf.pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-c1e6b7832e3209c0",
+        "kind": "notice",
+        "title_bn": "Notification of Scouts & Guides Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures",
+        "title_en": "Notification of Scouts & Guides Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures",
+        "organization": "RRC Eastern Railway (Kolkata)",
+        "category": "railway",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.rrcer.org/notice_board.html",
+        "notice_url": "https://www.rrcer.org/Final%20notification%20S&G%202026-27%20along%20with%20relevant%20annexures%20pdf.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Notification of Scouts & Guides Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures",
+        "body": "Notification of Scouts & Guides Quota (Open Advertisement) Recruitment for the year 2026-27 along with relevant annexures\n\n- Source listing: RRC Eastern Railway (Kolkata)\n- Notice link: https://www.rrcer.org/Final%20notification%20S&G%202026-27%20along%20with%20relevant%20annexures%20pdf.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-e709b920fc82e97e",
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_RevisedPriliminaryList_IX-X_2ndSLSTAT2025_12_Oct_2026_merged.pdf",
+      "source": "West Bengal School Service Commission",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-e709b920fc82e97e",
+        "kind": "notice",
+        "title_bn": "Notice dated 12.10.2026 regarding Publication of Revised Priliminary List of candidates for Interview for selection to the posts of Assitant Teachers icw 2nd SLST(AT), 2025 for Class Level IX-X",
+        "title_en": "Notice dated 12.10.2026 regarding Publication of Revised Priliminary List of candidates for Interview for selection to the posts of Assitant Teachers icw 2nd SLST(AT), 2025 for Class Level IX-X",
+        "organization": "West Bengal School Service Commission",
+        "category": "teaching",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.westbengalssc.com/otr/recruitment/",
+        "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_RevisedPriliminaryList_IX-X_2ndSLSTAT2025_12_Oct_2026_merged.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Notice dated 12.10.2026 regarding Publication of Revised Priliminary List of candidates for Interview for selection to the posts of Assitant Teachers icw 2nd SLST(AT), 2025 for Class Level IX-X",
+        "body": "Notice dated 12.10.2026 regarding Publication of Revised Priliminary List of candidates for Interview for selection to the posts of Assitant Teachers icw 2nd SLST(AT), 2025 for Class Level IX-X\n\n- Source listing: West Bengal School Service Commission\n- Notice link: https://www.westbengalssc.com/otr/downloads/notice/Notice_RevisedPriliminaryList_IX-X_2ndSLSTAT2025_12_Oct_2026_merged.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-922f9d29e24bb584",
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/MeritList_1112_counselling_1P_PARTII.pdf",
+      "source": "West Bengal School Service Commission",
+      "seen_on": null,
+      "is_new": true,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-922f9d29e24bb584",
+        "kind": "notice",
+        "title_bn": "Click here to Download Combined Merit List for 1st Phase(Part-II) Counselling icw 2nd SLST(AT), 2025 for Class Level XI-XII",
+        "title_en": "Click here to Download Combined Merit List for 1st Phase(Part-II) Counselling icw 2nd SLST(AT), 2025 for Class Level XI-XII",
+        "organization": "West Bengal School Service Commission",
+        "category": "teaching",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.westbengalssc.com/otr/recruitment/",
+        "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/MeritList_1112_counselling_1P_PARTII.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Click here to Download Combined Merit List for 1st Phase(Part-II) Counselling icw 2nd SLST(AT), 2025 for Class Level XI-XII",
+        "body": "Click here to Download Combined Merit List for 1st Phase(Part-II) Counselling icw 2nd SLST(AT), 2025 for Class Level XI-XII\n\n- Source listing: West Bengal School Service Commission\n- Notice link: https://www.westbengalssc.com/otr/downloads/notice/MeritList_1112_counselling_1P_PARTII.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-77f8af1523274fba",
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/FINAL_VACANCY_DETAILS_1112%20_SUBSTITUTE_17.04.2026.pdf",
+      "source": "West Bengal School Service Commission",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": true,
+      "card": {
+        "id": "notice-77f8af1523274fba",
+        "kind": "notice",
+        "title_bn": "Substitute vacancy for ARABIC(PG) and SOCIOLOGY(PG) for 1st Phase(Part-III) Counselling to be held on 20.04.26 as per WBBSE letter Admin/2139 Dated 17.04.26 icw 2nd SLST(AT), 2025 for Class Level",
+        "title_en": "Substitute vacancy for ARABIC(PG) and SOCIOLOGY(PG) for 1st Phase(Part-III) Counselling to be held on 20.04.26 as per WBBSE letter Admin/2139 Dated 17.04.26 icw 2nd SLST(AT), 2025 for Class Level",
+        "organization": "West Bengal School Service Commission",
+        "category": "teaching",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.westbengalssc.com/otr/recruitment/",
+        "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/FINAL_VACANCY_DETAILS_1112%20_SUBSTITUTE_17.04.2026.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Substitute vacancy for ARABIC(PG) and SOCIOLOGY(PG) for 1st Phase(Part-III) Counselling to be held on 20.04.26 as per WBBSE letter Admin/2139 Dated 17.04.26 icw 2nd SLST(AT), 2025 for Class Level",
+        "body": "Substitute vacancy for ARABIC(PG) and SOCIOLOGY(PG) for 1st Phase(Part-III) Counselling to be held on 20.04.26 as per WBBSE letter Admin/2139 Dated 17.04.26 icw 2nd SLST(AT), 2025 for Class Level\n\n- Source listing: West Bengal School Service Commission\n- Notice link: https://www.westbengalssc.com/otr/downloads/notice/FINAL_VACANCY_DETAILS_1112%20_SUBSTITUTE_17.04.2026.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-a3f25730b710dbeb",
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_21.01.26.pdf",
+      "source": "West Bengal School Service Commission",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-a3f25730b710dbeb",
+        "kind": "notice",
+        "title_bn": "Notice for Publication of Provisional Panel and Waiting List in c/w 2nd SLST(AT), 2025 for CLASS LEVEL XI-XII",
+        "title_en": "Notice for Publication of Provisional Panel and Waiting List in c/w 2nd SLST(AT), 2025 for CLASS LEVEL XI-XII",
+        "organization": "West Bengal School Service Commission",
+        "category": "teaching",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.westbengalssc.com/otr/recruitment/",
+        "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Notice_21.01.26.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Notice for Publication of Provisional Panel and Waiting List in c/w 2nd SLST(AT), 2025 for CLASS LEVEL XI-XII",
+        "body": "Notice for Publication of Provisional Panel and Waiting List in c/w 2nd SLST(AT), 2025 for CLASS LEVEL XI-XII\n\n- Source listing: West Bengal School Service Commission\n- Notice link: https://www.westbengalssc.com/otr/downloads/notice/Notice_21.01.26.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-2c051cf0738e8d4d",
+      "url": "https://www.westbengalssc.com/otr/downloads/notice/Public%20Notice%20-%20Scribe%20Form%20-%201st%20SLST-NTS%202025%20Dated%20-%2017022026.pdf",
+      "source": "West Bengal School Service Commission",
+      "seen_on": "2026-10-19",
+      "is_new": false,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-2c051cf0738e8d4d",
+        "kind": "notice",
+        "title_bn": "Notice dated 16.02.2026 for availing Scribe facility to eligible candidates icw 1st SLST (NTS), 2025 for the post of Clerk and Group-D",
+        "title_en": "Notice dated 16.02.2026 for availing Scribe facility to eligible candidates icw 1st SLST (NTS), 2025 for the post of Clerk and Group-D",
+        "organization": "West Bengal School Service Commission",
+        "category": "teaching",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://www.westbengalssc.com/otr/recruitment/",
+        "notice_url": "https://www.westbengalssc.com/otr/downloads/notice/Public%20Notice%20-%20Scribe%20Form%20-%201st%20SLST-NTS%202025%20Dated%20-%2017022026.pdf",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] Notice dated 16.02.2026 for availing Scribe facility to eligible candidates icw 1st SLST (NTS), 2025 for the post of Clerk and Group-D",
+        "body": "Notice dated 16.02.2026 for availing Scribe facility to eligible candidates icw 1st SLST (NTS), 2025 for the post of Clerk and Group-D\n\n- Source listing: West Bengal School Service Commission\n- Notice link: https://www.westbengalssc.com/otr/downloads/notice/Public%20Notice%20-%20Scribe%20Form%20-%201st%20SLST-NTS%202025%20Dated%20-%2017022026.pdf\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-016569a3077c4afd",
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement",
+      "source": "WBPSC (West Bengal Public Service Commission)",
+      "seen_on": null,
+      "is_new": true,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-016569a3077c4afd",
+        "kind": "notice",
+        "title_bn": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+        "title_en": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+        "organization": "WBPSC (West Bengal Public Service Commission)",
+        "category": "office",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://psc.wb.gov.in/",
+        "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025",
+        "body": "INDICATIVE ADVERTISEMENT FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2025, ADVT. NO. 03/2025\n\n- Source listing: WBPSC (West Bengal Public Service Commission)\n- Notice link: https://psc.wb.gov.in/Download?param1=An_20251129151248_Indwbcs25.pdf&param2=advertisement\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-a25a1198908572d5",
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251129151445_INDstono25.pdf&param2=advertisement",
+      "source": "WBPSC (West Bengal Public Service Commission)",
+      "seen_on": null,
+      "is_new": true,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-a25a1198908572d5",
+        "kind": "notice",
+        "title_bn": "INDICATIVE ADVERTISEMENT FOR ENGLISH STENOGRAPHERS BASIC GRADE (SCHEDULE A&B) RECRUITMENT EXAMINATION, 2025 ADVT NO. 04/2025",
+        "title_en": "INDICATIVE ADVERTISEMENT FOR ENGLISH STENOGRAPHERS BASIC GRADE (SCHEDULE A&B) RECRUITMENT EXAMINATION, 2025 ADVT NO. 04/2025",
+        "organization": "WBPSC (West Bengal Public Service Commission)",
+        "category": "office",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://psc.wb.gov.in/",
+        "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251129151445_INDstono25.pdf&param2=advertisement",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] INDICATIVE ADVERTISEMENT FOR ENGLISH STENOGRAPHERS BASIC GRADE (SCHEDULE A&B) RECRUITMENT EXAMINATION, 2025 ADVT NO. 04/2025",
+        "body": "INDICATIVE ADVERTISEMENT FOR ENGLISH STENOGRAPHERS BASIC GRADE (SCHEDULE A&B) RECRUITMENT EXAMINATION, 2025 ADVT NO. 04/2025\n\n- Source listing: WBPSC (West Bengal Public Service Commission)\n- Notice link: https://psc.wb.gov.in/Download?param1=An_20251129151445_INDstono25.pdf&param2=advertisement\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-6bc8ded57ecdb4ca",
+      "url": "https://psc.wb.gov.in/Download?param1=An_20251029173719_Notice_OMR_clerkship.pdf&param2=advertisement",
+      "source": "WBPSC (West Bengal Public Service Commission)",
+      "seen_on": null,
+      "is_new": true,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-6bc8ded57ecdb4ca",
+        "kind": "notice",
+        "title_bn": "IMPORTANT NOTICE REGARDING CLERKSHIP EXAMINATION (PRELI) RECRUITMENT EXAMINATION, 2023 [ADVT. NO. 13/2023]",
+        "title_en": "IMPORTANT NOTICE REGARDING CLERKSHIP EXAMINATION (PRELI) RECRUITMENT EXAMINATION, 2023 [ADVT. NO. 13/2023]",
+        "organization": "WBPSC (West Bengal Public Service Commission)",
+        "category": "office",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://psc.wb.gov.in/",
+        "notice_url": "https://psc.wb.gov.in/Download?param1=An_20251029173719_Notice_OMR_clerkship.pdf&param2=advertisement",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] IMPORTANT NOTICE REGARDING CLERKSHIP EXAMINATION (PRELI) RECRUITMENT EXAMINATION, 2023 [ADVT. NO. 13/2023]",
+        "body": "IMPORTANT NOTICE REGARDING CLERKSHIP EXAMINATION (PRELI) RECRUITMENT EXAMINATION, 2023 [ADVT. NO. 13/2023]\n\n- Source listing: WBPSC (West Bengal Public Service Commission)\n- Notice link: https://psc.wb.gov.in/Download?param1=An_20251029173719_Notice_OMR_clerkship.pdf&param2=advertisement\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    },
+    {
+      "id": "notice-b724a93fa350e0dc",
+      "url": "https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement",
+      "source": "WBPSC (West Bengal Public Service Commission)",
+      "seen_on": null,
+      "is_new": true,
+      "title_truncated": false,
+      "card": {
+        "id": "notice-b724a93fa350e0dc",
+        "kind": "notice",
+        "title_bn": "SCHEME AND SYLLABUS FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2024 (ADVT. NO. 8/2024)",
+        "title_en": "SCHEME AND SYLLABUS FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2024 (ADVT. NO. 8/2024)",
+        "organization": "WBPSC (West Bengal Public Service Commission)",
+        "category": "office",
+        "districts": [
+          "West Bengal"
+        ],
+        "qualifications": [],
+        "status": "published",
+        "source_url": "https://psc.wb.gov.in/",
+        "notice_url": "https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement",
+        "reviewed_at": "2026-10-20T05:30:00Z",
+        "published_at": "2026-10-20T05:30:00Z",
+        "updated_at": "2026-10-20T05:30:00Z",
+        "summary_bn": "সরকারি সাইটে প্রকাশিত বিজ্ঞপ্তি। যোগ্যতা, শূন্যপদ ও শেষ তারিখ এই কার্ডে যাচাই করা হয়নি — মূল বিজ্ঞপ্তি দেখুন।",
+        "summary_en": "Official notice published on the source site. Eligibility, vacancies and the last date have not been checked for this card — read the original notice.",
+        "how_to_apply_bn": "আবেদনের নিয়ম ও শেষ তারিখ মূল বিজ্ঞপ্তিতে দেখুন।",
+        "how_to_apply_en": "See the original notice for how to apply and the last date.",
+        "vacancies": null,
+        "application_start_date": null,
+        "application_end_date": null,
+        "application_end_at": null,
+        "exam_date": null,
+        "apply_url": null,
+        "age_note_bn": null,
+        "age_note_en": null
+      },
+      "issue": {
+        "title": "[notice] SCHEME AND SYLLABUS FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2024 (ADVT. NO. 8/2024)",
+        "body": "SCHEME AND SYLLABUS FOR WEST BENGAL CIVIL SERVICE (EXECUTIVE) ETC. EXAMINATION, 2024 (ADVT. NO. 8/2024)\n\n- Source listing: WBPSC (West Bengal Public Service Commission)\n- Notice link: https://psc.wb.gov.in/Download?param1=20251114121739_SCHEME_SYLLABUS-2024_Final.pdf&param2=advertisement\n\nHuman steps before any feed change:\n1. Open the notice and confirm it is on an official site.\n2. Record last date, vacancy, eligibility and apply link from the notice itself.\n3. Only then add or update the job in the feed draft (docs/REAL_DATA_RUNBOOK.md).\n\nThis proposal was generated offline by scripts/notice_proposals.py from a listing page captured on 2026-10-20. It is not a verification. The card preview says eligibility, vacancies and dates were not checked."
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "url": "https://www.rrcer.org/Cultural%20Quota%20Notification%202026-27..pdf",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "reason": "already-in-feed as rrc-er-cultural-quota-2026-27"
+    },
+    {
+      "url": "https://rrceronline.co.in/CQ2627ERv02/",
+      "source": "RRC Eastern Railway (Kolkata)",
+      "reason": "notice link host is not on the approved domain for 'RRC Eastern Railway (Kolkata)': rrceronline.co.in"
+    }
+  ]
+}

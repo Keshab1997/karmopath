@@ -18,9 +18,25 @@ Aggregator and job-blog sites are not sources and are excluded on purpose.
 | West Bengal Police (main portal) | https://www.wbpolice.gov.in/ | Police department news and links | Named as the police website inside the WBPRB official notice PDF. Not fetched directly |
 | West Bengal Health Recruitment Board (WBHRB) | https://www.hrb.wb.gov.in/ | Staff Nurse, Medical Officer, faculty and health posts | Notice page labelled "Only Official Website"; govt advertisement PDF gives `www.hrb.wb.gov.in`. Direct fetch returned 403 |
 | Railway Recruitment Cell, Eastern Railway (RRC-ER, Kolkata) | https://www.rrcer.org/ | Cultural Quota, Scouts & Guides Quota, Act Apprentice notices (Eastern Railway units) | Notice board page opened; Cultural Quota 2026-27 PDF opened |
+| WBPSC alternate host | https://www.psc.wb.gov.in/ | Same pages as `psc.wb.gov.in` | Used only as a fallback when the primary host times out. Checked 2026-10-20: both hosts returned the identical page title "Public Service Commission,WB" and the same "What's New" entries. Links from either host are still filtered by `allowed_domains` |
 | Railway Recruitment Boards (RRB) central portal | https://rrbapply.gov.in/ (apply), https://rrb.indianrailways.gov.in/ (notices) | RRB NTPC, Group D and other CENs | `rrbapply.gov.in` named as the apply portal by several sources, but the page did not render and the notice PDF could not be opened. Not verified directly |
 | RRB Kolkata (RRB for Eastern Railway) | https://www.rrbkolkata.gov.in/ | RRB Kolkata CEN notices | Named in the RRB all-RRBs listing; homepage fetch failed. Not opened directly |
 | RRB Siliguri | https://www.rrbsiliguri.gov.in/ | RRB Siliguri CEN notices | Named in the RRB all-RRBs listing and a city-intimation page on the domain. Not opened directly |
+
+## Found while listing these sources (2026-10-20)
+
+- **`rrceronline.co.in` is the RRC-ER application host, and it is not an
+  approved domain.** The Cultural Quota and Scouts & Guides apply links on the
+  RRC-ER notice board point there, so `publish_notice.py` rejects them and
+  `notice_url` for the Eastern Railway source can only ever be the
+  `rrcer.org` notice PDF. That is the correct gate: the notice board is the
+  source of truth, and the apply portal is reached from it. Adding the host to
+  `allowed_domains` needs an owner decision, not a code change.
+- **The WBPSC homepage capture was dated.** Every entry in the captured
+  "What's New" list carried a 2025 stamp. It is not known whether the site
+  listed nothing newer or the fetch served a cached page, and the sandbox has no
+  network egress to re-check. WBPSC candidates in `docs/proposals/` must be
+  confirmed against the live page before any label is applied.
 
 ## Not yet verified
 
