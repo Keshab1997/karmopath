@@ -359,19 +359,42 @@ def main(argv: list[str] | None = None) -> int:
             args.issues_out.parent.mkdir(parents=True, exist_ok=True)
             lines = [
                 "#!/usr/bin/env bash",
-                "# Opens one notice-review issue per proposal. Reviewing and",
-                "# labelling each issue stays a human act; this script never",
-                "# applies 'approve-notice' and never edits feed/jobs.json.",
-                "set -euo pipefail",
+                "# Opens one issue per proposal, then confirms the notice-review",
+                "# label actually landed. Reviewing and labelling stays a human",
+                "# act: this never applies 'approve-notice' and never edits",
+                "# feed/jobs.json.",
+                "#",
+                "# The check is not ceremony. publish-notice.yml only runs for an",
+                "# issue carrying BOTH notice-review and approve-notice, and a",
+                "# token that may create issues cannot always edit labels - so a",
+                "# silently unlabelled issue looks approved in the tracker and can",
+                "# never be published.",
+                "set -uo pipefail",
+                "MISSING=()",
                 "",
             ]
             for item in proposals:
                 lines.append(
-                    "gh issue create --label notice-review "
+                    "created=$(gh issue create "
                     f"--title {json.dumps(item['issue']['title'])} "
                     "--body-file /dev/stdin <<'KARMOPATH_ISSUE_BODY'\n"
-                    f"{item['issue']['body']}\nKARMOPATH_ISSUE_BODY"
+                    f"{item['issue']['body']}\nKARMOPATH_ISSUE_BODY\n"
+                    '    ) || exit 1\n'
+                    'number=${created##*/}\n'
+                    'if ! gh issue edit "$number" --add-label notice-review >/dev/null 2>&1; then\n'
+                    '  MISSING+=("$number")\n'
+                    "fi"
                 )
+            lines += [
+                "",
+                'if [ ${#MISSING[@]} -gt 0 ]; then',
+                '  echo "Issues created without the notice-review label: ${MISSING[*]}" >&2',
+                '  echo "With a token that can write labels, run:" >&2',
+                '  echo "  gh issue edit ${MISSING[*]} --add-label notice-review" >&2',
+                "  exit 1",
+                "fi",
+                'echo "All issues created and labelled notice-review."',
+            ]
             args.issues_out.write_text("\n".join(lines) + "\n", encoding="utf-8")
             args.issues_out.chmod(0o755)
     except (ProposalError, pn.NoticeError, OSError) as error:

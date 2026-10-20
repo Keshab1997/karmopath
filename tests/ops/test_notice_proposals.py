@@ -276,9 +276,20 @@ class MainTests(unittest.TestCase):
         self.assertEqual(len(feed["jobs"]), 2)
         self.assertEqual(feed["updated_at"], "2026-10-20T06:00:00Z")
         script = issues.read_text(encoding="utf-8")
-        self.assertIn("gh issue create --label notice-review", script)
+        self.assertIn("gh issue create --title", script)
+        self.assertIn("--add-label notice-review", script)
         self.assertIn("- Notice link: https://www.rrcer.org/PET%20result%2029.09.2026.pdf", script)
-        self.assertNotIn("--label approve-notice", script)
+        # The publisher gate is a human act. The comments may name the label to
+        # explain the check, but no executable line may apply it, and no line may
+        # write a feed.
+        code = "\n".join(
+            line
+            for line in script.splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        )
+        self.assertNotIn("approve-notice", code)
+        self.assertNotIn("jobs.json", code)
+        self.assertEqual(script.count("gh issue create"), len(document["proposals"]))
 
     def test_refuses_to_write_into_the_live_feed_directory(self):
         tmp, candidates, sources = self._tmp()
