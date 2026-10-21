@@ -58,7 +58,7 @@ concurrency:
 jobs:
   widget-tests:
     # Released runner pin; bump with scripts/bump-ref.sh on future releases.
-    uses: Keshab1997/flutter-builder/.github/workflows/flutter-widget-tests.yml@v1.15.0
+    uses: Keshab1997/flutter-builder/.github/workflows/flutter-widget-tests.yml@v1.15.1
     with:
       working-directory: ${{ inputs['working-directory'] || '.' }}
       flutter-channel: ${{ inputs['flutter-channel'] || 'stable' }}
