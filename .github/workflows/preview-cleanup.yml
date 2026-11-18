@@ -13,6 +13,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   cleanup:
-    uses: Keshab1997/flutter-builder/.github/workflows/preview-cleanup.yml@v1.18.2
+    uses: Keshab1997/flutter-builder/.github/workflows/preview-cleanup.yml@v1.18.5
     with:
       branch-name: ${{ inputs['branch-name'] }}
